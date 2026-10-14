@@ -1,0 +1,80 @@
+# U1 setup-data-platform — 프론트엔드 컴포넌트
+
+> U1은 화면 기능이 아니라 **모든 화면이 공유하는 뼈대**와 **기기 준비**만 만든다. 각 화면 내용은 U4·U5·U6.
+
+---
+
+## 1. 컴포넌트 계층
+
+```text
+RootLayout (src/app/layout.tsx)
+ +- DisplayModeRoot      (html 요소에 data-mode, CSS 변수 --scale; 값 공급은 U4, 기본 normal)
+ +- DeviceBootstrap      (앱 시작 시 ensureDevice, 실패 시 BootError)
+ |   +- BootError        (인터넷 오류 안내 + [다시 시도])
+ +- AppHeader            (앱 이름 "모찌네 청약 알리미")
+ +- <main>{children}</main>
+ +- BottomNav            (피드 / 관심 공고 / 설정)
+ +- ErrorMessage         (공통 오류 문구 표시용, 다른 Unit이 사용)
+```
+
+## 2. 컴포넌트 정의
+
+### DeviceBootstrap
+| 항목 | 내용 |
+|---|---|
+| props | `children` |
+| state | `status: 'checking' \| 'ready' \| 'error'` |
+| 동작 | 마운트 시 `ensureDevice()` (business-logic-model §1). `ready`가 되면 children 표시, `error`면 BootError |
+| 사용 API | `POST /api/device` |
+| 비고 | 이미 등록된 기기는 네트워크 없이 바로 `ready` (오프라인에서도 관심 공고 등 로컬 기능 사용 가능) |
+
+### BootError
+| 항목 | 내용 |
+|---|---|
+| props | `onRetry()` |
+| 표시 | "인터넷 연결을 확인해 주세요" + 큰 [다시 시도] 버튼 |
+
+### AppHeader
+| 항목 | 내용 |
+|---|---|
+| props | `title?`(기본 앱 이름), `back?`(상세 화면에서 뒤로 가기) |
+| 규칙 | 높이 56px 이상, 제목 20px 이상(일반 모드) |
+
+### BottomNav
+| 항목 | 내용 |
+|---|---|
+| 항목 | 피드(`/`), 관심 공고(`/bookmarks`), 설정(`/settings`): 아이콘 + 글자 라벨 |
+| 규칙 | 각 항목 터치 영역 ≥ 48×48px, 현재 위치는 색과 굵기 **두 가지**로 표시(색만으로 구분 금지), 라벨 16px 이상 |
+| 상태 | 현재 경로 (`usePathname`) |
+
+### ErrorMessage
+| 항목 | 내용 |
+|---|---|
+| props | `message: string`, `action?: { label; onClick }` |
+| 규칙 | API의 `{ code, message }` 중 `message`만 보여준다 (BR-U1-20). 코드는 화면에 노출하지 않음 |
+
+## 3. 디자인 토큰 (모든 Unit 공통, NFR-1)
+
+| 토큰 | 일반 모드 | 쉬운 모드 | 비고 |
+|---|---|---|---|
+| `--scale` | 1 | 1.25 | U4의 DisplayMode가 바꿈 |
+| 본문 글씨 | 18px × scale | 22.5px | NFR-1.1 |
+| 제목 글씨 | 22px × scale | | |
+| 보조 글씨 | 16px × scale | | 16px 미만 사용 금지 |
+| 최소 터치 영역 | 48px × scale | 60px | NFR-1.2 |
+| 줄 간격 | 1.6 | 1.6 | |
+| 색 대비 | 본문 4.5:1 이상 | 동일 | WCAG AA |
+
+Tailwind 설정에서 위 토큰을 CSS 변수로 연결해, 다른 Unit은 토큰 클래스만 쓴다.
+
+## 4. 사용자 상호작용 흐름
+
+```text
+첫 실행: 앱 열기 -> DeviceBootstrap(checking, 짧은 로딩 표시) -> 등록 성공 -> 화면 표시
+          (프로필이 없으면 U4의 시작 안내 화면, US-02)
+오프라인 첫 실행: -> BootError -> [다시 시도]
+재방문: 앱 열기 -> 바로 화면 표시
+```
+
+## 5. 폼 검증
+U1에는 사용자 입력 폼이 없다 (Q4=B로 가족 코드 입력 화면 없음).

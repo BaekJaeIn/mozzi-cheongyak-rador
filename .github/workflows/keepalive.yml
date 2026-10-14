@@ -1,0 +1,31 @@
+# 매일 운영 /api/health 호출 (NFR-U1-08·09)
+# - Supabase 무료 플랜 일시 중지 방지 (매일 API 요청 발생)
+# - 실패하면 워크플로가 실패하고 GitHub이 저장소 소유자에게 메일을 보낸다
+# 주의: GitHub은 저장소에 60일 동안 활동이 없으면 예약 워크플로를 자동으로 끈다 (끄기 전 메일 안내).
+#       메일을 받으면 Actions 화면에서 다시 켜야 한다.
+name: keepalive
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 매일 KST 09:00
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: check APP_URL
+        run: |
+          if [ -z "${{ vars.APP_URL }}" ]; then
+            echo "저장소 변수 APP_URL이 없습니다 (Settings > Secrets and variables > Actions > Variables)"
+            exit 1
+          fi
+
+      - name: GET /api/health
+        run: |
+          curl --fail --silent --show-error --retry 2 --retry-delay 10 --max-time 30 \
+            "${{ vars.APP_URL }}/api/health"

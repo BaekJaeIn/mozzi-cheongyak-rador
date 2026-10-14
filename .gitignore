@@ -1,0 +1,38 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# env (NFR-3: 시크릿 커밋 금지)
+.env
+.env.local
+.env*.local
+
+# supabase
+/supabase/.branches
+/supabase/.temp
+
+# vercel
+/.vercel
+
+# tests
+/test-results/
+/playwright-report/
+/blob-report/
+
+# misc
+.DS_Store
+*.log
+/coverage
+*.tsbuildinfo
+
+# 민감 개인·금융 정보 — 공개 레포에 올리지 않음 (로컬 전용)
+aidlc-docs/inception/requirements/household-profile.md
+aidlc-docs/inception/requirements/requirements-change-questions.md

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/*
+ * 디자인 토큰 (frontend-components.md §3, NFR-1, NFR-U1-26)
+ * - 모든 크기는 --scale(일반 1, 쉬운 모드 1.25)을 곱한다. 쉬운 모드 전환은 U4가 html[data-mode]를 바꿔서 한다.
+ * - 색은 흰 배경 기준 본문 대비 4.5:1 이상(WCAG AA).
+ * - 화면에서는 아래 토큰 유틸리티만 쓰고 임의 px 값은 쓰지 않는다.
+ */
+:root {
+  --scale: 1;
+}
+
+html[data-mode="easy"] {
+  --scale: 1.25;
+}
+
+@theme inline {
+  --font-sans: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+
+  /* 글씨: 16px 미만은 쓰지 않는다 */
+  --text-caption: calc(16px * var(--scale));
+  --text-body: calc(18px * var(--scale));
+  --text-title: calc(22px * var(--scale));
+  --text-heading: calc(26px * var(--scale));
+
+  /* 터치 영역 최소 48px */
+  --spacing-touch: calc(48px * var(--scale));
+  --spacing-header: calc(56px * var(--scale));
+
+  /* 색 */
+  --color-ink: #1a1a1a;
+  --color-muted: #4a4a4a;
+  --color-primary: #0b5cad;
+  --color-primary-soft: #e6f0fa;
+  --color-surface: #ffffff;
+  --color-canvas: #f6f7f9;
+  --color-line: #c9ced6;
+  --color-danger: #b3261e;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+
+body {
+  font-size: var(--text-body);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 키보드로 이동할 때 초점이 잘 보이게 */
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
