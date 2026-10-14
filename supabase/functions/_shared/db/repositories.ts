@@ -1,6 +1,8 @@
 // Repository 인터페이스 (계약 K2, CG-1)
 // 구현: Node → src/server/db/, Deno → supabase/functions/_lib/db/ (U3에서 생성)
-// U1은 기기·기준 데이터 부분을 구현하고, 나머지 메서드는 표시한 Unit에서 구현한다.
+import type { NoticeForJudgement } from "../eligibility/types.ts";
+import type { IncomeThreshold } from "../eligibility/income-table.ts";
+import type { ProfileStorageFields } from "../security/profile-codec.ts";
 import type { District, Judgement, Notice, StoredProfile, SupplyTypeLabel } from "./types.ts";
 
 /** register_device RPC 결과 (BR-U1-03, P-S4) */
@@ -23,10 +25,12 @@ export interface DeviceRepository {
 }
 
 export interface ProfileRepository {
-  /** U4 — 저장 후 새 profileVersion 반환 (RPC save_device_profile) */
-  save(profile: Omit<StoredProfile, "profileVersion" | "updatedAt">): Promise<number>;
-  /** U2·U4 */
+  /** U2(U4 사용) — RPC save_device_profile, 새 profileVersion 반환 */
+  save(deviceId: string, fields: ProfileStorageFields): Promise<number>;
+  /** U2 */
   get(deviceId: string): Promise<StoredProfile | null>;
+  /** U2 — 프로필이 있는 기기 목록 (전체 재계산용) */
+  listDeviceIdsWithProfile(): Promise<string[]>;
 }
 
 export interface ReferenceDataRepository {
@@ -34,16 +38,21 @@ export interface ReferenceDataRepository {
   listDistricts(): Promise<District[]>;
   /** U1 */
   listSupplyTypeLabels(): Promise<SupplyTypeLabel[]>;
+  /** U2 — 소득 기준표 (재계산 1회 1번, NFR-U2-04) */
+  loadIncomeThresholds(): Promise<IncomeThreshold[]>;
 }
 
 export interface NoticeRepository {
   /** U5 */
   getById(id: string): Promise<Notice | null>;
+  /** U2 — 보관 중인 공고 + 주택형 + 지구 ID (P-U2-P2) */
+  listRetainedWithUnits(): Promise<NoticeForJudgement[]>;
 }
 
+/** 판정 저장 결과: 오래된 프로필 버전으로 계산했으면 stale (P-U2-R3) */
+export type ReplaceResult = "saved" | "stale";
+
 export interface JudgementRepository {
-  /** U2 — RPC replace_judgements_for_device */
-  replaceForDevice(deviceId: string, judgements: Judgement[]): Promise<void>;
-  /** U2 — RPC replace_judgements_for_notices */
-  replaceForNotices(noticeIds: string[], judgements: Judgement[]): Promise<void>;
+  /** U2 — RPC replace_judgements_for_device(device, profileVersion, rows) */
+  replaceForDevice(deviceId: string, profileVersion: number, judgements: Judgement[]): Promise<ReplaceResult>;
 }

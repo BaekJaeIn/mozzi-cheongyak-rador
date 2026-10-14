@@ -107,6 +107,8 @@ CollectRun (독립)
 | effectiveFrom | date | 필수 | 기준 변경 대비 |
 
 ### E7 IncomeAssetThreshold (연도별 기준표)
+
+> **U2에서 변경 (마이그레이션 0006)**: `amountManwon` → `amountWon`(원 단위, 공식표 경계 오차 제거), `kind`는 `monthly_income`만, `basis`는 `urban_worker` / `median`, 100% 금액만 저장. 자산 기준은 공급유형 표준 요건(E6)으로 옮김. E1 `districts`에 `area_keywords` 추가. 자세한 내용은 U2 domain-entities.md §7
 | 속성 | 타입 | 제약 | 설명 |
 |---|---|---|---|
 | year | int | PK 일부 | 적용 연도 |

@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(25);
 
 -- ---------- register_device ----------
 select is(public.register_device('11111111-1111-4111-8111-111111111111', repeat('a', 64)), 'created', '새 기기 → created');
@@ -32,12 +32,22 @@ select is(public.save_device_profile('11111111-1111-4111-8111-111111111111',
   '{"schema_version":1,"data":{"a":2}}'::jsonb), 2, '프로필 다시 저장 → 버전 2');
 insert into public.push_subscriptions (endpoint, device_id, p256dh, auth)
 values ('https://push.example/1', '11111111-1111-4111-8111-111111111111', 'k', 'a');
-select is(public.replace_judgements_for_device('11111111-1111-4111-8111-111111111111',
-  '[{"notice_id":"22222222-2222-4222-8222-222222222222","verdict":"eligible","in_district":true,"detail":{},"profile_version":2}]'::jsonb),
+-- U2: 판정 저장은 프로필 버전을 함께 받는다 (P-U2-R3). 현재 프로필 버전 = 2
+select is(public.replace_judgements_for_device('11111111-1111-4111-8111-111111111111', 2,
+  '[{"notice_id":"22222222-2222-4222-8222-222222222222","verdict":"eligible","in_district":true,"detail":{}}]'::jsonb),
   1, '판정 1건 저장');
-select is(public.replace_judgements_for_device('11111111-1111-4111-8111-111111111111',
-  '[{"notice_id":"33333333-3333-4333-8333-333333333333","verdict":"eligible","in_district":true,"detail":{},"profile_version":2}]'::jsonb),
+select is(public.replace_judgements_for_device('11111111-1111-4111-8111-111111111111', 2,
+  '[{"notice_id":"33333333-3333-4333-8333-333333333333","verdict":"eligible","in_district":true,"detail":{}}]'::jsonb),
   0, '없는 공고의 판정은 넣지 않고, 기존 판정은 교체(삭제)된다');
+select is(public.replace_judgements_for_device('11111111-1111-4111-8111-111111111111', 2,
+  '[{"notice_id":"22222222-2222-4222-8222-222222222222","verdict":"unknown","in_district":true,"detail":{}}]'::jsonb),
+  1, '같은 버전으로 다시 저장 가능');
+select is(public.replace_judgements_for_device('11111111-1111-4111-8111-111111111111', 1, '[]'::jsonb),
+  -1, '낮은 프로필 버전으로 계산한 저장은 건너뛴다 (-1)');
+select is((select count(*)::int from public.judgements where device_id = '11111111-1111-4111-8111-111111111111'),
+  1, '오래된 계산이 최신 판정을 지우지 않는다');
+select is(public.replace_judgements_for_device('99999999-9999-4999-8999-999999999999', 1, '[]'::jsonb),
+  -1, '프로필이 없는 기기는 저장하지 않는다 (-1)');
 insert into public.notification_log (device_id, notice_id)
 values ('11111111-1111-4111-8111-111111111111', '22222222-2222-4222-8222-222222222222');
 

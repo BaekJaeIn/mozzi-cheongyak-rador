@@ -20,6 +20,8 @@ export interface District {
   sido: string;
   sigungu: string[];
   keywords: string[];
+  /** 시군구가 같을 때만 매칭하는 동 이름 (U2 0006) */
+  areaKeywords: string[];
   active: boolean;
   sortOrder: number;
 }
@@ -30,6 +32,7 @@ export interface DistrictRow {
   sido: string;
   sigungu: string[];
   keywords: string[];
+  area_keywords: string[];
   active: boolean;
   sort_order: number;
 }

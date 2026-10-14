@@ -126,7 +126,7 @@
 - [x] **Step 15. DB 테스트** (`supabase/tests/*.test.sql`, pgTAP)
   - [x] 15.1 `security.test.sql` (anon·authenticated로 모든 테이블 조회·쓰기 실패, RPC 실행 실패)
   - [x] 15.2 `rpc.test.sql` (`register_device` 4가지 결과, 연쇄 삭제, 정리 함수 경계값)
-  - [ ] 15.3 *(실행은 Docker 설치 후 `npm run db:test`)* — 미실행, Build and Test로 넘김
+  - [x] 15.3 *(실행은 Docker 설치 후 `npm run db:test`)* — GitHub Actions db-and-e2e에서 통과 (2026-10-14)
 
 ### Part G. 문서·배포 산출물
 
@@ -149,9 +149,9 @@
   - [x] 18.5 `deno check`: Deno 없음 → CI에서 확인하는 것으로 기록
   - [x] 18.6 Docker 필요 항목(`db:reset`, `db:test`, `e2e`)은 **실행하지 않음**으로 기록하고 Build and Test 단계로 넘김
 - [ ] **Step 19. 외부 구축 (사용자 작업, setup-guide.md 기준)**
-  - [ ] 19.1 Docker Desktop 설치
-  - [ ] 19.2 GitHub 저장소 생성 → AI가 로컬 `git init`·첫 커밋 준비 (push는 사용자 확인 후) — 저장소 생성·init·첫 커밋(5819cde) 완료, push 확인 대기
-  - [ ] 19.3 운영 Supabase 프로젝트 생성·`supabase link`·`db push`
+  - [x] 19.1 Docker Desktop 설치 — 완료 (사용자 확인, 2026-10-14)
+  - [x] 19.2 GitHub 저장소 생성 → AI가 로컬 `git init`·첫 커밋 준비 (push는 사용자 확인 후) — 완료 (커밋 5819cde, f2943a7 push, 2026-10-14)
+  - [x] 19.3 운영 Supabase 프로젝트 생성·`supabase link`·`db push` — 완료 (사용자 확인, 2026-10-14)
   - [ ] 19.4 Vercel 프로젝트 생성·환경 변수·첫 배포 (원하시면 Vercel 연동 도구로 AI가 도움)
   - [ ] 19.5 keepalive 수동 실행 1번
 

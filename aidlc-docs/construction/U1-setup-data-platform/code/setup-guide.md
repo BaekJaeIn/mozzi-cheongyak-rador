@@ -7,9 +7,9 @@
 
 ## 0. Docker Desktop 설치 (로컬 개발·DB 테스트·E2E에 필요)
 
-- [ ] https://www.docker.com/products/docker-desktop/ 에서 Windows용 설치 (WSL 2 백엔드)
-- [ ] 설치 후 확인: `docker --version`
-- [ ] 로컬 확인:
+- [x] https://www.docker.com/products/docker-desktop/ 에서 Windows용 설치 (WSL 2 백엔드)
+- [x] 설치 후 확인: `docker --version`
+- [x] 로컬 확인:
   ```bash
   npm run db:start        # 처음에는 이미지 다운로드로 몇 분 걸림
   npm run db:test         # DB 테스트 53건(보안 32 + 함수 21) 통과 확인
@@ -17,32 +17,31 @@
 
 ## 1. GitHub 저장소
 
-- [ ] GitHub에서 새 저장소 만들기 (README·.gitignore **없이** 빈 저장소)
-- [ ] 저장소 주소를 알려 주시면 로컬 `git init`·첫 커밋을 준비하고, 확인을 받은 뒤 push합니다
-- [ ] push 후 Actions 탭에서 `ci` 워크플로 통과 확인
+- [x] GitHub에서 새 저장소 만들기 (README·.gitignore **없이** 빈 저장소)
+- [x] 저장소 주소를 알려 주시면 로컬 `git init`·첫 커밋을 준비하고, 확인을 받은 뒤 push합니다
+- [x] push 후 Actions 탭에서 `ci` 워크플로 통과 확인
 
 ## 2. 운영 Supabase 프로젝트
 
-- [ ] https://supabase.com/dashboard 에서 새 프로젝트: 지역 **Northeast Asia (Seoul)**, 무료 플랜
-- [ ] DB 비밀번호는 비밀번호 관리자에 보관
-- [ ] 연결과 마이그레이션 적용:
+- [x] https://supabase.com/dashboard 에서 새 프로젝트: 지역 **Northeast Asia (Seoul)**, 무료 플랜
+- [x] DB 비밀번호는 비밀번호 관리자에 보관
+- [x] 연결과 마이그레이션 적용:
   ```bash
   npx supabase login
   npx supabase link --project-ref <프로젝트 ref>
   npx supabase db push
   ```
-- [ ] 대시보드에서 확인: 테이블 13개, Database > Cron Jobs에 `cleanup-devices`, `cleanup-notices`
+- [x] 대시보드에서 확인: 테이블 13개, Database > Cron Jobs에 `cleanup-devices`, `cleanup-notices`
 
-## 3. 암호화 키 (운영용)
+## 3. 암호화 키 (로컬과 같은 키 사용)
 
-- [ ] 운영 키 만들기 (로컬 개발 키와 **다른 값**):
+> 운영과 로컬이 같은 키를 씁니다 (infrastructure-design.md §5). 그래서 `.env.local`이 새면 운영 데이터도 풀립니다 — 커밋·공유·화면 노출 금지.
+
+- [x] `.env.local`의 `AMOUNT_ENC_KEY_V1` 값을 확인 (이 값이 운영 키)
+- [x] 비밀번호 관리자에 보관 (잃어버리면 저장된 소득·자산을 복호화할 수 없음. `.env.local`만으로는 PC 교체·파일 삭제에 대비할 수 없음)
+- [x] Supabase Function 시크릿 등록 (U2부터 사용):
   ```bash
-  node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
-  ```
-- [ ] 비밀번호 관리자에 보관 (잃어버리면 저장된 소득·자산을 복호화할 수 없음)
-- [ ] Supabase Function 시크릿 등록 (U2부터 사용):
-  ```bash
-  npx supabase secrets set AMOUNT_ENC_KEY_V1=<운영 키> AMOUNT_ENC_KEY_CURRENT=1
+  npx supabase secrets set AMOUNT_ENC_KEY_V1=<.env.local의 값> AMOUNT_ENC_KEY_CURRENT=1
   ```
 
 ## 4. Vercel 프로젝트
@@ -54,7 +53,7 @@
   |---|---|
   | `SUPABASE_URL` | Supabase Project Settings > API의 URL |
   | `SUPABASE_SERVICE_ROLE_KEY` | 같은 화면의 service_role 키 |
-  | `AMOUNT_ENC_KEY_V1` | 3단계의 운영 키 |
+  | `AMOUNT_ENC_KEY_V1` | 3단계의 키 (`.env.local`과 같은 값) |
   | `AMOUNT_ENC_KEY_CURRENT` | `1` |
 - [ ] 함수 지역은 저장소의 `vercel.json`(`icn1`)이 적용됨. 미리보기 배포도 `vercel.json`에서 꺼 둠
 - [ ] 배포 후 확인: `https://<이름>.vercel.app/api/health` → `{"ok":true}`

@@ -25,6 +25,7 @@ const districtArb = fc.record({
   sido: textArb,
   sigungu: fc.array(textArb, { minLength: 1, maxLength: 3 }),
   keywords: fc.array(textArb, { minLength: 1, maxLength: 4 }),
+  areaKeywords: fc.array(textArb, { maxLength: 6 }),
   active: fc.boolean(),
   sortOrder: fc.integer({ min: 0, max: 100 }),
 });

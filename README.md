@@ -84,3 +84,31 @@ FC_SEED=123456 npm test -- supabase/functions/_shared/domain
 
 - 화면·API: `main`에 push하면 Vercel이 자동 배포 (미리보기 배포 끔)
 - DB: `npx supabase db push` (사람이 직접 실행, **코드 배포보다 먼저**)
+
+## 연간 갱신 — 소득 기준표·표준 요건 (매년 1~3월)
+
+공고의 소득 조건은 **공고 연도의 기준표**로 판정합니다. 그해 기준표가 없으면 소득 조건이 모두 "확인 필요"로 바뀝니다
+(화면에 "올해 소득 기준표가 아직 준비되지 않았어요"가 보이면 갱신할 때입니다).
+
+1. 공식 금액 확인 (해당 연도 적용표)
+   - 도시근로자 가구원수별 월평균소득: [마이홈포털 국민임대 입주자격](https://www.myhome.go.kr/hws/portal/cont/selectNationalRentalHouseView.do)
+   - 기준 중위소득: [마이홈포털 통합공공임대 입주자격](https://www.myhome.go.kr/hws/portal/cont/selectIntegratedPubRentalHouseView.do)
+   - 자산·자동차 기준과 공급유형별 비율도 같은 페이지·LH청약플러스에서 확인
+2. `supabase/functions/_shared/eligibility/reference-data.ts`의 `INCOME_THRESHOLDS`(**100% 금액, 원 단위**)·`STANDARD_REQUIREMENTS`를 고친다
+3. 같은 값을 넣는 **새 마이그레이션**(`supabase/migrations/NNNN_reference_YYYY.sql`)을 만든다 — 출처 URL과 확인 날짜를 주석으로 남긴다. 이미 적용한 `0006`은 고치지 않는다
+4. `reference-data.test.ts`의 대상 파일을 새 마이그레이션으로 바꾸고 `npm test`
+5. `npx supabase db push` → 다음 날 새벽 전체 재계산 때 반영
+
+## 암호화 키 교체
+
+소득·자산 금액은 `AMOUNT_ENC_KEY_V{n}`으로 암호화되고, 암호문 앞에 `v{n}`이 붙습니다. 키가 새었거나 바꿔야 할 때:
+
+1. 새 키 만들기: `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`
+2. **옛 키는 그대로 두고** 새 키를 추가: Vercel과 Supabase 시크릿 양쪽에 `AMOUNT_ENC_KEY_V2=<새 키>`, `AMOUNT_ENC_KEY_CURRENT=2` → 재배포
+3. 이후 저장되는 프로필은 새 키로 암호화됩니다. 기존 암호문은 사용자가 프로필을 다시 저장할 때 바뀝니다
+4. 옛 키 암호문이 남았는지 확인 (Supabase SQL Editor):
+   ```sql
+   select count(*) from public.device_profiles
+   where enc_monthly_income like 'v1.%' or enc_total_asset like 'v1.%' or enc_car_value like 'v1.%';
+   ```
+5. 결과가 **0이 된 뒤에만** 옛 키(`AMOUNT_ENC_KEY_V1`)를 양쪽에서 지운다. 0이 아닌데 지우면 그 기기들은 판정이 멈춥니다

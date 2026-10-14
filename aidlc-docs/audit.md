@@ -304,3 +304,187 @@
 **Context**: CONSTRUCTION - U1 Code Generation Step 19.2, push 확인 대기
 
 ---
+
+## U1 Code Generation — Step 19.2 push
+**Timestamp**: 2026-10-14T03:50:00Z
+**User Input**: "푸시해줘"
+**AI Response**: "git push -u origin main 성공 (main 추적 설정). GitHub Actions ci, db-and-e2e 실행 대기열 확인 → 백그라운드로 결과 확인 중."
+**Context**: CONSTRUCTION - U1 Code Generation Step 19.2 완료
+
+---
+
+## U1 Code Generation — 승인
+**Timestamp**: 2026-10-14T03:55:00Z
+**User Input**: "진행"
+**AI Response**: "U1 코드 승인(Continue to Next Stage)으로 기록. U1 완료. 남은 사용자 작업(Docker, Supabase·Vercel, keepalive)은 Step 19에 미완료로 유지. CI 결과는 백그라운드 확인 중. U2 Functional Design 시작."
+**Context**: CONSTRUCTION - U1 완료 → U2
+
+---
+
+## U2 Functional Design — 계획 및 질문
+**Timestamp**: 2026-10-14T04:00:00Z
+**User Input**: (없음 — 직전 "진행"에 따른 단계 시작)
+**AI Response**: "construction/plans/U2-eligibility-engine-functional-design-plan.md 생성: 질문 6개(Q1 가구 단위 판정·세대주 항목(OI-1), Q2 나이 기준일(OI-2), Q3 공급유형 정밀 판정 범위, Q4 연도별 소득 기준표 관리, Q5 면적 구간(OI-3), Q6 정렬 우선순위(OI-3)), 법령 요건 값은 질문 대신 공개 자료 조사로 처리, 실행 체크리스트 7단계(PBT-01 포함). 답변 대기."
+**Context**: CONSTRUCTION - U2 Functional Design Step 1~4, GATE: 답변 대기
+
+---
+
+## U1 — CI 결과 확인
+**Timestamp**: 2026-10-14T04:20:00Z
+**User Input**: (없음 — 백그라운드 확인)
+**AI Response**: "GitHub Actions 결과: ci(run 38571523779) success — typecheck·lint·deno check·단위+PBT 통과; db-and-e2e(run 38571523850) success — pgTAP 53건·E2E(axe 포함) 통과. U1 code-summary 검증표와 계획 15.3 갱신."
+**Context**: CONSTRUCTION - U1 검증 보완
+
+---
+
+## U2 Functional Design — 답변 수신
+**Timestamp**: 2026-10-14T04:20:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(가구 단위 판정 + 세대주 항목), Q2=A(모집공고일 기준), Q3=A(7개 유형 정밀), Q4=A(공고 금액 우선 + 연도 기준표, 없으면 확인 필요), Q5=A(4구간), Q6=B(선호 조건 일치 우선, 같으면 마감 임박). 모순 없음(Q6은 정렬만 영향, 숨김 없음). 다음: 공개 자료 조사 후 설계 문서 생성."
+**Context**: CONSTRUCTION - U2 Functional Design Step 5
+
+---
+
+## U2 Functional Design — 조사 및 설계 생성
+**Timestamp**: 2026-10-14T05:00:00Z
+**User Input**: (없음 — 답변에 따른 진행)
+**AI Response**: "공개 자료 조사: 마이홈포털(국민임대·통합공공임대·영구임대), LH청약플러스(행복주택), SH(공공분양), 무순위 개편 보도. 2026 도시근로자 소득·기준 중위소득 공식표 확인, 국민임대·통합공공임대 자산 3억4,500만·자동차 4,542만 확인. 미확인·불일치 값은 unknown 또는 더 너그러운 값(BR-U2-34). 생성: construction/U2-eligibility-engine/functional-design/domain-entities.md(HouseholdProfile v1 — 추가 항목 householdHead·householdSize·spouseEarns·welfare, Requirements 구조, 공급유형 8+other(국민·영구임대 분리), 시드 값·출처, U1 스키마 변경 0006, U4 넘김 항목), business-rules.md(BR-U2-01~84, 요건 확정 규칙에서 AD-7을 Q4=A에 맞게 다듬음: 금액 조건은 공고 값 우선·0.5~2배 범위 검증, 구조 조건 불일치는 unknown; unknown은 ineligible을 만들지 않음), business-logic-model.md(모듈 구성, 판정·재계산 흐름, 예시, PBT-01 속성 24개 + 예시 시나리오). U1 domain-entities E7에 변경 메모. 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U2 NFR Requirements'."
+**Context**: CONSTRUCTION - U2 Functional Design Step 6~7, GATE: 승인 대기
+
+---
+
+## U2 Functional Design — 승인
+**Timestamp**: 2026-10-14T05:10:00Z
+**User Input**: "진행"
+**AI Response**: "U2 기능 설계 승인(Continue to Next Stage)으로 기록 — 입력 항목 4개 추가와 금액 조건 원칙(BR-U2-25) 포함. U2 NFR Requirements 시작."
+**Context**: CONSTRUCTION - U2 Functional Design 완료
+
+---
+
+## U2 NFR Requirements — 계획 및 질문
+**Timestamp**: 2026-10-14T05:15:00Z
+**User Input**: (없음 — 직전 "진행"에 따른 단계 시작)
+**AI Response**: "construction/plans/U2-eligibility-engine-nfr-requirements-plan.md 생성: 규모 계산(판정 ≤ 2만 건, 성능·확장성 질문 생략 사유), 질문 4개(Q1 판정 사유에 내 금액 저장 여부 — DB 평문 노출 문제, Q2 실제 공고 골든 세트, Q3 연도 기준표 갱신 점검, Q4 암호화 키 교체 방식). 답변 대기."
+**Context**: CONSTRUCTION - U2 NFR Requirements Step 1~4, GATE: 답변 대기
+
+---
+
+## U2 NFR Requirements — 답변 수신 및 문서 생성
+**Timestamp**: 2026-10-14T05:30:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(서버 사유에 기준 금액만, 내 금액은 화면에서 기기 프로필로), Q2=A(실제 공고 골든 세트 5~10건 — U3 Code Generation 마지막 단계), Q3=B(기준표 갱신 자동 알림 없음 — RK-U2-1), Q4=A(키 교체 절차서 + 확인 SQL). 생성: nfr-requirements/nfr-requirements.md(NFR-U2-01~24, 위험 3건, PBT 요약 — blocking 없음), tech-stack-decisions.md(새 라이브러리 없음, PBT 설정 승계·상태 기반 테스트 설정, 시드 관리). 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U2 NFR Design'."
+**Context**: CONSTRUCTION - U2 NFR Requirements Step 5~7, GATE: 승인 대기
+
+---
+
+## U2 NFR Requirements — 승인
+**Timestamp**: 2026-10-14T05:40:00Z
+**User Input**: "진행"
+**AI Response**: "U2 비기능 요구사항 승인(Continue to Next Stage)으로 기록. U2 NFR Design 시작."
+**Context**: CONSTRUCTION - U2 NFR Requirements 완료
+
+---
+
+## U2 NFR Design — 계획 및 질문
+**Timestamp**: 2026-10-14T05:45:00Z
+**User Input**: (없음 — 직전 "진행"에 따른 단계 시작)
+**AI Response**: "construction/plans/U2-eligibility-engine-nfr-design-plan.md 생성: 범주별 검토(확장성·보안·논리 컴포넌트는 질문 없음 + 사유), 질문 3개(Q1 저장 시 재계산 위치, Q2 재계산 실패 시 저장 처리, Q3 동시 재계산 경쟁 — 옛 프로필 판정이 새 판정을 덮어쓰는 문제). 답변 대기."
+**Context**: CONSTRUCTION - U2 NFR Design Step 1~4, GATE: 답변 대기
+
+---
+
+## U2 NFR Design — 답변 수신 및 문서 생성
+**Timestamp**: 2026-10-14T05:55:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(저장 요청 안 동기 재계산), Q2=A(저장 성공 + 재계산 실패 기록, judgementsUpdated 플래그), Q3=A(프로필 버전 확인 — 구현 시 device_profiles 행 잠금 for update 추가). 생성: nfr-design/nfr-design-patterns.md(P-U2-R1~R4, 확장성 미적용 사유, P-U2-P1~P3, P-U2-S1~S4, 관측성), logical-components.md(L-U2-1~10, Repository 추가·시그니처 변경, 0006 마이그레이션 변경 목록, 호출 관계, PBT 요약 — blocking 없음). 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U2 Code Generation' (U2는 Infrastructure Design 생략)."
+**Context**: CONSTRUCTION - U2 NFR Design Step 5~7, GATE: 승인 대기
+
+---
+
+## U2 NFR Design — 승인
+**Timestamp**: 2026-10-14T06:05:00Z
+**User Input**: "진행"
+**AI Response**: "U2 비기능 설계 승인(Continue to Next Stage)으로 기록. U2는 Infrastructure Design 생략 → U2 Code Generation 시작."
+**Context**: CONSTRUCTION - U2 NFR Design 완료
+
+---
+
+## U2 Code Generation — Part 1 계획 및 승인 요청
+**Timestamp**: 2026-10-14T06:10:00Z
+**User Input**: (없음 — 직전 "진행"에 따른 단계 시작)
+**AI Response**: "construction/plans/U2-eligibility-engine-code-generation-plan.md 생성: 15단계(Part A 도메인, B 판정 엔진, C 암호화·코덱, D 재계산 서비스, E 테스트 — 생성기·예시 9 시나리오·PBT 24 속성·상태 기반, F Node Repository, G 마이그레이션 0006·pgTAP, H 문서·검증), 스토리·PBT 대응표. 승인 요청: 'U2 코드 생성 계획을 승인하시면 Step 1부터 실행합니다.'"
+**Context**: CONSTRUCTION - U2 Code Generation Part 1, GATE: 계획 승인 대기
+
+---
+
+## U2 Code Generation — 계획 승인
+**Timestamp**: 2026-10-14T06:20:00Z
+**User Input**: "진행"
+**AI Response**: "U2 코드 생성 계획 승인으로 기록. Part 2 생성을 Step 1부터 실행."
+**Context**: CONSTRUCTION - U2 Code Generation Part 1 완료 → Part 2
+
+---
+
+## U1 외부 구축 — 진행 보고
+**Timestamp**: 2026-10-14T06:30:00Z
+**User Input**: "setup-guide.md에서 0,1,2는 완료했어"
+**AI Response**: "setup-guide.md 0(Docker)·1(GitHub)·2(운영 Supabase) 체크 완료. U1 코드 생성 계획 Step 19.1·19.3 [x], aidlc-state.md 남은 작업 갱신. 다음: 3단계 운영 암호화 키 → 4단계 Vercel → 5단계 keepalive 안내."
+**Context**: CONSTRUCTION - U1 Step 19 (사용자 외부 구축) 진행 기록
+
+---
+
+## U1 외부 구축 — 운영 암호화 키 분리 여부
+**Timestamp**: 2026-10-14T06:40:00Z
+**User Input**: "운영용 암호화 키를 굳이 따로 두고 싶지 않아"
+**AI Response**: "로컬 키는 .env.local(gitignore 대상, 저장소 미포함)에만 있음을 확인. 같은 키 재사용 시 위험(로컬 파일 유출 = 운영 데이터 복호화 가능, 로컬 테스트·화면 공유·AI 대화에 키 노출 가능성)과 대안을 설명하고, 재사용으로 결정하면 setup-guide 3단계·infrastructure-design의 '개발용 별도 키' 기준을 고칠지 확인 요청."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 3단계), 설계 기준 변경 여부 확인 대기
+
+---
+
+## U1 외부 구축 — 운영 암호화 키 같은 값 사용 결정
+**Timestamp**: 2026-10-14T06:50:00Z
+**User Input**: "고쳐줘"
+**AI Response**: "운영·로컬 같은 암호화 키 사용으로 문서 수정: infrastructure-design.md §5(표 '운영과 같은 키', 규칙을 '같은 값'으로 바꾸고 받아들인 위험·완화 기록), setup-guide.md 3단계(.env.local 값 사용·백업·노출 금지)와 4단계 Vercel 표."
+**Context**: CONSTRUCTION - U1 Step 19, 설계 기준 변경 (사용자 결정)
+
+---
+
+## U1 외부 구축 — 3단계 암호화 키 시크릿 등록 확인
+**Timestamp**: 2026-10-14T14:15:00Z
+**User Input**: "했어"
+**AI Response**: "`supabase secrets list`로 AMOUNT_ENC_KEY_V1·AMOUNT_ENC_KEY_CURRENT 등록 확인. V1 다이제스트가 .env.local 키의 SHA-256과 일치(키 값은 출력하지 않음), CURRENT는 '1'의 다이제스트. setup-guide 3단계 [x], aidlc-state 남은 작업 갱신. 다음: 4단계 Vercel."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 3단계 완료)
+
+---
+
+## U1 외부 구축 — Vercel 환경 변수 질문, 암호화 키 규격 미달 발견
+**Timestamp**: 2026-10-14T14:20:00Z
+**User Input**: "supabase에서 환경변수에 넣어야하는키가 뭔지 모르겠어" (Supabase API Keys 화면과 VS Code 터미널 스크린숏 첨부)
+**AI Response**: "스크린숏 터미널에 암호화 키 원문이 보였고, .env.local의 AMOUNT_ENC_KEY_V1이 11자(32바이트 base64url=43자 아님)라 AmountCipher가 거부하는 값임을 확인(값은 기록하지 않음). 아직 암호화된 데이터가 없으므로 무작위 키 재생성 → .env.local·Supabase 시크릿 교체 안내, setup-guide 3단계 체크 해제. Vercel 값 안내: SUPABASE_URL=https://omucyfrevegoqxmnxumq.supabase.co, SUPABASE_SERVICE_ROLE_KEY=Secret keys의 sb_secret_ 키(supabase-js 2.117.3 지원)."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 3단계 재작업, 4단계 안내)
+
+---
+
+## U1 외부 구축 — 새 암호화 키 확인
+**Timestamp**: 2026-10-14T14:30:00Z
+**User Input**: "env파일에 넣었어"
+**AI Response**: ".env.local 새 키 검증: 43자, base64url, 32바이트 — 규격 충족. Supabase 시크릿 AMOUNT_ENC_KEY_V1 다이제스트는 로컬 키와 불일치(이전 값과도 다름) → .env.local에서 직접 읽어 등록하는 PowerShell 명령 안내."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 3단계 재작업 중)
+
+---
+
+## U1 외부 구축 — 3단계 완료 확인
+**Timestamp**: 2026-10-14T14:40:00Z
+**User Input**: "했어"
+**AI Response**: "Supabase 시크릿 AMOUNT_ENC_KEY_V1 다이제스트가 .env.local 새 키의 SHA-256과 일치, CURRENT='1' 확인. setup-guide 3단계 [x], aidlc-state 갱신. 다음: 4단계 Vercel."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 3단계 완료)
+
+---
+
+## U2 Code Generation — Part 2 생성 완료 및 승인 요청
+**Timestamp**: 2026-10-14T09:00:00Z
+**User Input**: (없음 — "진행" 승인에 따른 생성)
+**AI Response**: "계획 Step 1~15 실행. 생성: _shared 도메인 5·판정 엔진(기준 데이터 원본 포함)·암호화·코덱·재계산 서비스, Node Repository 3 + 키링 + deps, 마이그레이션 0006(지구 area_keywords, 원 단위 소득표 2026, 공급유형 9개 표준 요건, 판정 저장 RPC 버전 확인), pgTAP 갱신·추가, README 연간 갱신·키 교체 절. 검증: typecheck·lint 통과, 테스트 31파일 210건 통과(성능 목표·SQL=TS 시드 대조 포함), build 성공. 발견·수정: 키 형식 오류 예외 타입, PBT가 찾은 0~9만원 암호문 복호화 불가 버그(회귀 테스트 추가), 변이 검사로 정보 감소 속성 강화, PostgREST 1,000행 페이지 나눔. 미실행: deno check·pgTAP(이 PC에 Deno·Docker 없음 — PowerShell로도 재확인) → push 후 CI. 커밋함, push는 사용자 확인 필요. 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U3 Functional Design'."
+**Context**: CONSTRUCTION - U2 Code Generation Part 2, GATE: 승인 대기
+
+---

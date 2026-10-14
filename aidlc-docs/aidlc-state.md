@@ -4,7 +4,7 @@
 - **Project Name**: 모찌네 청약 알리미 (저장소명: silverCheongYak-radar)
 - **Project Type**: Greenfield
 - **Start Date**: 2026-10-13T12:55:00Z
-- **Current Stage**: CONSTRUCTION - U1 Code Generation (생성 완료 — 승인 대기)
+- **Current Stage**: CONSTRUCTION - U2 Code Generation (생성 완료 — 승인 대기)
 
 ## Workspace State
 - **Existing Code**: No (SPEC.md, .gitignore, aidlc-rule-details/ 만 존재)
@@ -56,14 +56,14 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: U1 Code Generation (승인 대기)
-- **Next Stage**: U2 Functional Design
+- **Current Stage**: U2 Code Generation (생성 완료 — 승인 대기)
+- **Next Stage**: U3 Functional Design
 
 ## Unit Progress (CONSTRUCTION, 순서대로)
 | Unit | FD | NFR-R | NFR-D | Infra | Code | 상태 |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| U1 setup-data-platform | ✅ | ✅ | ✅ | ✅ | ✅ | Code 생성 완료 — 승인 대기 (미실행: pgTAP·E2E·deno check — Docker·Deno 없음, 외부 구축은 사용자 작업) |
-| U2 eligibility-engine | ✅ | ✅ | ✅ | – | ✅ | 대기 |
+| U1 setup-data-platform | ✅ | ✅ | ✅ | ✅ | ✅ | 완료 (2026-10-14 승인). 남은 사용자 작업: Vercel 구축, keepalive (setup-guide 4~5, Step 19.4~19.5). Docker·GitHub·Supabase·암호화 키 시크릿 완료 (2026-10-14) |
+| U2 eligibility-engine | ✅ | ✅ | ✅ | – | ✅ | Code 생성 완료 — 승인 대기 (pgTAP·deno check는 push 후 CI) |
 | U3 collection-pipeline | ✅ | ✅ | ✅ | ✅ | ✅ | 대기 |
 | U4 profile-settings | ✅ | – | – | – | ✅ | 대기 |
 | U5 feed-detail | ✅ | – | – | – | ✅ | 대기 |

@@ -18,7 +18,7 @@ export function createFakeDb(responder: (call: FakeCall) => FakeResponse) {
 
   const builder = (call: FakeCall) => {
     const proxy: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "update", "insert", "delete", "order", "maybeSingle", "single", "in", "lt"]) {
+    for (const method of ["select", "eq", "update", "insert", "delete", "order", "maybeSingle", "single", "in", "lt", "range", "limit"]) {
       proxy[method] = (...args: unknown[]) => {
         call.chain.push({ method, args });
         return proxy;

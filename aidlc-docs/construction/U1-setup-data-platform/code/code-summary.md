@@ -46,9 +46,9 @@
 | `npm test` | ✅ 18개 파일, 97개 테스트 통과 (예시 기반 + PBT), seed 출력·재현 확인 |
 | `npm run build` | ✅ 성공 (`/api/device`, `/api/health` 동적, 화면 3개 정적) |
 | 빌드 서버 스모크 테스트 | ✅ (버그 1건 발견·수정 후) 헬스 503(환경 변수 없음), 등록 400·413·500 형식, `lang="ko"`, 로그에 토큰 없음 |
-| `npm run deno:check` | ⏸ 이 PC에 Deno 없음 → CI(`ci.yml`)에서 확인 |
-| `npm run db:test` (pgTAP 53건) | ⏸ Docker 없음 → Docker 설치 후 또는 `e2e.yml`(CI)에서 확인 |
-| `npm run e2e` | ⏸ Docker 없음 → Docker 설치 후 또는 `e2e.yml`에서 확인 |
+| `npm run deno:check` | ✅ GitHub Actions `ci` 통과 (2026-10-14, run 38571523779) — 이 PC에는 Deno 없음 |
+| `npm run db:test` (pgTAP 53건) | ✅ GitHub Actions `db-and-e2e` 통과 (run 38571523850) |
+| `npm run e2e` | ✅ GitHub Actions `db-and-e2e` 통과 (Android·iPhone 뷰포트, axe 위반 0건) |
 
 ## 4. 설계 대비 변경·결정
 
