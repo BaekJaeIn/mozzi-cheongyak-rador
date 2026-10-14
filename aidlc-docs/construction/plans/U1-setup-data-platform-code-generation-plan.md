@@ -150,7 +150,7 @@
   - [x] 18.6 Docker 필요 항목(`db:reset`, `db:test`, `e2e`)은 **실행하지 않음**으로 기록하고 Build and Test 단계로 넘김
 - [ ] **Step 19. 외부 구축 (사용자 작업, setup-guide.md 기준)**
   - [ ] 19.1 Docker Desktop 설치
-  - [ ] 19.2 GitHub 저장소 생성 → AI가 로컬 `git init`·첫 커밋 준비 (push는 사용자 확인 후)
+  - [ ] 19.2 GitHub 저장소 생성 → AI가 로컬 `git init`·첫 커밋 준비 (push는 사용자 확인 후) — 저장소 생성·init·첫 커밋(5819cde) 완료, push 확인 대기
   - [ ] 19.3 운영 Supabase 프로젝트 생성·`supabase link`·`db push`
   - [ ] 19.4 Vercel 프로젝트 생성·환경 변수·첫 배포 (원하시면 Vercel 연동 도구로 AI가 도움)
   - [ ] 19.5 keepalive 수동 실행 1번
