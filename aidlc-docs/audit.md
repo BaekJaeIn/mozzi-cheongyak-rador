@@ -776,3 +776,27 @@
 **Context**: CONSTRUCTION - U3 Code Generation 완료 → U4
 
 ---
+
+## U4 Functional Design — 계획·질문 작성
+**Timestamp**: 2026-10-15T15:55:00Z
+**User Input**: (없음 — U3 승인 후 다음 단계)
+**AI Response**: "U4 profile-settings 기능 설계 시작. unit-of-work·story-map·stories(US-02·04~09·18~20)·U2 프로필 엔티티(§1·§8)·U1 테이블(devices.notify_hour/enabled, device_profiles) 확인. `aidlc-docs/construction/plans/U4-profile-settings-functional-design-plan.md`에 질문 10개(화면 나누기, 생년월일 입력, 사는 곳 목록, 기간 입력, 금액 재확인 기준, 필수 항목, 기기 저장, 설정 저장 방식, 모두 지우기 오프라인, 이어서 하기) 작성. 답변 대기."
+**Context**: CONSTRUCTION - U4 Functional Design, 질문 대기
+
+---
+
+## U4 Functional Design — 답변 완료
+**Timestamp**: 2026-10-15T16:20:00Z
+**User Input**: "완료"
+**AI Response**: "질문 10개 모두 A(추천안) 확인 — 애매한 답 없음. 기능 설계 문서 4개 작성 진행."
+**Context**: CONSTRUCTION - U4 Functional Design, 답변 분석
+
+---
+
+## U4 Functional Design — 문서 작성, 승인 요청
+**Timestamp**: 2026-10-15T16:50:00Z
+**User Input**: (없음)
+**AI Response**: "CI c0e87a1 ci·db-and-e2e 통과 확인. U4 기능 설계 문서 4개 작성: business-rules.md(BR-U4-01~104: 처음 실행, 마법사 24화면·건너뛰기, 생년월일·사는 곳·기간 구간·금액 단위 실수·필수 항목, 기기 원본 저장·동기화 대기열·재등록 재전송, 설정 즉시 저장, 쉬운 모드 1.25배, 모두 지우기 서버 먼저, API 3개), domain-entities.md(답·구간·기기 저장 형식·동기화 상태 전이·API 형식·PBT P-U4-1~10), business-logic-model.md(흐름·화면 순서 예시·예시), frontend-components.md(경로·컴포넌트·상태·API·접근성). 완료 메시지(2-option) 제시."
+**Context**: CONSTRUCTION - U4 Functional Design 완료, 승인 대기
+
+---
