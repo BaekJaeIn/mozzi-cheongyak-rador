@@ -800,3 +800,35 @@
 **Context**: CONSTRUCTION - U4 Functional Design 완료, 승인 대기
 
 ---
+
+## U4 Functional Design — 승인
+**Timestamp**: 2026-10-15T17:00:00Z
+**User Input**: "진행"
+**AI Response**: "U4 Functional Design 승인으로 기록. Code Generation Part 1(계획) 시작."
+**Context**: CONSTRUCTION - U4 Functional Design 완료 → Code Generation
+
+---
+
+## U4 Code Generation — 계획 승인 요청
+**Timestamp**: 2026-10-15T17:15:00Z
+**User Input**: (없음)
+**AI Response**: "`aidlc-docs/construction/plans/U4-profile-settings-code-generation-plan.md` 작성: 18단계(Part A 순수 로직·예시·PBT, Part B 저장소·핸들러 3개·테스트, Part C api-client 재등록 끄기·ProfileProvider·쉬운 모드, Part D 처음 실행·입력 부품·마법사·설정, Part E E2E·문서·검증). 마이그레이션 없음. 조정: BR-U4-04는 U1 DeviceBootstrap 동작 유지. 승인 요청."
+**Context**: CONSTRUCTION - U4 Code Generation Part 1, 승인 대기
+
+---
+
+## U4 Code Generation — 계획 승인
+**Timestamp**: 2026-10-15T17:25:00Z
+**User Input**: "진행"
+**AI Response**: "U4 코드 생성 계획 승인으로 기록. Part 2 생성을 Step 1부터 실행."
+**Context**: CONSTRUCTION - U4 Code Generation Part 1 완료 → Part 2
+
+---
+
+## U4 Code Generation — Part 2 완료, 승인 요청
+**Timestamp**: 2026-10-15T23:45:00Z
+**User Input**: (없음 — 승인된 계획 실행)
+**AI Response**: "Step 1~18 완료. 순수 로직(model/: 화면·변환·구간·금액·지역·저장·동기화) + 예시·PBT(P-U4-1~10, 1b), API 3개(PUT /api/profile·/api/notify-settings, DELETE /api/device)+테스트, api-client 재등록 끄기, ProfileProvider·쉬운 모드·하단 메뉴 숨김, 처음 실행·입력 부품·마법사·설정 화면, E2E 7개(+app-shell 수정). 발견·수정: 선호 화면 [잘 모르겠어요] 결함(allowUnknown), 저장 실패 안내가 안 보이던 문제(결과 화면), U3 parseSourceDate 객체 입력 예외(PBT 새 seed). 조정: 시도 16·인천 11군구(2026 행정구역), BR-U4-04 U1 동작 유지. 검증: typecheck·lint·test 419(seed 4회)·deno check·build 통과, 로컬 E2E(API 가짜, Chromium) 13/13·axe 0. 로컬 커밋, push는 확인 후."
+**Context**: CONSTRUCTION - U4 Code Generation Part 2 완료, 승인 대기
+
+---

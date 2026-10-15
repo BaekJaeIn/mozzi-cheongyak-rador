@@ -79,19 +79,30 @@ export function createApiClient(deps: ApiClientDeps) {
     return loadIdentity(deps.storage) ?? registerNew();
   }
 
-  async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResult<T>> {
+  /**
+   * @param options.reregister false면 기기 등록·재등록을 하지 않는다 (U4 모두 지우기: 빈 기기를 새로 만들어 지우지 않게).
+   *        저장된 기기가 없으면 요청하지 않고 401 AUTH_MISSING을 돌려준다.
+   */
+  async function request<T>(path: string, init: RequestInit = {}, options: { reregister?: boolean } = {}): Promise<ApiResult<T>> {
+    const reregister = options.reregister ?? true;
     let identity: DeviceCredentials;
-    try {
-      identity = await ensureDevice();
-    } catch (e) {
-      return { ok: false, status: 0, error: e instanceof DeviceSetupError ? e.error : apiError("NETWORK") };
+    if (!reregister) {
+      const stored = loadIdentity(deps.storage);
+      if (!stored) return { ok: false, status: 401, error: apiError("AUTH_MISSING") };
+      identity = stored;
+    } else {
+      try {
+        identity = await ensureDevice();
+      } catch (e) {
+        return { ok: false, status: 0, error: e instanceof DeviceSetupError ? e.error : apiError("NETWORK") };
+      }
     }
 
     const call = (id: DeviceCredentials) =>
       send(path, { ...init, headers: { ...(init.headers as Record<string, string>), ...buildAuthHeaders(id) } });
 
     let result = await toResult<T>(await call(identity));
-    if (!result.ok && result.status === 401 && REREGISTER_CODES.has(result.error.code)) {
+    if (reregister && !result.ok && result.status === 401 && REREGISTER_CODES.has(result.error.code)) {
       clearIdentity(deps.storage);
       try {
         identity = await registerNew();

@@ -112,6 +112,30 @@ describe("request", () => {
     expect(calls).toHaveLength(3);
   });
 
+  it("reregister: false면 401이어도 다시 등록하지 않는다 (U4 모두 지우기)", async () => {
+    const { client, identity, storage, calls } = setup([fail("DEVICE_UNKNOWN", 401)]);
+    let notified = 0;
+    client.onReRegistered(() => notified++);
+    expect(await client.request("/api/device", { method: "DELETE" }, { reregister: false })).toMatchObject({
+      ok: false,
+      status: 401,
+      error: { code: "DEVICE_UNKNOWN" },
+    });
+    expect(calls).toHaveLength(1);
+    expect(notified).toBe(0);
+    expect(loadIdentity(storage)).toEqual(identity);
+  });
+
+  it("reregister: false이고 저장된 기기가 없으면 요청 없이 401 AUTH_MISSING", async () => {
+    const { client, calls } = setup([], false);
+    expect(await client.request("/api/device", { method: "DELETE" }, { reregister: false })).toMatchObject({
+      ok: false,
+      status: 401,
+      error: { code: "AUTH_MISSING" },
+    });
+    expect(calls).toHaveLength(0);
+  });
+
   it("204는 data null", async () => {
     const { client } = setup([new Response(null, { status: 204 })]);
     expect(await client.request("/api/device", { method: "DELETE" })).toEqual({ ok: true, status: 204, data: null });

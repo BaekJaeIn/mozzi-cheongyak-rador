@@ -7,7 +7,8 @@ const COMPACT = /^(\d{4})(\d{2})(\d{2})(?!\d)/;
 const SEPARATED = /^(\d{4})\s*[.\-/년]\s*(\d{1,2})\s*[.\-/월]\s*(\d{1,2})(?!\d)/;
 
 export function parseSourceDate(value: unknown): IsoDate | null {
-  if (value === null || value === undefined) return null;
+  // 원천 값은 문자열·숫자뿐이다. 객체 등은 String()이 예외를 낼 수 있어 보지 않는다 (PBT seed 980816069)
+  if (typeof value !== "string" && typeof value !== "number") return null;
   const text = String(value).trim();
   const m = COMPACT.exec(text) ?? SEPARATED.exec(text);
   if (!m) return null;

@@ -67,7 +67,7 @@ RootLayout
 | `convert.ts` | `toProfile(answers)`, `fromProfile(profile)`, `mergeGroupEdit(current, edited, group)` |
 | `bands.ts` | `YEAR_BANDS`·`HOMELESS_BANDS`·`MONTHS_BANDS`, `lowerOf`, `bandOf` |
 | `amount.ts` | `formatManwon(n)`, `parseKoreanManwon(s)`(테스트용), `needsConfirm(field, n)`, `exceedsMax(n)` |
-| `regions.ts` | `SIDO_LIST`(17), `SIGUNGU_BY_SIDO`(서울 25·경기 31·인천 10) |
+| `regions.ts` | `SIDO_OPTIONS`(16), `SIGUNGU_BY_SIDO`(서울 25·경기 31·인천 11) |
 | `summary.ts` | `groupSummary(profile, group)` (설정 요약 한 줄) |
 | `hour.ts` | `hourLabel(h)` ("오전 9시") |
 | `storage.ts` | `loadStoredProfile`·`saveStoredProfile`·`loadDraft`·`saveDraft`·`clearDraft`·`loadNotify`·`saveNotify`·`clearAllPersonal` (KeyValueStorage 주입, 깨진 JSON 처리) |

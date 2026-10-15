@@ -1,4 +1,4 @@
-// DeviceRepository Node 구현 (C19, BR-U1-02~05, 11, 16)
+// DeviceRepository Node 구현 (C19, BR-U1-02~05, 11, 16, BR-U4-101)
 import "server-only";
 import type { DeviceAuthRecord, DeviceRepository, RegisterResult } from "@shared/db/repositories.ts";
 import { type DbClient, DbError } from "./client";
@@ -35,6 +35,11 @@ export function createDeviceRepository(db: DbClient): DeviceRepository {
       const { data, error } = await db.rpc("delete_device", { p_id: deviceId });
       if (error) throw new DbError("delete_device", error);
       return data === true;
+    },
+
+    async updateNotifySettings(deviceId, { hour, enabled }) {
+      const { error } = await db.from("devices").update({ notify_hour: hour, notify_enabled: enabled }).eq("id", deviceId);
+      if (error) throw new DbError("devices.updateNotifySettings", error);
     },
   };
 }

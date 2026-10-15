@@ -4,6 +4,8 @@ import { AppHeader } from "@/features/app-chrome/AppHeader";
 import { BottomNav } from "@/features/app-chrome/BottomNav";
 import { APP_NAME } from "@/features/app-chrome/constants";
 import { DeviceBootstrap } from "@/features/device/DeviceBootstrap";
+import { DISPLAY_MODE_SCRIPT } from "@/features/display-mode/display-mode";
+import { ProfileProvider, SyncOnReady } from "@/features/profile/ProfileProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,14 +23,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    // data-mode: 일반(normal) / 쉬운 모드(easy). 전환은 U4에서 구현
-    <html lang="ko" data-mode="normal">
+    // data-mode: 일반(normal) / 쉬운 모드(easy). 저장된 모드는 그리기 전에 스크립트가 바꾼다 (BR-U4-83)
+    <html lang="ko" data-mode="normal" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: DISPLAY_MODE_SCRIPT }} />
+      </head>
       <body className="min-h-dvh bg-canvas">
-        <AppHeader title={APP_NAME} />
-        <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
-          <DeviceBootstrap>{children}</DeviceBootstrap>
-        </main>
-        <BottomNav />
+        <ProfileProvider>
+          <AppHeader title={APP_NAME} />
+          <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
+            <DeviceBootstrap>
+              <SyncOnReady />
+              {children}
+            </DeviceBootstrap>
+          </main>
+          <BottomNav />
+        </ProfileProvider>
       </body>
     </html>
   );

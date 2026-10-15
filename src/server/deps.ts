@@ -10,6 +10,14 @@ import { createNoticeRepository } from "./db/notice-repository";
 import { createProfileRepository } from "./db/profile-repository";
 import { createReferenceRepository } from "./db/reference-repository";
 import { getKeyring } from "./security/keyring";
+import { districtsCache } from "./cache/reference-cache";
+import {
+  createDeleteDeviceHandler,
+  createNotifySettingsHandler,
+  createSaveProfileHandler,
+  NOTIFY_MAX_BODY_BYTES,
+  PROFILE_MAX_BODY_BYTES,
+} from "./handlers/profile-settings";
 
 export const deviceRepository = () => createDeviceRepository(getDb());
 export const profileRepository = () => createProfileRepository(getDb());
@@ -33,3 +41,22 @@ export async function pingDb(): Promise<void> {
   const { error } = await getDb().from("districts").select("id").limit(1);
   if (error) throw new DbError("health.ping", error);
 }
+
+// ---------- U4 API (S3) ----------
+export const saveProfileRoute = withDevice(
+  createSaveProfileHandler({
+    profiles: profileRepository,
+    keyring: getKeyring,
+    activeDistrictIds: async () => (await districtsCache.get()).filter((d) => d.active).map((d) => d.id),
+    recompute: (deviceId, asOf) => judgementService().recomputeForDevice(deviceId, asOf),
+    now: () => new Date(),
+  }),
+  { route: "PUT /api/profile", maxBodyBytes: PROFILE_MAX_BODY_BYTES },
+);
+
+export const notifySettingsRoute = withDevice(createNotifySettingsHandler(deviceRepository), {
+  route: "PUT /api/notify-settings",
+  maxBodyBytes: NOTIFY_MAX_BODY_BYTES,
+});
+
+export const deleteDeviceRoute = withDevice(createDeleteDeviceHandler(deviceRepository), { route: "DELETE /api/device" });

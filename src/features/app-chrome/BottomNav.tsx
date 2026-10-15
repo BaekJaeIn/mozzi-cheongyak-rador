@@ -1,11 +1,12 @@
 "use client";
 
-// 하단 메뉴: 피드 / 관심 공고 / 설정 (frontend-components.md §2)
+// 하단 메뉴: 피드 / 관심 공고 / 설정 (frontend-components.md §2, U4 BR-U4-03 숨김)
 // - 터치 영역 48px 이상, 라벨 16px 이상
 // - 현재 위치는 색 + 굵기 + 위쪽 막대로 표시 (색만으로 구분하지 않음)
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useProfile } from "@/features/profile/ProfileProvider";
 
 interface NavItem {
   href: string;
@@ -61,8 +62,16 @@ export function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" || pathname.startsWith("/notice/") : pathname.startsWith(href);
 }
 
+/** 마법사(/profile/*)와 처음 실행(프로필 없음)에서는 숨긴다 (BR-U4-03). 기기 저장을 읽기 전에도 숨긴다 */
+export function shouldShowNav(pathname: string, loaded: boolean, hasProfile: boolean): boolean {
+  if (pathname.startsWith("/profile")) return false;
+  return loaded && hasProfile;
+}
+
 export function BottomNav() {
   const pathname = usePathname() ?? "/";
+  const { loaded, stored } = useProfile();
+  if (!shouldShowNav(pathname, loaded, stored !== null)) return null;
   return (
     <nav aria-label="주요 메뉴" className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface">
       <ul className="mx-auto flex w-full max-w-xl">

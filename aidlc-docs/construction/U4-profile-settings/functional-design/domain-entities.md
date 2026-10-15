@@ -24,7 +24,9 @@ interface WizardStep {
   /** 지금까지의 답으로 이 화면을 보일지 (BR-U4-10) */
   visible(answers: WizardAnswers): boolean;
   /** 필수 화면: [잘 모르겠어요] 없음, 답이 있어야 [다음] (BR-U4-50) */
-  required: boolean | ((answers: WizardAnswers) => boolean);
+  required: boolean;
+  /** [잘 모르겠어요] 버튼 (필수·선호 화면에는 없음, BR-U4-52) */
+  allowUnknown: boolean;
   /** 이 화면이 채우는 답 키 (안 보이게 되면 지울 키, BR-U4-12) */
   fields: AnswerKey[];
 }

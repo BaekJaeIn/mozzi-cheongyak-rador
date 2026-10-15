@@ -6,15 +6,18 @@ import { generateDeviceId, generateToken, hashToken } from "@shared/security/tok
 export interface MemoryDevices extends DeviceRepository {
   records: Map<string, DeviceAuthRecord>;
   touches: { deviceId: string; now: Date }[];
+  notify: Map<string, { hour: number; enabled: boolean }>;
   nextRegisterResult?: RegisterResult;
 }
 
 export function createMemoryDevices(): MemoryDevices {
   const records = new Map<string, DeviceAuthRecord>();
   const touches: { deviceId: string; now: Date }[] = [];
+  const notify = new Map<string, { hour: number; enabled: boolean }>();
   const repo: MemoryDevices = {
     records,
     touches,
+    notify,
     async register(deviceId, tokenHash) {
       if (repo.nextRegisterResult) return repo.nextRegisterResult;
       const existing = records.get(deviceId);
@@ -31,7 +34,11 @@ export function createMemoryDevices(): MemoryDevices {
       if (record) record.lastSeenAt = now;
     },
     async deleteAll(deviceId) {
+      notify.delete(deviceId);
       return records.delete(deviceId);
+    },
+    async updateNotifySettings(deviceId, settings) {
+      notify.set(deviceId, { ...settings });
     },
   };
   return repo;

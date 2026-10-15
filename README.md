@@ -16,7 +16,8 @@
 
 ```text
 src/app/                  화면과 API 라우트
-src/features/             화면 기능 (app-chrome, device, …)
+src/features/             화면 기능 (app-chrome, device, profile, settings, display-mode, …)
+src/features/profile/model/  마법사·저장·동기화 순수 로직 (React 없음, 단위·속성 테스트)
 src/server/               서버 전용 코드 (환경 변수, 인증, DB, 핸들러)
 supabase/functions/_shared/  Node·Deno 공용 순수 코드 (npm 패키지 import 금지)
 supabase/functions/_lib/     Edge Function 전용 코드 (Deno: DB·HTTP·Gemini)
@@ -79,6 +80,21 @@ FC_SEED=123456 npm test -- supabase/functions/_shared/domain
 
 [`.env.example`](.env.example)에 목록이 있습니다. 비밀 값은 저장소에 커밋하지 않습니다.
 브라우저에 노출되는 값은 `NEXT_PUBLIC_VAPID_PUBLIC_KEY` 하나뿐이어야 합니다.
+
+## 화면과 API (U4: 내 정보·설정)
+
+| 경로 | 내용 |
+|---|---|
+| `/` | 프로필이 없으면 처음 실행 안내, 입력 중이면 마법사로, 있으면 피드(U5) |
+| `/profile/setup` | 입력 마법사 (`?redo=1`: 지금 값으로 처음부터 다시) |
+| `/profile/edit/[group]` | 설정에서 그룹 고치기 (basic·residence·housing·savings·money·districts·prefs) |
+| `/settings` | 내 정보 요약·고치기, 알림 시각·켜기/끄기, 쉬운 모드, 모두 지우기 |
+| `PUT /api/profile` | 내 정보 저장(금액 암호화) + 이 기기 판정 재계산 |
+| `PUT /api/notify-settings` | `{ hour: 0~23, enabled }` |
+| `DELETE /api/device` | 이 기기의 서버 정보 모두 삭제 |
+
+- 내 정보는 **휴대폰(localStorage)이 원본**이고 서버는 판정·알림용 사본입니다. 서버 저장이 실패하면 앱을 다시 열 때·인터넷이 연결될 때 자동으로 다시 보냅니다.
+- 기기 저장 키: `mz.device`(U1), `mz.profile`, `mz.profile.draft`, `mz.notify`, `mz.display`, `mz.bookmarks`(U5).
 
 ## 수집·분석 함수 (Edge Functions)
 

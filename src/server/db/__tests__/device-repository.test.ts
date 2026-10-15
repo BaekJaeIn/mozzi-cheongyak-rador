@@ -52,6 +52,21 @@ describe("touch / deleteAll", () => {
     expect(calls[0]?.chain[0]).toEqual({ method: "update", args: [{ last_seen_at: now.toISOString() }] });
   });
 
+  it("updateNotifySettings는 notify_hour·notify_enabled를 갱신한다 (BR-U4-101)", async () => {
+    const { db, calls } = createFakeDb(() => ({ data: null, error: null }));
+    await createDeviceRepository(db).updateNotifySettings(ID, { hour: 20, enabled: false });
+    expect(calls[0]).toMatchObject({ kind: "from", name: "devices" });
+    expect(calls[0]?.chain).toEqual([
+      { method: "update", args: [{ notify_hour: 20, notify_enabled: false }] },
+      { method: "eq", args: ["id", ID] },
+    ]);
+  });
+
+  it("updateNotifySettings DB 오류면 DbError", async () => {
+    const { db } = createFakeDb(() => ({ data: null, error: { message: "boom" } }));
+    await expect(createDeviceRepository(db).updateNotifySettings(ID, { hour: 9, enabled: true })).rejects.toBeInstanceOf(DbError);
+  });
+
   it("deleteAll은 RPC 결과(true/false)를 돌려준다", async () => {
     const { db } = createFakeDb(() => ({ data: false, error: null }));
     await expect(createDeviceRepository(db).deleteAll(ID)).resolves.toBe(false);
