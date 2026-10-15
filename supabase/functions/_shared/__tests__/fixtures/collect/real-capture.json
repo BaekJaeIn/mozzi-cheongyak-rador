@@ -1,6 +1,12 @@
 {
   "files": [
     {
+      "file": "real-applyhome.json",
+      "source": "https://api.odcloud.kr/api/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail",
+      "bytes": 85617,
+      "capturedAt": "2026-10-15"
+    },
+    {
       "file": "real-gh-detail-sr7150.html",
       "source": "https://apply.gh.or.kr/sb/sr/sr7150/selectPbancDetailView.do",
       "bytes": 35955,
@@ -16,6 +22,18 @@
       "file": "real-gh-main.html",
       "source": "https://apply.gh.or.kr/co/coa/selectMainView.do",
       "bytes": 63284,
+      "capturedAt": "2026-10-15"
+    },
+    {
+      "file": "real-lh-detail-1.json",
+      "source": "https://apis.data.go.kr/B552555/lhLeaseNoticeDtlInfo1/getLeaseNoticeDtlInfo1",
+      "bytes": 4828,
+      "capturedAt": "2026-10-15"
+    },
+    {
+      "file": "real-lh-list.json",
+      "source": "https://apis.data.go.kr/B552555/lhLeaseNoticeInfo1/lhLeaseNoticeInfo1",
+      "bytes": 90379,
       "capturedAt": "2026-10-15"
     }
   ]

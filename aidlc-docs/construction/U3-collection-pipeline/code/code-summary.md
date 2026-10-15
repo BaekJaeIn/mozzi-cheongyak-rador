@@ -35,7 +35,7 @@
 |---|---|
 | `npm run typecheck` | ✅ 오류 없음 |
 | `npm run lint` | ✅ 오류·경고 없음 |
-| `npm test` | ✅ 39개 파일, **339개 테스트** 통과 (U1·U2 210 + U3 129), 서로 다른 seed로 반복 확인 |
+| `npm test` | ✅ 39개 파일, **350개 테스트** 통과 (U1·U2 213 + U3 137), 서로 다른 seed로 반복 확인 |
 | `npm run deno:check` | ✅ `_shared`·`_lib`·`collect`·`analyze` 전체 (deno 2.5.6) |
 | `npm run build` | ✅ 성공 |
 | DB 함수 (로컬 대체 확인) | ✅ Docker가 없어 PGlite(WASM Postgres)에 cron·Vault·pg_net 대역을 두고 0002~0007 적용 + pgTAP 파일 실행: `collect` 23/23, `rpc` 25/25, `reference` 9/9, `security` 31/32(실패 1건은 대역용 임시 테이블의 RLS — 실제 DB와 무관). **push 후 CI `db-and-e2e`(실제 pgTAP)·`ci`(deno check) 통과 — 커밋 77e31d8** |
@@ -65,14 +65,16 @@
 | 소스 | 결과 |
 |---|---|
 | GH | ✅ 메인 카드 12건·상세 2건(sr7150·sr7155) 캡처. 첨부는 `apply-cdn.gh.or.kr/sr/<경로>/selectFileDown.do` 링크, 공고문 PDF 내려받기 확인(`%PDF-`, 1~10MB). 보완: `&#039;` 같은 숫자 문자 참조 풀기, 첨부 이름 끝 "(N Byte)" 제거, PDF 고르기를 공고문 > 공고 > 모집 순으로(포스터·팸플릿·주택내역 뒤로). 지금 GH 공고에는 3기 신도시가 없고 잘못 매칭도 없음 |
-| 청약홈 | ⏳ `.env.local`에 `DATA_GO_KR_API_KEY`가 없어 대기 |
-| LH | ⏳ 같은 이유로 대기 (첨부 데이터셋 이름·지구 키워드 확인이 남음) |
+| 청약홈 | ✅ 1쪽 캡처(경기·인천 40행 저장). 필드 매핑 그대로 동작. 첨부 정보는 없음(RK-U3-2 예상대로) — 청약홈만 있는 민간 분양은 PDF 없이 표준 요건으로 판정 |
+| LH | ✅ 목록 1쪽(100행 중 경기·인천 주택 1건 — 나머지는 토지·상가·다른 시도)·상세 1건. 첨부는 `dsAhflInfo`의 `apply.lh.or.kr/lhapply/lhFile.do?fileid=…`, 공고문 PDF 내려받기 확인. 보완: 접수 시작이 `SBSC_ACP_ST_DT`에만 있는 경우 |
+| 지구 매칭 | 청약홈 인천계양 2건은 계양으로 찾음. 잘못 매칭 2가지 발견 → **BR-U2-07** 추가(대표 키워드로 찾았거나 다른 "지구"를 밝힌 공고에는 동 키워드 매칭을 쓰지 않음): 계양 공고 경계의 "부천시 대장동" → 부천 대장 ✗, "남양주진접2지구"(진접읍) → 왕숙 ✗. 키워드 데이터는 그대로 |
+| 개인정보 | 전화번호 필드(`MDHS_TELNO`·`SIL_OFC_TLNO`)는 하이픈 없이 와서 필드 이름으로 가림. 키·`serviceKey` 없음을 테스트로 확인 |
 
 ## 5. 남은 일
 
 | 단계 | 내용 | 필요 |
 |---|---|---|
-| Step 12 | GH 완료. 청약홈·LH 캡처 → 파서·첨부 추출·지구 키워드 확정 (RK-U3-2) | **`.env.local`에 `DATA_GO_KR_API_KEY` 추가** |
+| Step 12 | ✅ 완료 (GH·청약홈·LH) | — |
 | Step 15 | push → CI(`deno check`, pgTAP 0007) | ✅ 완료 (CI 통과) |
 | 배포 | setup-guide-u3.md 1~7단계 | 사용자 작업 |
 | Step 16 | 골든 세트 (운영 수집·분석 후) | 사용자 대조 확인 |

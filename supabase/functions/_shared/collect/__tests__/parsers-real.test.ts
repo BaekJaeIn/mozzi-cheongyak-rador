@@ -4,7 +4,9 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { matchDistricts } from "../../domain/district-matcher.ts";
 import { DISTRICTS } from "../../eligibility/reference-data.ts";
+import { parseApplyhomePage } from "../parsers/applyhome.ts";
 import { ghCardToRaw, ghNetFunnelActive, parseGhAttachments, parseGhCards } from "../parsers/gh.ts";
+import { isLhErrorBody, parseLhDetail, parseLhListPage } from "../parsers/lh.ts";
 import { htmlToText } from "../parsers/html.ts";
 import { pickNoticePdf } from "../pdf-locator.ts";
 
@@ -74,6 +76,88 @@ describe("GH 실제 응답", () => {
       expect(text).not.toMatch(/\b0(?!00-0000-0000)\d{1,3}-\d{3,4}-\d{4}\b/);
       expect(text).not.toMatch(/[A-Za-z0-9._%+-]+@(?!example\.invalid)[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
       expect(text).not.toMatch(/<script/i);
+    }
+  });
+});
+
+describe("청약홈 실제 응답", () => {
+  const json = JSON.parse(real("real-applyhome.json")) as { data: Record<string, unknown>[] };
+  const page = parseApplyhomePage(json);
+  const notice = (no: string) => page.notices.find((n) => n.sourceNoticeNo === no)!;
+
+  it("행 40건 모두 경기·인천 (캡처 때 경기·인천을 앞에 둠), 첨부 없음", () => {
+    expect(page.rowCount).toBe(40);
+    expect(page.notices).toHaveLength(40);
+    expect(page.notices.every((n) => n.attachments.length === 0 && n.originalUrl.startsWith("https://www.applyhome.co.kr/"))).toBe(true);
+  });
+
+  it("필드 매핑: 신혼희망타운 공공분양 (특별공급 시작이 접수 시작)", () => {
+    const row = json.data.find((r) => r.PBLANC_NO === "2026820010")!;
+    expect(notice("2026820010")).toMatchObject({
+      title: "인천계양 A17블록 신혼희망타운(공공분양)(본청약)",
+      supplyTypeText: "분양주택 국민 신혼희망타운",
+      tenureHint: "sale",
+      dates: { applyStart: row.SPSPLY_RCEPT_BGNDE ?? row.RCEPT_BGNDE, applyEnd: "2026-10-27" },
+    });
+  });
+
+  it("지구 매칭: 인천계양 2건만 계양 — 경계의 '부천시 대장동'·진접2지구는 매칭하지 않는다 (BR-U2-07)", () => {
+    const matched = page.notices
+      .map((n) => [n.sourceNoticeNo, matchDistricts({ title: n.title, complexName: n.complexName, location: n.location }, DISTRICTS)] as const)
+      .filter(([, ids]) => ids.length > 0);
+    expect(matched).toEqual([
+      ["2026820010", ["gyeyang"]],
+      ["2026000414", ["gyeyang"]],
+    ]);
+  });
+});
+
+describe("LH 실제 응답", () => {
+  const list = JSON.parse(real("real-lh-list.json"));
+  const detail = JSON.parse(real("real-lh-detail-1.json"));
+
+  it("목록: 100행 중 경기·인천 주택 공고만 (토지·상가·다른 시도 제외)", () => {
+    const { rowCount, candidates } = parseLhListPage(list);
+    expect(rowCount).toBe(100);
+    expect(candidates.map((c) => c.notice.sourceNoticeNo)).toEqual(["2015122300020880"]);
+    expect(candidates[0]!.detailParams).toEqual({
+      PAN_ID: "2015122300020880",
+      CCR_CNNT_SYS_DS_CD: "03",
+      SPL_INF_TP_CD: "135",
+      UPP_AIS_TP_CD: "13",
+      AIS_TP_CD: "26",
+    });
+    expect(candidates[0]!.notice).toMatchObject({ supplyTypeText: "주거복지 매입임대", dates: { applyEnd: "2026.10.23" } }); // 원천 형식 그대로, normalize의 parseSchedule이 바꾼다
+  });
+
+  it("상세: 접수 시작은 ACP_DTTM이 비면 SBSC_ACP_ST_DT, 열 이름 행은 첨부에서 빠진다", () => {
+    const d = parseLhDetail(detail);
+    expect(d.applyStart).toBe("2026-10-20");
+    expect(d.resultAt).toBeNull();
+    expect(d.attachments).toHaveLength(4);
+    expect(d.attachments.every((a) => a.url.startsWith("https://apply.lh.or.kr/lhapply/lhFile.do?fileid="))).toBe(true);
+  });
+
+  it("상세: hwp는 건너뛰고 첫 공고문(PDF)을 고른다", () => {
+    expect(pickNoticePdf(parseLhDetail(detail).attachments)).toEqual({
+      name: "공고문(PDF) 여기가_입주자모집공고문_5차_프리웰.pdf",
+      url: "https://apply.lh.or.kr/lhapply/lhFile.do?fileid=68871365",
+    });
+  });
+
+  it("오류 봉투로 오인하지 않는다", () => {
+    expect(isLhErrorBody(real("real-lh-list.json"))).toBe(false);
+    expect(isLhErrorBody(real("real-lh-detail-1.json"))).toBe(false);
+  });
+});
+
+describe("JSON 픽스처 개인정보·키", () => {
+  it("전화번호 필드는 가려져 있고, 키·serviceKey가 없다", () => {
+    for (const f of ["real-applyhome.json", "real-lh-list.json", "real-lh-detail-1.json"]) {
+      const text = real(f);
+      expect(text).not.toMatch(/serviceKey/i);
+      for (const m of text.matchAll(/"[A-Z_]*(?:TELNO|TLNO)":\s*"([^"]*)"/g)) expect(m[1]).toMatch(/^(0000000000|[^\d]*)$/);
+      expect(text).not.toMatch(/\b0(?!00-0000-0000)\d{1,3}-\d{3,4}-\d{4}\b/);
     }
   });
 });

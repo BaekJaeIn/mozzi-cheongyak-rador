@@ -57,7 +57,12 @@ function maskText(s) {
 function maskJson(value) {
   if (typeof value === "string") return maskText(value);
   if (Array.isArray(value)) return value.map(maskJson);
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, maskJson(v)]));
+  if (value && typeof value === "object") {
+    // 전화번호 필드(MDHS_TELNO, SIL_OFC_TLNO 등)는 하이픈 없이 오기도 해서 이름으로 가린다 (열 이름 행의 글자는 둔다)
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, /TELNO|TLNO/i.test(k) && typeof v === "string" && /\d/.test(v) ? "0000000000" : maskJson(v)]),
+    );
+  }
   return value;
 }
 

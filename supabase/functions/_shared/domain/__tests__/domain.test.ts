@@ -81,6 +81,33 @@ describe("matchDistricts (BR-U2-01~06)", () => {
   it("고양시 덕양구는 '덕양구'만 있어도 시군구로 인정", () => {
     expect(matchDistricts({ title: "공공임대", location: "덕양구 화전동" }, DISTRICTS)).toEqual(["changneung"]);
   });
+  // BR-U2-07 — 실제 청약홈 공고 (2026-10-15, real-applyhome.json)
+  it("대표 키워드로 찾으면 동 키워드는 보지 않는다: 인천계양 지구 경계의 '부천시 대장동'은 부천 대장이 아니다", () => {
+    expect(
+      matchDistricts(
+        {
+          title: "인천계양 A17블록 신혼희망타운(공공분양)(본청약)",
+          location:
+            "인천광역시 계양구 귤현동, 동양동, 박촌동, 병방동, 상야동, 경기도 부천시 대장동, 서울특별시 강서구 오곡동 일원 인천계양 테크노밸리 공공주택지구 내 A17블록",
+        },
+        DISTRICTS,
+      ),
+    ).toEqual(["gyeyang"]);
+  });
+  it("다른 이름의 지구를 밝히면 동 키워드는 보지 않는다: 남양주진접2지구는 왕숙이 아니다", () => {
+    expect(
+      matchDistricts(
+        {
+          title: "남양주진접2지구 A-4블록 신혼희망타운(공공분양) 잔여세대 추가입주자모집공고",
+          location: "경기도 남양주시 진접읍 내각리, 연평리 일원 남양주진접2 공공주택지구 A-4블록",
+        },
+        DISTRICTS,
+      ),
+    ).toEqual([]);
+  });
+  it("지구 이름이 있어도 대표 키워드면 매칭: 부천대장 공공주택지구", () => {
+    expect(matchDistricts({ title: "부천대장 A5블록 공공분양", location: "경기도 부천시 대장동 부천대장 공공주택지구" }, DISTRICTS)).toEqual(["daejang"]);
+  });
 });
 
 describe("validateRequirements", () => {

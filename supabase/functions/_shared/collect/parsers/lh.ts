@@ -1,5 +1,6 @@
 // LH 분양임대 공고 목록 (data.go.kr 15058530) + 상세 (15057999) 응답 파서 (BR-U3-03·04)
-// 목록·상세 구조는 cheongYak-radar(lh.ts, parsers.ts)에서 가져옴. 첨부(공고문 PDF) 추출은 새로 추가 — Step 12 실제 응답으로 확정.
+// 목록·상세 구조는 cheongYak-radar(lh.ts, parsers.ts)에서 가져옴. 첨부는 Step 12 실제 응답(real-lh-*)으로 확인:
+// dsAhflInfo의 AHFL_URL(apply.lh.or.kr/lhapply/lhFile.do?fileid=…), 이름은 SL_PAN_AHFL_DS_CD_NM("공고문(PDF)") + CMN_AHFL_NM. dsAhflInfoNm은 열 이름 행이라 주소가 http가 아니어서 걸러진다.
 import { findSido } from "../../domain/profile.ts";
 import { parseDateRange, parseSourceDate } from "../dates.ts";
 import type { Attachment, RawNotice } from "../types.ts";
@@ -101,7 +102,11 @@ export interface LhDetail {
 /** 상세 응답 → 접수 시작(공급일정 중 가장 이른 시작), 발표일, 첨부 */
 export function parseLhDetail(json: unknown): LhDetail {
   const schedules = lhRows(json, "dsSplScdl");
-  const starts = schedules.map((r) => parseDateRange(String(r.ACP_DTTM ?? ""))[0]).filter((d): d is string => !!d).sort();
+  // 실제 응답(Step 12)은 ACP_DTTM이 "~"뿐이고 시작일이 SBSC_ACP_ST_DT에만 있는 경우가 있다
+  const starts = schedules
+    .map((r) => parseDateRange(String(r.ACP_DTTM ?? ""))[0] ?? parseSourceDate(r.SBSC_ACP_ST_DT))
+    .filter((d): d is string => !!d)
+    .sort();
   const results = schedules.map((r) => parseSourceDate(r.PZWR_ANC_DT)).filter((d): d is string => !!d).sort();
 
   // 첨부 데이터셋: 이름에 "Ahfl"이 들어간 블록 (예: dsAhflInfo)

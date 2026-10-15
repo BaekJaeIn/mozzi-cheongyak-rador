@@ -696,3 +696,27 @@
 **Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 12 일부 완료 (키 대기)
 
 ---
+
+## U3 Code Generation — 질문 (Decoding 키 위치)
+**Timestamp**: 2026-10-15T13:35:00Z
+**User Input**: "공공데이터포털에서 decoding키를 어디서 확인해?"
+**AI Response**: "공공데이터포털 로그인 → 마이페이지 → 데이터활용 → Open API → 활용신청 현황에서 신청한 API 상세의 '일반 인증키(Decoding)' 위치 안내. 필요한 활용신청 3개(15098547·15058530·15057999), 승인 직후 활성화 지연 가능성, .env.local 입력 형식 안내."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 12 키 대기
+
+---
+
+## U3 Code Generation — 키 입력 완료
+**Timestamp**: 2026-10-15T13:45:00Z
+**User Input**: "넣었어"
+**AI Response**: "`.env.local`의 DATA_GO_KR_API_KEY로 청약홈·LH 캡처 실행 (키 값은 출력·저장하지 않음)."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 12 계속
+
+---
+
+## U3 Code Generation — Step 12 청약홈·LH 캡처·보완, 완료 보고
+**Timestamp**: 2026-10-15T14:10:00Z
+**User Input**: (없음)
+**AI Response**: "청약홈 1쪽(경기·인천 40행)·LH 목록 1쪽·LH 상세 1건 캡처(전화번호 필드 이름으로 가림, 키 없음 확인). 발견·보완: (1) 지구 잘못 매칭 2가지 — 인천계양 공고 경계의 '부천시 대장동' → 부천 대장, '남양주진접2지구'(진접읍) → 왕숙 → BR-U2-07(대표 키워드로 찾았거나 '지구'를 밝힌 공고에는 동 키워드 매칭 안 함) 추가, U2 business-rules·OI-U2-1 갱신, 키워드 데이터·마이그레이션 변경 없음. (2) LH 접수 시작이 SBSC_ACP_ST_DT에만 있는 경우 보완. (3) LH 첨부 dsAhflInfo·공고문 PDF 내려받기 확인, 청약홈은 첨부 없음 확인. 테스트 39파일 350개 통과, typecheck·lint·deno check 통과. Step 12 [x]. U3 Code Generation 완료 메시지 제시 (Step 16 골든 세트는 배포 후)."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2 완료, 승인 대기
+
+---
