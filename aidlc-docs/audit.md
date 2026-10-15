@@ -720,3 +720,59 @@
 **Context**: CONSTRUCTION - U3 Code Generation Part 2 완료, 승인 대기
 
 ---
+
+## U3 Code Generation — 질문 (배포 1단계)
+**Timestamp**: 2026-10-15T14:20:00Z
+**User Input**: "운영 배포 1단계 어떻게 해?"
+**AI Response**: "1단계(CI 통과 확인) 방법 안내: GitHub Actions 페이지에서 ci·db-and-e2e 초록 체크 확인. 77e31d8은 통과했으나 Step 12 커밋 2개(9d893d9·6052023)는 push 전이라 push 후 다시 확인 필요 — push 여부 확인 요청."
+**Context**: CONSTRUCTION - U3 Code Generation 완료 승인 대기, 배포 안내
+
+---
+
+## U3 Code Generation — 질문 (배포 2단계)
+**Timestamp**: 2026-10-15T14:30:00Z
+**User Input**: "2단계는?"
+**AI Response**: "2단계(함수 시크릿) 안내: CRON_SECRET 생성, Gemini 키 발급처, AMOUNT_ENC_KEY는 운영(Vercel) 값, 셸 기록에 남지 않게 gitignore된 .env.functions.local + `supabase secrets set --env-file` 방식 권장, link 확인, secrets list로 확인."
+**Context**: CONSTRUCTION - U3 배포 안내
+
+---
+
+## U3 Code Generation — 질문 (배포 3단계)
+**Timestamp**: 2026-10-15T14:40:00Z
+**User Input**: "3단계는?"
+**AI Response**: "3단계(Vault) 안내: 프로젝트 ref로 채운 collect_url·analyze_url, cron_secret은 2단계와 같은 값. 쿼리 기록에 남지 않게 대시보드 Vault 화면(Add new secret) 권장, SQL 방식 대안, 이름 3개 확인 쿼리."
+**Context**: CONSTRUCTION - U3 배포 안내
+
+---
+
+## U3 배포 — 6단계 오류 문의
+**Timestamp**: 2026-10-15T15:00:00Z
+**User Input**: "6단계 하고 있는데 [붙여 넣은 PowerShell 오류: \"System.Collections.IDictionary\" 유형으로 변환할 수 없습니다 … + ...  -X POST -H \"Authorization: Bearer [CRON_SECRET 일부 — 감사 기록에서 가림] ... [Invoke-WebRequest], ParameterBindingException] 이런 에러가 나"
+**AI Response**: "원인: PowerShell의 curl은 Invoke-WebRequest 별칭 → curl.exe 사용 안내 (Read-Host로 비밀 값 입력해 기록에 남지 않게). 채팅에 CRON_SECRET 일부가 노출되어 확인 후 교체(시크릿·Vault 둘 다) 권고."
+**Context**: CONSTRUCTION - U3 배포 6단계
+
+---
+
+## U3 배포 — 6단계 401
+**Timestamp**: 2026-10-15T15:10:00Z
+**User Input**: "{\"error\":\"unauthorized\"} 이렇게 나와"
+**AI Response**: "`supabase secrets list` 확인: 앞서 붙여 넣은 Bearer 값이 CRON_SECRET 원래 값이 아니라 목록에 보이는 SHA-256 다이제스트와 일치 → 원래 값 대신 해시를 보낸 것이 401 원인. 노출된 것은 해시라 교체 권고 철회. Vault cron_secret도 해시로 넣었는지 확인, 원래 값을 모르면 새로 만들어 시크릿·Vault 둘 다 갱신 안내."
+**Context**: CONSTRUCTION - U3 배포 6단계
+
+---
+
+## U3 배포 — 6단계 수동 실행 성공
+**Timestamp**: 2026-10-15T15:30:00Z
+**User Input**: "6단계 하고 나서 [붙여 넣은 결과: collect runId c2754d71… — applyhome ok fetched 220 kept 1, lh_rental ok fetched 67 kept 1, gh ok fetched 12 kept 0, warnings 없음, groups 1, changed 1, saved 1, saveErrors 0, recompute devices 0 notices 1; analyze runId 161adb6f… — claimed 1, status done, units 3, hasSummary true, recomputeError null] 이렇게 나왔어"
+**AI Response**: "결과 해석: 세 소스 모두 성공·경고 없음, 청약홈·LH 같은 공고 1건이 한 묶음으로 저장, analyze가 공고문 PDF를 Gemini로 읽어 주택형 3개·요약 저장 성공, 등록 기기 0대라 판정 0건은 정상. 다음: 6단계 확인 SQL, 7단계 자동 실행 확인(내일 05:00·매시 30분), Step 16은 공고가 쌓인 뒤, Step 12 커밋 push·U3 승인 대기."
+**Context**: CONSTRUCTION - U3 배포 6단계 완료
+
+---
+
+## U3 Code Generation — 승인·push
+**Timestamp**: 2026-10-15T15:40:00Z
+**User Input**: "푸시하고 승인"
+**AI Response**: "U3 Code Generation 승인으로 기록 (Step 16 골든 세트는 공고가 쌓인 뒤 별도). aidlc-state U3 완료 표시, 커밋 후 origin main push → CI 확인. 다음: U4 Functional Design 시작."
+**Context**: CONSTRUCTION - U3 Code Generation 완료 → U4
+
+---
