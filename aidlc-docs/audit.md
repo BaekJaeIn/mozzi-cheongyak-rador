@@ -656,3 +656,19 @@
 **Context**: CONSTRUCTION - U3 Code Generation Part 2 진행
 
 ---
+
+## U3 Code Generation — Step 12·push 확인 요청
+**Timestamp**: 2026-10-15T13:00:00Z
+**User Input**: (없음)
+**AI Response**: "로컬 커밋 4c0c0cd (push 안 함). 확인 요청: (1) Step 12 — `.env.local`의 data.go.kr 키로 청약홈 1쪽·LH 목록 1쪽·상세 2건, GH 메인·상세 1건을 받아 키·URL 쿼리·개인정보 없이 픽스처로 저장해도 되는지, (2) push(→ CI deno check·pgTAP 0007) 해도 되는지."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2, 사용자 확인 대기
+
+---
+
+## U3 Code Generation — push 승인
+**Timestamp**: 2026-10-15T12:59:00Z
+**User Input**: "푸시 진행"
+**AI Response**: "push 승인으로 기록. audit.md 커밋 후 origin main에 push → CI(ci: deno check, db-and-e2e: pgTAP 0007) 확인. Step 12 실제 응답 캡처는 아직 확인 전이라 실행하지 않음."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 15 push
+
+---
