@@ -71,7 +71,7 @@
 
 - [x] **Step 13. CPU 측정** (RK-U3-4): base64 10MB·20MB, 전체 판정 재계산 2,000건 — Node에서 측정해 기록, 한도 근접 시 상한 조정
 - [x] **Step 14. 문서**: README(함수 로컬 실행·수동 실행), `code/setup-guide-u3.md`(첫 배포 7단계: 시크릿·Vault·db push·functions deploy·수동 실행 확인), `code/code-summary.md`
-- [ ] **Step 15. 검증**: typecheck·lint·test·build, 커밋 (push는 사용자 확인 후 → CI에서 `deno check`·pgTAP)
+- [x] **Step 15. 검증**: typecheck·lint·test·build, 커밋 (push는 사용자 확인 후 → CI에서 `deno check`·pgTAP)
 
 ### Part G. 골든 세트 (배포 후, 사용자 참여)
 

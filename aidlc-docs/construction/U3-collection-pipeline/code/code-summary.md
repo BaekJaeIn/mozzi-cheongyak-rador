@@ -37,7 +37,7 @@
 | `npm test` | ✅ 38개 파일, **329개 테스트** 통과 (U1·U2 210 + U3 119), 서로 다른 seed로 반복 확인 |
 | `npm run deno:check` | ✅ `_shared`·`_lib`·`collect`·`analyze` 전체 (deno 2.5.6) |
 | `npm run build` | ✅ 성공 |
-| DB 함수 (로컬 대체 확인) | ✅ Docker가 없어 PGlite(WASM Postgres)에 cron·Vault·pg_net 대역을 두고 0002~0007 적용 + pgTAP 파일 실행: `collect` 23/23, `rpc` 25/25, `reference` 9/9, `security` 31/32(실패 1건은 대역용 임시 테이블의 RLS — 실제 DB와 무관). **실제 pgTAP은 push 후 CI `db-and-e2e`에서 확인** |
+| DB 함수 (로컬 대체 확인) | ✅ Docker가 없어 PGlite(WASM Postgres)에 cron·Vault·pg_net 대역을 두고 0002~0007 적용 + pgTAP 파일 실행: `collect` 23/23, `rpc` 25/25, `reference` 9/9, `security` 31/32(실패 1건은 대역용 임시 테이블의 RLS — 실제 DB와 무관). **push 후 CI `db-and-e2e`(실제 pgTAP)·`ci`(deno check) 통과 — 커밋 77e31d8** |
 
 ### CPU 측정 (Step 13, RK-U3-4) — deno 2.5.6, 이 PC
 
@@ -64,6 +64,6 @@
 | 단계 | 내용 | 필요 |
 |---|---|---|
 | Step 12 | 실제 응답 캡처 → 파서·첨부 추출·지구 키워드 확정 (RK-U3-2) | **사용자 확인** (data.go.kr 키 사용) |
-| Step 15 | push → CI(`deno check`, pgTAP 0007) | **사용자 확인** |
+| Step 15 | push → CI(`deno check`, pgTAP 0007) | ✅ 완료 (CI 통과) |
 | 배포 | setup-guide-u3.md 1~7단계 | 사용자 작업 |
 | Step 16 | 골든 세트 (운영 수집·분석 후) | 사용자 대조 확인 |
