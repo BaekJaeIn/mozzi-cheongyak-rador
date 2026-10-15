@@ -13,6 +13,7 @@
 | Deno 전용 (`_lib/`) | `env.ts`, `http.ts`(User-Agent, PdfFetcher), `gemini.ts`(base64 `jsr:@std/encoding`, Extractor), `guard.ts`(POST·Bearer 확인, 실행 ID, 오류 500), `deps.ts`(조립), `db/{client,repositories,collect-repository}.ts` |
 | 함수 | `supabase/functions/collect/index.ts`, `supabase/functions/analyze/index.ts` |
 | DB | `supabase/migrations/0007_collect_pipeline.sql`, `supabase/tests/collect.test.sql`(23건) |
+| 캡처 (Step 12) | `scripts/capture-fixtures.mjs`, `_shared/__tests__/fixtures/collect/real-*`, `collect/__tests__/parsers-real.test.ts` |
 | 설정 | `supabase/config.toml`(두 함수 `verify_jwt = false`), `tsconfig.json`·`eslint.config.mjs`(analyze 제외), `scripts/deno-check.mjs`(`--no-lock`, deno 없으면 npm 배포본), `.env.example` |
 | 변경 | `_shared/domain/profile.ts`(`findSido`) |
 | 문서 | `README.md` "수집·분석 함수" 절, 배포 절 |
@@ -34,7 +35,7 @@
 |---|---|
 | `npm run typecheck` | ✅ 오류 없음 |
 | `npm run lint` | ✅ 오류·경고 없음 |
-| `npm test` | ✅ 38개 파일, **329개 테스트** 통과 (U1·U2 210 + U3 119), 서로 다른 seed로 반복 확인 |
+| `npm test` | ✅ 39개 파일, **339개 테스트** 통과 (U1·U2 210 + U3 129), 서로 다른 seed로 반복 확인 |
 | `npm run deno:check` | ✅ `_shared`·`_lib`·`collect`·`analyze` 전체 (deno 2.5.6) |
 | `npm run build` | ✅ 성공 |
 | DB 함수 (로컬 대체 확인) | ✅ Docker가 없어 PGlite(WASM Postgres)에 cron·Vault·pg_net 대역을 두고 0002~0007 적용 + pgTAP 파일 실행: `collect` 23/23, `rpc` 25/25, `reference` 9/9, `security` 31/32(실패 1건은 대역용 임시 테이블의 RLS — 실제 DB와 무관). **push 후 CI `db-and-e2e`(실제 pgTAP)·`ci`(deno check) 통과 — 커밋 77e31d8** |
@@ -59,11 +60,19 @@
 | `collect/__tests__/stored.test.ts` | 저장 공고 → BundleBase(대표 원천 PDF 우선, 옛 소스 제외), 첨부 검증, 상태·기록 행 |
 | `supabase/tests/collect.test.sql` | 저장·상태 조회, AI 필드 유지, 옛 공고 삭제, 예약 순서·겹침 없음·10분 만료·한도, 해제 2가지, cron 2개, Vault 없음 기록, anon 차단 |
 
-## 4. 남은 일
+## 4. 실제 응답 확인 (Step 12, 2026-10-15)
+
+| 소스 | 결과 |
+|---|---|
+| GH | ✅ 메인 카드 12건·상세 2건(sr7150·sr7155) 캡처. 첨부는 `apply-cdn.gh.or.kr/sr/<경로>/selectFileDown.do` 링크, 공고문 PDF 내려받기 확인(`%PDF-`, 1~10MB). 보완: `&#039;` 같은 숫자 문자 참조 풀기, 첨부 이름 끝 "(N Byte)" 제거, PDF 고르기를 공고문 > 공고 > 모집 순으로(포스터·팸플릿·주택내역 뒤로). 지금 GH 공고에는 3기 신도시가 없고 잘못 매칭도 없음 |
+| 청약홈 | ⏳ `.env.local`에 `DATA_GO_KR_API_KEY`가 없어 대기 |
+| LH | ⏳ 같은 이유로 대기 (첨부 데이터셋 이름·지구 키워드 확인이 남음) |
+
+## 5. 남은 일
 
 | 단계 | 내용 | 필요 |
 |---|---|---|
-| Step 12 | 실제 응답 캡처 → 파서·첨부 추출·지구 키워드 확정 (RK-U3-2) | **사용자 확인** (data.go.kr 키 사용) |
+| Step 12 | GH 완료. 청약홈·LH 캡처 → 파서·첨부 추출·지구 키워드 확정 (RK-U3-2) | **`.env.local`에 `DATA_GO_KR_API_KEY` 추가** |
 | Step 15 | push → CI(`deno check`, pgTAP 0007) | ✅ 완료 (CI 통과) |
 | 배포 | setup-guide-u3.md 1~7단계 | 사용자 작업 |
 | Step 16 | 골든 세트 (운영 수집·분석 후) | 사용자 대조 확인 |

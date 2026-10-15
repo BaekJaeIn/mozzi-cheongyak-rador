@@ -680,3 +680,19 @@
 **Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 15 완료
 
 ---
+
+## U3 Code Generation — Step 12 승인
+**Timestamp**: 2026-10-15T13:15:00Z
+**User Input**: "캡처 진행"
+**AI Response**: "Step 12 실행 승인으로 기록. `.env.local`의 data.go.kr 키로 청약홈·LH·GH 실제 응답을 받아 키·URL 쿼리·개인정보 없이 픽스처로 저장, 파서·첨부 추출·지구 키워드 확정."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 12 시작
+
+---
+
+## U3 Code Generation — Step 12 GH 캡처·보완
+**Timestamp**: 2026-10-15T13:25:00Z
+**User Input**: (없음)
+**AI Response**: "`.env.local`에 DATA_GO_KR_API_KEY가 없음(Supabase·암호화 키만 있음) → 키가 필요 없는 GH만 캡처. `scripts/capture-fixtures.mjs` 작성(키·URL 쿼리 제거, 전화번호·이메일 가림, script·style·주석 제거, 키 잔존 시 저장 거부). GH 메인 12건·상세 2건(sr7150·sr7155) `real-gh-*` 저장, 공고문 PDF 내려받기 확인(%PDF-). 보완: htmlToText 숫자 문자 참조, GH 첨부 이름 '(N Byte)' 제거, pickNoticePdf 공고문>공고>모집·부속 자료 뒤로(BR-U3-60 문구 갱신). `parsers-real.test.ts`·PDF 고르기 예시 추가. typecheck·lint 통과, 테스트 39파일 339개 통과, deno check 통과. 청약홈·LH는 키 추가 후 진행."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2, Step 12 일부 완료 (키 대기)
+
+---

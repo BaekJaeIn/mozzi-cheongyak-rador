@@ -1,0 +1,22 @@
+{
+  "files": [
+    {
+      "file": "real-gh-detail-sr7150.html",
+      "source": "https://apply.gh.or.kr/sb/sr/sr7150/selectPbancDetailView.do",
+      "bytes": 35955,
+      "capturedAt": "2026-10-15"
+    },
+    {
+      "file": "real-gh-detail-sr7155.html",
+      "source": "https://apply.gh.or.kr/sb/sr/sr7155/selectPbancDetailView.do",
+      "bytes": 26873,
+      "capturedAt": "2026-10-15"
+    },
+    {
+      "file": "real-gh-main.html",
+      "source": "https://apply.gh.or.kr/co/coa/selectMainView.do",
+      "bytes": 63284,
+      "capturedAt": "2026-10-15"
+    }
+  ]
+}

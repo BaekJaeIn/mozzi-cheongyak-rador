@@ -131,6 +131,16 @@ describe("PDF 고르기 (BR-U3-60)", () => {
     ).toBe("https://x/2.pdf");
     expect(pickNoticePdf([{ name: "공고문.hwp", url: "https://x/3.hwp" }])).toBeNull();
   });
+  it("공고문 > 공고 > 모집, 포스터·팸플릿·주택내역 같은 부속 자료는 뒤로 (실제 GH 첨부 이름)", () => {
+    const pick = (names: string[]) => pickNoticePdf(names.map((name, i) => ({ name, url: `https://x/${i}` })))?.name;
+    expect(pick(["2. 26년 매입임대주택 입주자 모집(자격완화) 포스터(260615).pdf", "1. 26년 매입임대주택 입주자 모집(자격완화) 공고문(수정260617).pdf"])).toBe(
+      "1. 26년 매입임대주택 입주자 모집(자격완화) 공고문(수정260617).pdf",
+    );
+    expect(pick(["다산지금A3 통합공공임대주택_팸플릿.pdf", "[공고]다산지금A3 통합공공임대주택 입주자 모집공고_28.05.28 공고.pdf"])).toBe(
+      "[공고]다산지금A3 통합공공임대주택 입주자 모집공고_28.05.28 공고.pdf",
+    );
+    expect(pick(["3. 입주자 모집 주택내역.pdf", "단지 안내.pdf"])).toBe("3. 입주자 모집 주택내역.pdf"); // 모두 0점이면 첫 PDF
+  });
 });
 
 describe("추출 검증 (BR-U3-63·64)", () => {

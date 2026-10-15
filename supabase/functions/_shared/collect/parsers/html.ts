@@ -1,5 +1,11 @@
 // HTML 공통 도우미 (cheongYak-radar parsers.ts에서 가져옴)
 
+// &#039; 같은 숫자 문자 참조 (실제 GH 제목에 쓰임). 범위 밖이면 그대로 둔다
+function numericEntity(whole: string, dec?: string, hex?: string): string {
+  const code = dec !== undefined ? Number(dec) : parseInt(hex ?? "", 16);
+  return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : whole;
+}
+
 /** HTML → 공백 정규화된 평문 (script/style/주석 제거) */
 export function htmlToText(html: string): string {
   return html
@@ -8,6 +14,7 @@ export function htmlToText(html: string): string {
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);|&#x([0-9a-f]+);/gi, numericEntity)
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")

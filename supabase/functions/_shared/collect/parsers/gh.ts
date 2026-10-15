@@ -1,5 +1,6 @@
 // GH 청약센터 메인 카드·대기열·상세 첨부 파서 (BR-U3-05)
-// 카드·대기열·상세 경로는 cheongYak-radar(parsers.ts)에서 가져옴. 상세 첨부 추출은 새로 추가 — Step 12 실제 HTML로 확정.
+// 카드·대기열·상세 경로는 cheongYak-radar(parsers.ts)에서 가져옴. 상세 첨부는 Step 12 실제 HTML(real-gh-*)로 확인:
+// 첨부는 apply-cdn.gh.or.kr/sr/<경로>/selectFileDown.do?… 링크이고, 링크 글자가 "파일명.pdf (크기 Byte)"다.
 import { parseSourceDate } from "../dates.ts";
 import type { Attachment, RawNotice } from "../types.ts";
 import { absoluteUrl, htmlToText } from "./html.ts";
@@ -85,13 +86,13 @@ export function ghCardToRaw(card: GhCard): RawNotice {
   };
 }
 
-/** 상세 페이지 → 첨부 (링크 글자나 주소에 .pdf가 있는 것) */
+/** 상세 페이지 → 첨부 (링크 글자나 주소에 .pdf가 있는 것). 링크 글자 끝의 "(1164034 Byte)"는 뺀다 */
 export function parseGhAttachments(html: string, pageUrl: string): Attachment[] {
   const out: Attachment[] = [];
   const seen = new Set<string>();
   for (const m of html.matchAll(/<a\b[^>]*\bhref="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)) {
     const href = m[1]!;
-    const name = htmlToText(m[2]!);
+    const name = htmlToText(m[2]!).replace(/\s*\(\s*[\d,]+\s*Bytes?\s*\)\s*$/i, "");
     if (!/\.pdf/i.test(name) && !/\.pdf/i.test(href)) continue;
     if (/^javascript:/i.test(href)) continue;
     const url = absoluteUrl(href, pageUrl);
