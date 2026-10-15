@@ -46,22 +46,22 @@
 
 ## 4. Vercel 프로젝트
 
-- [ ] https://vercel.com/new 에서 GitHub 저장소 가져오기
-- [ ] **프로젝트 이름을 정한다** → 주소가 `https://<이름>.vercel.app`이 됨. **이후 바꾸지 않는다** (부모님 휴대폰의 앱 설치·알림이 이 주소에 묶임)
-- [ ] Settings > Environment Variables (Production):
+- [x] https://vercel.com/new 에서 GitHub 저장소 가져오기
+- [x] **프로젝트 이름을 정한다** → 주소가 `https://<이름>.vercel.app`이 됨. **이후 바꾸지 않는다** (부모님 휴대폰의 앱 설치·알림이 이 주소에 묶임)
+- [x] Settings > Environment Variables (Production):
   | 이름 | 값 |
   |---|---|
   | `SUPABASE_URL` | Supabase Project Settings > API의 URL |
   | `SUPABASE_SERVICE_ROLE_KEY` | 같은 화면의 service_role 키 |
   | `AMOUNT_ENC_KEY_V1` | 3단계의 키 (`.env.local`과 같은 값) |
   | `AMOUNT_ENC_KEY_CURRENT` | `1` |
-- [ ] 함수 지역은 저장소의 `vercel.json`(`icn1`)이 적용됨. 미리보기 배포도 `vercel.json`에서 꺼 둠
-- [ ] 배포 후 확인: `https://<이름>.vercel.app/api/health` → `{"ok":true}`
+- [x] 함수 지역은 저장소의 `vercel.json`(`icn1`)이 적용됨. 미리보기 배포도 `vercel.json`에서 꺼 둠
+- [x] 배포 후 확인: `https://<이름>.vercel.app/api/health` → `{"ok":true}`
 
 ## 5. keepalive
 
-- [ ] GitHub 저장소 Settings > Secrets and variables > Actions > **Variables**에 `APP_URL` = `https://<이름>.vercel.app`
-- [ ] Actions > keepalive > Run workflow로 한 번 실행해 성공 확인
+- [x] GitHub 저장소 Settings > Secrets and variables > Actions > **Variables**에 `APP_URL` = `https://mozzi-cheongyak-rador.vercel.app`
+- [x] Actions > keepalive > Run workflow로 한 번 실행해 성공 확인
 
 ## 6. 운영 시작 후 2주 점검
 

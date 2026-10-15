@@ -413,3 +413,10 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# U3 수집·분석 함수: pg_cron이 CRON_SECRET(Bearer)으로 호출하고 함수 안에서 비교한다 (P-U3-S1)
+[functions.collect]
+verify_jwt = false
+
+[functions.analyze]
+verify_jwt = false

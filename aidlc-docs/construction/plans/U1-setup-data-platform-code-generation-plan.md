@@ -148,12 +148,12 @@
   - [x] 18.4 `npm run build`
   - [x] 18.5 `deno check`: Deno 없음 → CI에서 확인하는 것으로 기록
   - [x] 18.6 Docker 필요 항목(`db:reset`, `db:test`, `e2e`)은 **실행하지 않음**으로 기록하고 Build and Test 단계로 넘김
-- [ ] **Step 19. 외부 구축 (사용자 작업, setup-guide.md 기준)**
+- [x] **Step 19. 외부 구축 (사용자 작업, setup-guide.md 기준)**
   - [x] 19.1 Docker Desktop 설치 — 완료 (사용자 확인, 2026-10-14)
   - [x] 19.2 GitHub 저장소 생성 → AI가 로컬 `git init`·첫 커밋 준비 (push는 사용자 확인 후) — 완료 (커밋 5819cde, f2943a7 push, 2026-10-14)
   - [x] 19.3 운영 Supabase 프로젝트 생성·`supabase link`·`db push` — 완료 (사용자 확인, 2026-10-14)
-  - [ ] 19.4 Vercel 프로젝트 생성·환경 변수·첫 배포 (원하시면 Vercel 연동 도구로 AI가 도움)
-  - [ ] 19.5 keepalive 수동 실행 1번
+  - [x] 19.4 Vercel 프로젝트 생성·환경 변수·첫 배포 (원하시면 Vercel 연동 도구로 AI가 도움) — 완료 (https://mozzi-cheongyak-rador.vercel.app, /api/health ok, 2026-10-14)
+  - [x] 19.5 keepalive 수동 실행 1번 — 완료 (workflow_dispatch 성공, 2026-10-14)
 
 ---
 

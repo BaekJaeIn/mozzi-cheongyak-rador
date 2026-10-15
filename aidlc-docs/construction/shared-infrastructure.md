@@ -30,6 +30,6 @@
 
 | Unit | 추가 자원 |
 |---|---|
-| U2 | 기준 데이터 시드 마이그레이션 |
-| U3 | Edge Function `collect`, cron `collect-daily`, Vault `collect_url`·`service_role_key`, 시크릿 `DATA_GO_KR_API_KEY`·`GEMINI_API_KEY` |
-| U6 | Edge Function `dispatch`, cron `dispatch-hourly`, Vault `dispatch_url`, VAPID 키 |
+| U2 | 마이그레이션 0006 (지구·기준표·표준 요건 시드, 판정 저장 RPC) |
+| U3 | Edge Function `collect`·`analyze` (`verify_jwt=false`), cron `collect-daily`(UTC `0 20 * * *` = KST 05:00)·`analyze-hourly`(`30 * * * *`), Vault `collect_url`·`analyze_url`·`cron_secret`, 함수 시크릿 `DATA_GO_KR_API_KEY`·`GEMINI_API_KEY`·`GEMINI_MODEL`(선택)·`CRON_SECRET`, 마이그레이션 0007 |
+| U6 | Edge Function `dispatch`, cron `dispatch-hourly`, Vault `dispatch_url`(+ U3의 `cron_secret` 재사용), VAPID 키 |

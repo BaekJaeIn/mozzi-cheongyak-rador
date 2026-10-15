@@ -95,7 +95,7 @@ cheongYak-radar `supabase/functions/collect/recommend/{matcher,scorer,weights}.t
 - [x] **Step 13. DB 테스트**
   - [x] 13.1 `supabase/tests/rpc.test.sql` 판정 저장 부분을 새 시그니처로 갱신 + 버전 경우 3개
   - [x] 13.2 `supabase/tests/reference.test.sql`: 지구 6개·키워드, 2026 기준표 15행, 공급유형 9개, 표준 요건 JSON이 엔진 형식 검증과 맞는지(키 존재)
-  - [ ] 13.3 실행은 GitHub Actions `db-and-e2e` (push 후, 사용자 확인 필요) — 이 PC에 Docker 없음 (2026-10-14 재확인)
+  - [x] 13.3 실행은 GitHub Actions `db-and-e2e` — 통과 (run 38580354762, 2026-10-14)
 
 ### Part H. 문서·검증
 

@@ -27,7 +27,7 @@
 | 성능 (NFR-U2-01·02) | ✅ 공고 2,000건 판정 1초 미만, 1건 평균 1ms 미만 (`performance.test.ts`) |
 | SQL 시드 = TS 원본 | ✅ 공급유형 9, 소득표 15행, 지구 6 (`reference-data.test.ts`) |
 | `npm run build` | ✅ 성공 |
-| `deno check`, pgTAP(`rpc` 25건, `reference` 9건) | ⏸ 이 PC에 Deno·Docker 없음 → push 후 GitHub Actions(`ci`, `db-and-e2e`)에서 확인 |
+| `deno check`, pgTAP(`rpc` 25건, `reference` 9건), E2E | ✅ GitHub Actions `ci`(run 38580354722)·`db-and-e2e`(run 38580354762) 통과 |
 
 ## 3. 테스트가 찾은 문제 (모두 수정)
 

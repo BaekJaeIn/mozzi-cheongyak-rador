@@ -26,7 +26,14 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-const result = spawnSync("deno", ["check", ...files], { stdio: "inherit", shell: process.platform === "win32" });
+// 잠금 파일은 만들지 않는다 (배포 시 Supabase가 의존성을 다시 받는다)
+const args = ["check", "--no-lock", ...files];
+const shell = process.platform === "win32";
+const hasDeno = spawnSync("deno", ["--version"], { stdio: "ignore", shell }).status === 0;
+// 로컬에 deno가 없으면 npm 배포본으로 실행한다
+const result = hasDeno
+  ? spawnSync("deno", args, { stdio: "inherit", shell })
+  : spawnSync("npx", ["-y", "deno@2.5.6", ...args], { stdio: "inherit", shell });
 if (result.error) {
   console.error("deno를 실행할 수 없습니다. https://deno.com 에서 설치하거나 CI에서 확인하세요.");
   process.exit(1);

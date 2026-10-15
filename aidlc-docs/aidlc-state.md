@@ -4,7 +4,7 @@
 - **Project Name**: 모찌네 청약 알리미 (저장소명: silverCheongYak-radar)
 - **Project Type**: Greenfield
 - **Start Date**: 2026-10-13T12:55:00Z
-- **Current Stage**: CONSTRUCTION - U2 Code Generation (생성 완료 — 승인 대기)
+- **Current Stage**: CONSTRUCTION - U3 Code Generation (Step 1~11·13~14 완료, Step 12 실제 응답 캡처 확인 대기)
 
 ## Workspace State
 - **Existing Code**: No (SPEC.md, .gitignore, aidlc-rule-details/ 만 존재)
@@ -56,15 +56,15 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: U2 Code Generation (생성 완료 — 승인 대기)
-- **Next Stage**: U3 Functional Design
+- **Current Stage**: U3 Code Generation (Step 12 확인 대기)
+- **Next Stage**: U4 Functional Design
 
 ## Unit Progress (CONSTRUCTION, 순서대로)
 | Unit | FD | NFR-R | NFR-D | Infra | Code | 상태 |
 |---|:-:|:-:|:-:|:-:|:-:|---|
-| U1 setup-data-platform | ✅ | ✅ | ✅ | ✅ | ✅ | 완료 (2026-10-14 승인). 남은 사용자 작업: Vercel 구축, keepalive (setup-guide 4~5, Step 19.4~19.5). Docker·GitHub·Supabase·암호화 키 시크릿 완료 (2026-10-14) |
-| U2 eligibility-engine | ✅ | ✅ | ✅ | – | ✅ | Code 생성 완료 — 승인 대기 (pgTAP·deno check는 push 후 CI) |
-| U3 collection-pipeline | ✅ | ✅ | ✅ | ✅ | ✅ | 대기 |
+| U1 setup-data-platform | ✅ | ✅ | ✅ | ✅ | ✅ | 완료 (2026-10-14 승인). 외부 구축 완료 (Docker·GitHub·Supabase·암호화 키·Vercel https://mozzi-cheongyak-rador.vercel.app·keepalive, 2026-10-14). 남은 것: setup-guide 6단계 2주 점검 (~2026-10-28) (2026-10-14) |
+| U2 eligibility-engine | ✅ | ✅ | ✅ | – | ✅ | 완료 (2026-10-14 승인, push d2e18ee). 운영 DB에 0006 db push 필요 |
+| U3 collection-pipeline | ✅ | ✅ | ✅ | ✅ | ✅ | Code 생성 중 — Step 1~11·13~14 완료 (테스트 329, deno check 통과, PGlite로 0007 확인). 남은 것: Step 12 실제 응답 캡처(사용자 확인), push·CI pgTAP, 운영 db push 0006·0007·함수 배포 |
 | U4 profile-settings | ✅ | – | – | – | ✅ | 대기 |
 | U5 feed-detail | ✅ | – | – | – | ✅ | 대기 |
 | U6 pwa-push | ✅ | ✅ | ✅ | ✅ | ✅ | 대기 |

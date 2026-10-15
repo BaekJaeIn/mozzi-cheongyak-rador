@@ -488,3 +488,171 @@
 **Context**: CONSTRUCTION - U2 Code Generation Part 2, GATE: 승인 대기
 
 ---
+
+## U1 외부 구축 — 4단계 Vercel 배포 확인
+**Timestamp**: 2026-10-14T14:55:00Z
+**User Input**: "https://mozzi-cheongyak-rador.vercel.app/"
+**AI Response**: "/api/health → HTTP 200 {\"ok\":true} (pingDb로 Supabase 연결·서버 환경 변수 검증 통과), 루트 HTTP 200. setup-guide 4단계 [x], 5단계 APP_URL에 실제 주소 기입, 계획 Step 19.4 [x], aidlc-state 갱신. 다음: 5단계 keepalive."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 4단계 완료)
+
+---
+
+## U1 외부 구축 — 5단계 keepalive 확인 시도
+**Timestamp**: 2026-10-14T15:05:00Z
+**User Input**: "했어"
+**AI Response**: "GitHub 공개 API로 확인: keepalive 워크플로는 active지만 실행 기록 0건(workflow_dispatch 실행도 0건). APP_URL 변수는 인증 없이 확인 불가. 5단계 체크 보류, 실행 여부·화면 확인 요청."
+**Context**: CONSTRUCTION - U1 Step 19 (setup-guide 5단계 확인 중)
+
+---
+
+## U1 외부 구축 — 5단계 keepalive 완료, Step 19 종료
+**Timestamp**: 2026-10-14T15:15:00Z
+**User Input**: "했어"
+**AI Response**: "keepalive 실행 1건(workflow_dispatch, 2026-10-14T14:25:54Z) success 확인 — 워크플로가 APP_URL 미설정 시 실패하므로 변수 설정도 확인됨. setup-guide 5단계 [x], 계획 Step 19·19.5 [x], aidlc-state 갱신(남은 것: 6단계 2주 점검 ~2026-10-28). U2 Code Generation 재개 가능."
+**Context**: CONSTRUCTION - U1 Step 19 완료
+
+---
+
+## U2 Code Generation — 승인 및 push
+**Timestamp**: 2026-10-14T09:10:00Z
+**User Input**: "푸시하고 진행해줘"
+**AI Response**: ".env 파일이 추적되지 않음을 확인(.env.local은 .gitignore) 후 git push origin main (f2943a7..d2e18ee). CI 결과는 백그라운드 확인. U2 코드 승인으로 기록, U2 완료. U3 Functional Design 시작."
+**Context**: CONSTRUCTION - U2 완료 → U3
+
+---
+
+## U3 Functional Design — 계획 및 질문
+**Timestamp**: 2026-10-14T09:20:00Z
+**User Input**: (없음 — "진행"에 따른 단계 시작)
+**AI Response**: "cheongYak-radar collect 코드 확인(청약홈 odcloud, LH는 15058530+15057999 조합, GH 메인 크롤링, SH 서울주거포털, Gemini 2.5 flash PDF 추출). construction/plans/U3-collection-pipeline-functional-design-plan.md 생성: 질문 5개(Q1 수집 소스 — SH·마이홈 단지정보 제외 제안, Q2 AI 추출 입력 — PDF, Q3 대표 공고 묶기 기준 — 지구+블록+모집공고일, Q4 수집 범위, Q5 변경 시 재처리). 답변 대기."
+**Context**: CONSTRUCTION - U3 Functional Design Step 1~4, GATE: 답변 대기
+
+---
+
+## U3 Functional Design — 언어 재요청
+**Timestamp**: 2026-10-14T09:25:00Z
+**User Input**: "한국어로 해줘"
+**AI Response**: "직전 U3 질문 안내를 영어로 했던 것을 한국어로 다시 안내. 이후 모든 응답 한국어 유지."
+**Context**: CONSTRUCTION - U3 Functional Design, GATE: 답변 대기 유지
+
+---
+
+## U2 — CI 결과
+**Timestamp**: 2026-10-14T09:40:00Z
+**User Input**: (없음 — 백그라운드 확인)
+**AI Response**: "d2e18ee CI: ci(38580354722) success, db-and-e2e(38580354762) success — deno check, pgTAP(0006 시드·판정 저장 버전 확인), E2E 통과. keepalive(38580446748) success → 운영 Vercel·APP_URL 동작 확인. U2 계획 13.3, code-summary 갱신."
+**Context**: CONSTRUCTION - U2 검증 보완
+
+---
+
+## U3 Functional Design — 답변 수신 및 설계 생성
+**Timestamp**: 2026-10-14T09:50:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(청약홈+LH 15058530·15057999+GH, SH·마이홈 단지정보 제외), Q2=A(공고문 PDF를 Gemini로 추출), Q3=A(지구+블록 키+모집공고일 묶기), Q4=A(마감 전 공고만), Q5=A(해시 변경 시만 재처리). 모순 없음. requirements.md FR-1.1에 범위 축소 메모. 생성: construction/U3-collection-pipeline/functional-design/domain-entities.md(소스 3, RawNotice·NormalizedNotice·NoticeGroup·NoticeBundle·NoticeExtraction, notices 컬럼 ai_attempts·ai_source_url), business-rules.md(BR-U3-01~82: 소스별 수집, 정규화, 지구 매칭·후보 경고, 묶기, 범위, 변경 감지, AI 추출, 실행 기록, 골든 세트), business-logic-model.md(모듈 구성 _shared/collect·_lib·collect, 실행 흐름, 묶기 예시, RPC 보완, 목업 모드, PBT-01 속성 14개). 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U3 NFR Requirements'."
+**Context**: CONSTRUCTION - U3 Functional Design Step 5~7, GATE: 승인 대기
+
+---
+
+## U3 Functional Design — 승인
+**Timestamp**: 2026-10-14T10:00:00Z
+**User Input**: "진행"
+**AI Response**: "U3 기능 설계 승인(Continue to Next Stage)으로 기록. U3 NFR Requirements 시작."
+**Context**: CONSTRUCTION - U3 Functional Design 완료
+
+---
+
+## U3 NFR Requirements — 계획 및 질문
+**Timestamp**: 2026-10-14T10:05:00Z
+**User Input**: (없음 — 직전 "진행"에 따른 단계 시작)
+**AI Response**: "construction/plans/U3-collection-pipeline-nfr-requirements-plan.md 생성: 제약(Edge Function 벽시계 약 150초, Gemini PDF 10~40초), 질문 2개(Q1 AI 처리 방식 — 매시간 별도 analyze 함수 제안, Q2 소스 요청 재시도), 묻지 않고 정한 항목 5개(모델 환경 변수, Gemini 전송 데이터, 크롤링 예절, 키 보호, 장애 인지). 답변 대기."
+**Context**: CONSTRUCTION - U3 NFR Requirements Step 1~4, GATE: 답변 대기
+
+---
+
+## U3 NFR Requirements — 답변 수신 및 문서 생성
+**Timestamp**: 2026-10-14T10:15:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(AI 처리를 매시간 analyze 함수로, 2건씩), Q2=A(요청 단위 1회 재시도). 처리한 공고만 재계산 대신 처리 시 전체 재계산(규모가 작아 단순화). 생성: nfr-requirements/nfr-requirements.md(실행 구조 collect·analyze, NFR-U3-01~26, 위험 3), tech-stack-decisions.md(Deno 의존성, 정규식 파서, Gemini REST 구조화 출력, cheongYak-radar 가져올 파일과 변경점). 기능 설계 business-logic-model에 변경 메모 추가. PBT 요약 — blocking 없음. 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U3 NFR Design'."
+**Context**: CONSTRUCTION - U3 NFR Requirements Step 5~7, GATE: 승인 대기
+
+---
+
+## U3 NFR Requirements — 승인
+**Timestamp**: 2026-10-14T10:25:00Z
+**User Input**: "승인"
+**AI Response**: "U3 비기능 요구사항 승인(Continue to Next Stage)으로 기록. U3 NFR Design 시작."
+**Context**: CONSTRUCTION - U3 NFR Requirements 완료
+
+---
+
+## U3 NFR Design — 계획 및 질문
+**Timestamp**: 2026-10-14T10:30:00Z
+**User Input**: (없음 — 직전 "승인"에 따른 단계 시작)
+**AI Response**: "construction/plans/U3-collection-pipeline-nfr-design-plan.md 생성: 범주별 검토(확장성·성능·보안은 질문 없음 + 사유), 질문 2개(Q1 analyze 동시 실행 방지 — 공고 단위 예약, Q2 변경된 공고의 재분석 전 판정 기준 — 표준 요건으로 되돌림). 답변 대기."
+**Context**: CONSTRUCTION - U3 NFR Design Step 1~4, GATE: 답변 대기
+
+---
+
+## U3 NFR Design — 답변 수신 및 문서 생성
+**Timestamp**: 2026-10-14T10:40:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(공고 단위 예약 — for update skip locked + ai_claimed_at, 10분 후 만료), Q2=A(바뀐 공고는 표준 요건으로, 요약은 남기고 pending + '다시 확인 중' 표시). 생성: nfr-design/nfr-design-patterns.md(P-U3-R1~R6, 확장성 미적용, P-U3-P1~P4, P-U3-S1~S4, 관측성), logical-components.md(L-U3-1~11, 오케스트레이터를 주입형 순수 TS로, 0007 마이그레이션 — notices 컬럼 3개·RPC 보완·collect_state·claim·release, 호출 관계, PBT 요약 — blocking 없음). 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U3 Infrastructure Design'."
+**Context**: CONSTRUCTION - U3 NFR Design Step 5~7, GATE: 승인 대기
+
+---
+
+## U3 NFR Design — 승인
+**Timestamp**: 2026-10-14T10:50:00Z
+**User Input**: "승인"
+**AI Response**: "U3 비기능 설계 승인(Continue to Next Stage)으로 기록. U3 Infrastructure Design 시작. Supabase Edge Functions Limits 공식 문서 확인: 무료 벽시계 150초, CPU 2초/요청, 메모리 256MB, 유휴 150초."
+**Context**: CONSTRUCTION - U3 NFR Design 완료
+
+---
+
+## U3 Infrastructure Design — 계획 및 질문
+**Timestamp**: 2026-10-14T10:55:00Z
+**User Input**: (없음 — 직전 "승인"에 따른 단계 시작)
+**AI Response**: "construction/plans/U3-collection-pipeline-infrastructure-design-plan.md 생성: 공식 한도 표(CPU 2초 위험 식별), 범주별 검토(배포·스토리지·메시징·네트워크·모니터링은 질문 없음 + 사유), 질문 3개(Q1 collect 시각 — OI-4, Q2 analyze 분, Q3 data.go.kr 데이터셋 3개 활용 신청 상태). 답변 대기."
+**Context**: CONSTRUCTION - U3 Infrastructure Design Step 1~4, GATE: 답변 대기
+
+---
+
+## U3 Infrastructure Design — 답변 수신 및 문서 생성
+**Timestamp**: 2026-10-14T11:05:00Z
+**User Input**: "완료"
+**AI Response**: "답변: Q1=A(collect 매일 KST 05:00, UTC 0 20 * * *), Q2=A(analyze 매시 30분), Q3=A(data.go.kr 3개 데이터셋 승인된 키 재사용). 보완: Supabase 새 sb_secret 키가 JWT가 아니라 verify_jwt/서버 키 비교가 깨질 수 있어 예약 작업 전용 CRON_SECRET(Vault+함수 시크릿) 사용, verify_jwt=false. pg_net 시간 제한 150초. CPU 2초 한도 대응(@std/encoding base64, 재계산 측정 후 분리 기준). 생성: infrastructure-design/infrastructure-design.md, deployment-architecture.md(Mermaid+텍스트, 첫 배포 7단계, 롤백), shared-infrastructure.md U2·U3·U6 행 갱신. 승인 요청: 'Request Changes' 또는 'Continue to Next Stage → U3 Code Generation'."
+**Context**: CONSTRUCTION - U3 Infrastructure Design Step 5~7, GATE: 승인 대기
+
+---
+
+## U3 Infrastructure Design — 승인
+**Timestamp**: 2026-10-14T11:15:00Z
+**User Input**: "승인"
+**AI Response**: "U3 인프라 설계 승인(Continue to Next Stage)으로 기록. U3 Code Generation 시작."
+**Context**: CONSTRUCTION - U3 Infrastructure Design 완료
+
+---
+
+## U3 Code Generation — Part 1 계획 및 승인 요청
+**Timestamp**: 2026-10-14T11:25:00Z
+**User Input**: (없음 — 직전 "승인"에 따른 단계 시작)
+**AI Response**: "cheongYak-radar collect 재확인: 공고문 PDF(첨부) 처리 없음, 실제 응답 픽스처 없음. construction/plans/U3-collection-pipeline-code-generation-plan.md 생성: 16단계(Part A 순수 코드·파서·주입형 오케스트레이터, B 테스트·PBT·상태 기반, C Deno _lib·Repository·함수, D 0007·pgTAP, E 실제 응답 캡처(사용자 확인 후, 키 미포함 저장), F CPU 측정·문서·검증, G 골든 세트(배포 후 사용자 참여, 별도 진행 가능)). 승인 요청."
+**Context**: CONSTRUCTION - U3 Code Generation Part 1, GATE: 계획 승인 대기
+
+---
+
+## U3 Code Generation — 계획 승인
+**Timestamp**: 2026-10-15T00:10:00Z
+**User Input**: "승인"
+**AI Response**: "U3 코드 생성 계획 승인으로 기록. Part 2 생성을 Step 1부터 실행 (Step 12 실제 응답 캡처는 실행 전 다시 확인)."
+**Context**: CONSTRUCTION - U3 Code Generation Part 1 완료 → Part 2
+
+---
+
+## U3 Code Generation — Part 2 Step 8~11·13~14 생성
+**Timestamp**: 2026-10-15T12:50:00Z
+**User Input**: (없음 — 승인된 계획 계속 실행)
+**AI Response**: "Step 8 `_lib/`(env·http·gemini·guard, 판단 로직은 `_shared/http/fetch.ts`·`collect/gemini-request.ts`·`collect/guard.ts`로 분리해 테스트). Step 9 `_lib/db/`(client·U1/U2 repository Deno 구현·collect-repository, 행 변환은 `_shared/collect/stored.ts`). Step 10 Collector를 `_shared/collect/collectors.ts`(HTTP 주입)로, `_lib/deps.ts`, `collect/index.ts`·`analyze/index.ts`, config.toml verify_jwt=false, tsconfig·eslint 제외 목록. Step 11 `0007_collect_pipeline.sql`(컬럼·인덱스·upsert 보완·collect_state·claim·release·invoke_edge_function·cron 2개·권한) + `collect.test.sql` 23건 — Docker 없음 → PGlite 대역으로 collect 23/23·rpc 25/25·reference 9/9 확인. Step 13 CPU: base64 20MB 85~115ms, 재계산 2,000건 137~205ms (한도 2초 대비 충분). Step 14 README·setup-guide-u3.md·code-summary.md·.env.example. 검증: typecheck·lint 통과, 테스트 38파일 329개 통과, deno check 통과(npm deno 2.5.6), build 성공. 다음: Step 12 실제 응답 캡처는 사용자 확인 후 실행."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2 진행
+
+---

@@ -1,0 +1,86 @@
+// 오케스트레이터가 주입받는 의존성 (L-U3-8·9, NFR-U3-24) — Deno 구현은 _lib/, 테스트는 가짜 구현
+import type { IsoDate } from "../domain/dates.ts";
+import type { DistrictRule } from "../domain/district-matcher.ts";
+import type { Requirements } from "../domain/requirements.ts";
+import type { RecomputeAllSummary } from "../services/judgement-service.ts";
+import type { BundleBase } from "./bundle.ts";
+import type { CollectRunRecord, CollectSource, NoticeBundle, RawNotice } from "./types.ts";
+
+export interface CollectorContext {
+  today: IsoDate;
+  /** 이 시각(epoch ms)이 지나면 그때까지 모은 것만 돌려준다 (NFR-U3-01) */
+  deadline: number;
+}
+
+export interface CollectorResult {
+  notices: RawNotice[];
+  /** 대기열·시간 초과·상세 실패 등 */
+  warnings: string[];
+}
+
+export interface Collector {
+  readonly source: CollectSource;
+  collect(ctx: CollectorContext): Promise<CollectorResult>;
+}
+
+export interface StoredSourceState {
+  source: CollectSource;
+  sourceNoticeNo: string;
+  noticeId: string;
+  dedupKey: string;
+  contentHash: string;
+  summaryStatus: "pending" | "done" | "failed";
+  aiAttempts: number;
+}
+
+export interface CollectRepository {
+  loadDistricts(): Promise<DistrictRule[]>;
+  loadStandards(): Promise<Record<string, Requirements>>;
+  collectState(keys: { source: CollectSource; sourceNoticeNo: string }[]): Promise<StoredSourceState[]>;
+  /** 대표 공고 id */
+  upsertBundle(bundle: NoticeBundle): Promise<string>;
+  claimForAnalysis(limit: number, now: Date): Promise<string[]>;
+  loadForAnalysis(noticeId: string): Promise<{ base: BundleBase; aiAttempts: number } | null>;
+  releaseClaim(noticeId: string, failed: boolean): Promise<void>;
+  recordRun(record: CollectRunRecord): Promise<void>;
+}
+
+export interface PdfFetcher {
+  /** 실패하면 StepError(too_large | pdf_fetch) */
+  fetchPdf(url: string): Promise<Uint8Array>;
+}
+
+export interface Extractor {
+  /** Gemini 응답 JSON(검증 전). 실패하면 StepError(gemini_error | invalid_json) */
+  extract(input: { pdf: Uint8Array; title: string; supplyTypeHint: string }): Promise<unknown>;
+}
+
+export interface Recomputer {
+  recomputeAll(asOf: IsoDate): Promise<RecomputeAllSummary>;
+}
+
+export interface Clock {
+  now(): Date;
+  nowMs(): number;
+}
+
+export type AnalyzeFailure = "no_pdf" | "too_large" | "pdf_fetch" | "gemini_error" | "invalid_json" | "not_notice" | "save_error";
+
+export class StepError extends Error {
+  constructor(
+    readonly code: AnalyzeFailure,
+    message?: string,
+  ) {
+    super(message ?? code);
+    this.name = "StepError";
+  }
+}
+
+/** 오류 문구에서 URL 쿼리(API 키)를 지운다 (BR-U3-72, P-U3-S2) */
+export function redactUrls(text: string): string {
+  return text.replace(/(https?:\/\/[^\s?#"']+)\?[^\s"']*/g, "$1?[redacted]");
+}
+
+export function errorMessage(e: unknown): string {
+  return redactUrls(e instanceof Error ? `${e.name}: ${e.message}` : String(e)).slice(0, 500);
+}

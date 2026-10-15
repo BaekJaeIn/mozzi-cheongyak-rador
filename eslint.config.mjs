@@ -17,6 +17,7 @@ export default defineConfig([
     "aidlc-rule-details/**",
     // Deno 진입점(Edge Function)은 deno check로 검사한다
     "supabase/functions/collect/**",
+    "supabase/functions/analyze/**",
     "supabase/functions/dispatch/**",
     "supabase/functions/_lib/**",
   ]),

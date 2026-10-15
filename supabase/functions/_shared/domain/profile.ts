@@ -109,6 +109,23 @@ export function normalizeSido(name: string): string {
   return compact;
 }
 
+/** 주소·제목 같은 문장에서 처음 나오는 시도 이름을 줄임 이름으로 찾는다 (U3 정규화). 없으면 null. */
+export function findSido(text: string): string | null {
+  const compact = text.normalize("NFC");
+  let best: { index: number; canonical: string; length: number } | null = null;
+  for (const [canonical, aliases] of SIDO_ALIASES) {
+    for (const alias of aliases) {
+      const index = compact.indexOf(alias);
+      if (index === -1) continue;
+      // 같은 위치면 더 긴 이름(예: "광주광역시")을, 아니면 더 앞에 나온 이름을 쓴다
+      if (!best || index < best.index || (index === best.index && alias.length > best.length)) {
+        best = { index, canonical, length: alias.length };
+      }
+    }
+  }
+  return best?.canonical ?? null;
+}
+
 // ---------- 형식 검증 (서버 저장 전, BR-U2-72) ----------
 
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };

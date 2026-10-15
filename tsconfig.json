@@ -31,5 +31,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "supabase/functions/collect", "supabase/functions/dispatch", "supabase/functions/_lib"]
+  "exclude": ["node_modules", "supabase/functions/collect", "supabase/functions/analyze", "supabase/functions/dispatch", "supabase/functions/_lib"]
 }

@@ -19,6 +19,8 @@ src/app/                  화면과 API 라우트
 src/features/             화면 기능 (app-chrome, device, …)
 src/server/               서버 전용 코드 (환경 변수, 인증, DB, 핸들러)
 supabase/functions/_shared/  Node·Deno 공용 순수 코드 (npm 패키지 import 금지)
+supabase/functions/_lib/     Edge Function 전용 코드 (Deno: DB·HTTP·Gemini)
+supabase/functions/collect/  매일 수집 함수 / analyze/ 매시 공고문 분석 함수
 supabase/migrations/      DB 구조·권한·DB 함수·예약 작업
 supabase/tests/           DB 테스트 (pgTAP)
 e2e/                      E2E 테스트
@@ -78,12 +80,34 @@ FC_SEED=123456 npm test -- supabase/functions/_shared/domain
 [`.env.example`](.env.example)에 목록이 있습니다. 비밀 값은 저장소에 커밋하지 않습니다.
 브라우저에 노출되는 값은 `NEXT_PUBLIC_VAPID_PUBLIC_KEY` 하나뿐이어야 합니다.
 
+## 수집·분석 함수 (Edge Functions)
+
+| 함수 | 예약 (pg_cron) | 하는 일 |
+|---|---|---|
+| `collect` | 매일 KST 05:00 | 청약홈·LH·GH 공고 수집 → 묶기 → 바뀐 공고만 저장(표준 요건) → 판정 재계산. AI 호출 없음 |
+| `analyze` | 매시 30분 | 분석 대기 공고 2건 → 공고문 PDF → Gemini 추출(요건·쉬운 요약) → 저장 → 판정 재계산 |
+
+로컬에서 목업으로 실행 (Docker 필요):
+
+```bash
+# .env.local에 COLLECT_MOCK=1, CRON_SECRET=<아무 16자 이상 값>, AMOUNT_ENC_KEY_* 를 넣는다
+npx supabase functions serve --env-file .env.local
+curl -X POST -H "Authorization: Bearer <CRON_SECRET>" http://127.0.0.1:54321/functions/v1/collect
+curl -X POST -H "Authorization: Bearer <CRON_SECRET>" http://127.0.0.1:54321/functions/v1/analyze
+```
+
+- 결과는 응답 JSON과 `collect_runs` 테이블에 남습니다 (소스별 행 + `all` 요약).
+- 운영 수동 실행은 같은 curl을 `https://<ref>.supabase.co/functions/v1/...`로 보냅니다.
+- 다시 분석하려면: `update notices set summary_status = pending, ai_attempts = 0 where id = …`
+- 긴급 정지: `select cron.unschedule(collect-daily)` / `select cron.unschedule(analyze-hourly)` (다시 켜려면 0007의 `cron.schedule` 문 실행)
+
 ## 배포
 
-처음 구축하는 순서는 [`aidlc-docs/construction/U1-setup-data-platform/code/setup-guide.md`](aidlc-docs/construction/U1-setup-data-platform/code/setup-guide.md)를 따릅니다.
+처음 구축하는 순서는 [`aidlc-docs/construction/U1-setup-data-platform/code/setup-guide.md`](aidlc-docs/construction/U1-setup-data-platform/code/setup-guide.md)를 따릅니다. 수집·분석 함수는 [`setup-guide-u3.md`](aidlc-docs/construction/U3-collection-pipeline/code/setup-guide-u3.md)를 따릅니다.
 
 - 화면·API: `main`에 push하면 Vercel이 자동 배포 (미리보기 배포 끔)
 - DB: `npx supabase db push` (사람이 직접 실행, **코드 배포보다 먼저**)
+- Edge Functions: `npx supabase functions deploy collect analyze` (사람이 직접 실행, `db push` 다음)
 
 ## 연간 갱신 — 소득 기준표·표준 요건 (매년 1~3월)
 
