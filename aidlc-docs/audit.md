@@ -880,3 +880,19 @@
 **Context**: CONSTRUCTION - U5 Functional Design 완료, 승인 대기
 
 ---
+
+## U5 Functional Design — 승인
+**Timestamp**: 2026-10-16T02:30:00Z
+**User Input**: "승인"
+**AI Response**: "U5 기능 설계 승인으로 기록. 다음 단계 U5 Code Generation Part 1(계획) 시작."
+**Context**: CONSTRUCTION - U5 Functional Design 승인 → U5 Code Generation
+
+---
+
+## U5 Code Generation — Part 1 계획, 승인 요청
+**Timestamp**: 2026-10-16T02:45:00Z
+**User Input**: (없음 — FD 승인에 따라 계획 작성)
+**AI Response**: "U5 코드 생성 계획 작성 (aidlc-docs/construction/plans/U5-feed-detail-code-generation-plan.md): Part A 순수 로직·예시·PBT(Step 1~7), Part B 저장소·핸들러·테스트(Step 8~10), Part C 화면(Step 11~14), Part D E2E·문서·검증(Step 15~17). DB 마이그레이션 없음. E2E 공고 데이터는 로컬 Supabase일 때만 넣고, 판정은 실제 U2 재계산으로 만듦. 계획 승인 요청."
+**Context**: CONSTRUCTION - U5 Code Generation Part 1, 승인 대기
+
+---
