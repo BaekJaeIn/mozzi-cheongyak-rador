@@ -6,6 +6,7 @@
 import type { HouseholdProfile } from "@shared/domain/profile.ts";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { getApiClient } from "@/features/device/api-client";
+import { clearFeedCache } from "@/features/feed/model/cache";
 import { createSyncApi, deleteDeviceOnServer, type DeleteOutcome } from "./api";
 import {
   clearAllPersonal,
@@ -37,6 +38,8 @@ export interface ProfileActions {
   saveNotify(settings: NotifySettings): Promise<FlushResult>;
   /** 대기 중인 것을 지금 보낸다 */
   flushNow(): Promise<void>;
+  /** 서버에 프로필이 없다고 할 때 — 보낸 것도 모두 다시 보낸다 (U5 BR-U5-64) */
+  resendAll(): Promise<void>;
   deleteAll(): Promise<DeleteOutcome>;
   refresh(): void;
 }
@@ -97,6 +100,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       async saveProfile(profile) {
         commitProfile(window.localStorage, profile, new Date());
         clearDraft(window.localStorage);
+        clearFeedCache(window.localStorage); // 바뀐 정보로 계산한 피드만 보이게 (U5 BR-U5-54)
         refresh();
         const result = (await sync().flush()).profile;
         refresh();
@@ -110,6 +114,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return result;
       },
       flushNow,
+      async resendAll() {
+        sync().markAllPending();
+        await flushNow();
+      },
       async deleteAll() {
         const outcome = await deleteDeviceOnServer(getApiClient());
         if (outcome === "deleted") {

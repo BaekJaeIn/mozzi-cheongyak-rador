@@ -45,16 +45,16 @@
 
 ## Part C. 화면
 
-- [ ] **Step 11. 공용 부품** `src/features/notice/ui/`: `DdayBadge`, `NewBadge`, `VerdictBadge`, `Toast`, `BookmarkButton` + `BookmarksProvider`(context, `storage` 이벤트, 모두 지우기 뒤 다시 읽기) — `layout.tsx`에 연결 — US-12·17
-- [ ] **Step 12. 피드** `src/features/feed/FeedView.tsx`(`NoticeCard`, `FeedStatusBar`, `FeedEmpty`, 저장본 먼저·no_profile → flushNow 1번·오류 — BR-U5-50~65), `src/app/page.tsx`의 `HomeGate feed`에 연결, U4 `saveProfile` 뒤 `mz.feed` 지움(BR-U5-54) — US-12
-- [ ] **Step 13. 상세** `src/features/notice/NoticeDetailView.tsx`(`OriginalLinkButton`, `StatusNotice`, `VerdictSummary`, `ScheduleTimeline`, `UnitTable`, `JudgementReasons`·`CriterionLine`, `AiSummary`, `CalendarButton`, 찾을 수 없음 화면, 열어 본 기록), 라우트 `src/app/notice/[id]/page.tsx` — US-13·14·15·16·17 (US-11 경로)
-- [ ] **Step 14. 관심 공고** `src/features/bookmarks/BookmarksView.tsx`(먼저 그리기 → 갱신, gone, [지우기], 빈 화면), `src/app/bookmarks/page.tsx` 교체(프로필 없으면 `/`) — US-17
+- [x] **Step 11. 공용 부품** `src/features/notice/ui/`: `DdayBadge`, `NewBadge`, `VerdictBadge`, `Toast`, `BookmarkButton` + `BookmarksProvider`(context, `storage` 이벤트, 모두 지우기 뒤 다시 읽기) — `layout.tsx`에 연결 — US-12·17
+- [x] **Step 12. 피드** `src/features/feed/FeedView.tsx`(`NoticeCard`, `FeedStatusBar`, `FeedEmpty`, 저장본 먼저·no_profile → flushNow 1번·오류 — BR-U5-50~65), `src/app/page.tsx`의 `HomeGate feed`에 연결, U4 `saveProfile` 뒤 `mz.feed` 지움(BR-U5-54) — US-12
+- [x] **Step 13. 상세** `src/features/notice/NoticeDetailView.tsx`(`OriginalLinkButton`, `StatusNotice`, `VerdictSummary`, `ScheduleTimeline`, `UnitTable`, `JudgementReasons`·`CriterionLine`, `AiSummary`, `CalendarButton`, 찾을 수 없음 화면, 열어 본 기록), 라우트 `src/app/notice/[id]/page.tsx` — US-13·14·15·16·17 (US-11 경로)
+- [x] **Step 14. 관심 공고** `src/features/bookmarks/BookmarksView.tsx`(먼저 그리기 → 갱신, gone, [지우기], 빈 화면), `src/app/bookmarks/page.tsx` 교체(프로필 없으면 `/`) — US-17
 
 ## Part D. E2E·문서·검증
 
-- [ ] **Step 15. E2E** `e2e/helpers.ts`(로컬 전용 공고 넣기·지우기), `e2e/feed.spec.ts`: 프로필 저장 → 피드 카드(관심 지구·미충족 숨김·마감 제외·정렬·배지·D-day·NEW) → 상세(원문 링크 주소·타임라인·세대수·판정 이유·내 금액·AI 요약/준비 중) → NEW 사라짐; 별 저장 → 관심 공고 화면 → 지우기; 저장본 표시(오프라인); 캘린더 버튼(Android: Google 링크, iPhone: `/api/notices/[id]/calendar` 응답 확인); 없는 공고 화면; axe(피드·상세·관심 공고, 쉬운 모드 가로 스크롤 없음). U4 E2E의 피드 자리 테스트 수정
-- [ ] **Step 16. 문서**: README("화면과 API (U5)" 절), `aidlc-docs/construction/U5-feed-detail/code/code-summary.md`(파일·설계 대비 조정·검증)
-- [ ] **Step 17. 검증**: typecheck·lint·test(+PBT seed 반복)·build·deno check, 로컬 Supabase pgTAP·E2E(Android·iPhone), 커밋 (push는 사용자 확인 후)
+- [x] **Step 15. E2E** `e2e/helpers.ts`(로컬 전용 공고 넣기·지우기), `e2e/feed.spec.ts`: 프로필 저장 → 피드 카드(관심 지구·미충족 숨김·마감 제외·정렬·배지·D-day·NEW) → 상세(원문 링크 주소·타임라인·세대수·판정 이유·내 금액·AI 요약/준비 중) → NEW 사라짐; 별 저장 → 관심 공고 화면 → 지우기; 저장본 표시(오프라인); 캘린더 버튼(Android: Google 링크, iPhone: `/api/notices/[id]/calendar` 응답 확인); 없는 공고 화면; axe(피드·상세·관심 공고, 쉬운 모드 가로 스크롤 없음). U4 E2E의 피드 자리 테스트 수정
+- [x] **Step 16. 문서**: README("화면과 API (U5)" 절), `aidlc-docs/construction/U5-feed-detail/code/code-summary.md`(파일·설계 대비 조정·검증)
+- [x] **Step 17. 검증**: typecheck·lint·test(+PBT seed 반복)·build·deno check, 로컬 Supabase pgTAP·E2E(Android·iPhone), 커밋 (push는 사용자 확인 후)
 
 ## 스토리 추적
 

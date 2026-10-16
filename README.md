@@ -94,7 +94,22 @@ FC_SEED=123456 npm test -- supabase/functions/_shared/domain
 | `DELETE /api/device` | 이 기기의 서버 정보 모두 삭제 |
 
 - 내 정보는 **휴대폰(localStorage)이 원본**이고 서버는 판정·알림용 사본입니다. 서버 저장이 실패하면 앱을 다시 열 때·인터넷이 연결될 때 자동으로 다시 보냅니다.
-- 기기 저장 키: `mz.device`(U1), `mz.profile`, `mz.profile.draft`, `mz.notify`, `mz.display`, `mz.bookmarks`(U5).
+- 기기 저장 키: `mz.device`(U1), `mz.profile`, `mz.profile.draft`, `mz.notify`, `mz.display`, `mz.bookmarks`·`mz.seen`·`mz.feed`(U5).
+
+## 화면과 API (U5: 피드·상세·관심 공고)
+
+| 경로 | 내용 |
+|---|---|
+| `/` | 맞춤 공고 피드: 관심 지구 + 충족·확인 필요만, 마감 제외. 접수 중 → 접수 예정, 그 안에서 점수·마감 순 |
+| `/notice/[id]` | 공고 상세: 원문 보기, 일정, 세대수, 판정 이유(내 금액은 기기에서만 붙임), AI 요약, 캘린더. 피드 밖 공고도 열림 (알림 클릭 이동 대상) |
+| `/bookmarks` | 관심 공고 (이 기기에만, 100개까지) |
+| `GET /api/feed` | `{ state: ready·outdated·no_profile, today, items }`. 판정이 오래됐으면 그 자리에서 한 번 다시 계산 |
+| `GET /api/notices/[id]` | 공고 + 이 기기의 판정 (`id`가 UUID가 아니거나 없으면 404) |
+| `GET /api/notices?ids=a,b` | 관심 공고 갱신용 요약 (1~100개), 없는 공고는 `missing` |
+| `GET /api/notices/[id]/calendar` | 캘린더 파일(.ics). 공고 정보만 담아 **기기 인증 없이** 열림 |
+
+- 피드는 마지막 응답을 기기(`mz.feed`)에 저장해 다음에 열 때 먼저 보여 줍니다. 내 정보를 저장하거나 모두 지우면 함께 지웁니다.
+- E2E의 피드 공고는 `e2e/helpers.ts`가 **로컬 Supabase(127.0.0.1·localhost)일 때만** 넣고 지웁니다. 운영 주소면 피드 E2E는 건너뜁니다.
 
 ## 수집·분석 함수 (Edge Functions)
 

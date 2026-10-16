@@ -74,7 +74,8 @@ select is((select summary_status || '/' || ai_attempts || '/' || coalesce(ai_cla
 select is((select schedule from cron.job where jobname = 'collect-daily'), '0 20 * * *', 'collect-daily: KST 05:00');
 select is((select schedule from cron.job where jobname = 'analyze-hourly'), '30 * * * *', 'analyze-hourly: 매시 30분');
 select is(public.invoke_edge_function('no_such_fn'), null::bigint, 'Vault 값이 없으면 호출하지 않는다');
-select is((select count(*)::int from public.collect_runs where source = 'all' and not ok and error like 'Vault 값 없음%'), 1, '호출 안 함을 기록');
+-- 이 테스트가 부른 함수의 기록만 센다 (로컬 DB에서는 실제 cron이 analyze 호출 기록을 남길 수 있다)
+select is((select count(*)::int from public.collect_runs where source = 'all' and not ok and error like 'Vault 값 없음: no_such_fn_url%'), 1, '호출 안 함을 기록');
 
 -- ---------- 권한 ----------
 set local role anon;

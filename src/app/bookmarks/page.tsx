@@ -1,6 +1,6 @@
-import { Placeholder } from "@/features/app-chrome/Placeholder";
+import { BookmarksView } from "@/features/bookmarks/BookmarksView";
 
-// U5에서 관심 공고 화면으로 바꾼다
+// 관심 공고 — 이 기기에만 저장 (US-17)
 export default function BookmarksPage() {
-  return <Placeholder title="관심 공고" description="별 버튼을 누른 공고를 여기에 모아 보여 드릴 거예요. 지금 준비하고 있어요." />;
+  return <BookmarksView />;
 }

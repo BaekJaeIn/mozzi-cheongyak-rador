@@ -1,16 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppHeader } from "@/features/app-chrome/AppHeader";
+import { BookmarksProvider } from "@/features/bookmarks/BookmarksProvider";
 import { BottomNav } from "@/features/app-chrome/BottomNav";
 import { APP_NAME } from "@/features/app-chrome/constants";
 import { DeviceBootstrap } from "@/features/device/DeviceBootstrap";
 import { DISPLAY_MODE_SCRIPT } from "@/features/display-mode/display-mode";
-import { ProfileProvider, SyncOnReady } from "@/features/profile/ProfileProvider";
+import {
+  ProfileProvider,
+  SyncOnReady,
+} from "@/features/profile/ProfileProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "3기 신도시 분양·임대 공고 중 우리 집에 맞는 것만 골라 알려 드려요",
+  description:
+    "3기 신도시 분양·임대 공고 중 우리 집에 맞는 것만 골라 알려 드려요",
   applicationName: APP_NAME,
 };
 
@@ -30,14 +35,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="min-h-dvh bg-canvas">
         <ProfileProvider>
-          <AppHeader title={APP_NAME} />
-          <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
-            <DeviceBootstrap>
-              <SyncOnReady />
-              {children}
-            </DeviceBootstrap>
-          </main>
-          <BottomNav />
+          <BookmarksProvider>
+            <AppHeader title={APP_NAME} />
+            <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
+              <DeviceBootstrap>
+                <SyncOnReady />
+                {children}
+              </DeviceBootstrap>
+            </main>
+            <BottomNav />
+          </BookmarksProvider>
         </ProfileProvider>
       </body>
     </html>

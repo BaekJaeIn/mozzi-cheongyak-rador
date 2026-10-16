@@ -24,6 +24,7 @@ async function axe(page: Page) {
 
 /** 부부·집 없음·통장 없음으로 확인 화면까지 */
 async function fillToReview(page: Page) {
+  test.slow(); // 화면 20개 가까이 지나가는 긴 흐름 — WebKit·병렬 실행에서 30초를 넘을 수 있다
   await heading(page, "이 휴대폰을 쓰시는 분의 생년월일을 골라 주세요");
   await pickBirth(page, 1960, 3, 2);
   await expect(page.getByText(/만 \d+세/)).toBeVisible();
