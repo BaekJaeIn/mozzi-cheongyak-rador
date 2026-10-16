@@ -960,3 +960,11 @@
 **Context**: CONSTRUCTION - U6 Functional Design 승인 → U6 NFR Requirements
 
 ---
+
+## U6 NFR Requirements — 계획·질문 작성
+**Timestamp**: 2026-10-16T06:10:00Z
+**User Input**: (없음 — FD 승인에 따라 다음 단계 시작)
+**AI Response**: "U6 NFR Requirements 계획과 질문 6개 작성 (aidlc-docs/construction/plans/U6-pwa-push-nfr-requirements-plan.md): 웹 푸시 구현(Web Crypto 공용 구현 vs 라이브러리), VAPID 키 관리, 발송 시간·규모, 알림 유효 시간, 발송 기록, 아이콘 PNG 생성. 답 대기."
+**Context**: CONSTRUCTION - U6 NFR Requirements, 질문 대기
+
+---
