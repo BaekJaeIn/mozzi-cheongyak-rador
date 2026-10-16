@@ -968,3 +968,11 @@
 **Context**: CONSTRUCTION - U6 NFR Requirements, 질문 대기
 
 ---
+
+## U6 NFR Requirements — 답변·완료, 승인 요청
+**Timestamp**: 2026-10-16T06:40:00Z
+**User Input**: "6번은 첨부한 사진을 바탕으로 만들어줘" (사진 첨부: 반려견 얼굴, 941×1672 PNG. 계획 파일 Q1~Q5 = A, Q6 = X 기입)
+**AI Response**: "Q6=X를 '첨부 사진을 아이콘 원본으로, 생성 방법은 Playwright 일회용 스크립트'로 해석. scratchpad에서 잘라 보기 시안 2종(일반·maskable 82%) 확인 — 머리 전체가 들어가게 중심·크기 조정. nfr-requirements.md(NFR-U6-01~35), tech-stack-decisions.md(Web Crypto 직접 구현·VAPID·dispatch_runs·아이콘) 작성. 승인 대기."
+**Context**: CONSTRUCTION - U6 NFR Requirements 완료, 승인 대기
+
+---
