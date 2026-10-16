@@ -1024,3 +1024,19 @@
 **Context**: CONSTRUCTION - U6 Infrastructure Design, 질문 대기
 
 ---
+
+## U6 Infrastructure Design — 답변
+**Timestamp**: 2026-10-16T07:50:00Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q4 모두 A로 기입. 인프라 설계 문서 작성. (아이콘 사진 공개 여부는 여전히 답 없음)"
+**Context**: CONSTRUCTION - U6 Infrastructure Design, 답 수집 완료
+
+---
+
+## U6 Infrastructure Design — 완료, 승인 요청
+**Timestamp**: 2026-10-16T08:05:00Z
+**User Input**: (없음 — 답에 따라 설계 문서 작성)
+**AI Response**: "infrastructure-design.md(구성 매핑·cron dispatch-hourly·cleanup-push·비밀값·미리보기 503·키 교체·CPU 측정 기준), deployment-architecture.md(구성도, 운영 반영 ①~⑧, 되돌리기, 로컬·CI), shared-infrastructure U6 행 갱신. 승인 대기."
+**Context**: CONSTRUCTION - U6 Infrastructure Design 완료, 승인 대기
+
+---

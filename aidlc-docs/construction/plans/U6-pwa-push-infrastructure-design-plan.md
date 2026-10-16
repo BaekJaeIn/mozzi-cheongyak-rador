@@ -22,7 +22,7 @@ B) 제가 명령으로 직접 만들어 등록 (개인 키가 대화 기록에 �
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -35,7 +35,7 @@ B) 처음부터 기기 100대씩 나눠 여러 번 호출
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -48,7 +48,7 @@ B) 운영 + 미리보기 모두
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -60,14 +60,14 @@ B) 한 번에 모두 반영 (순서 안내 없이)
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
 ## 진행 단계 (답을 받은 뒤)
 
-- [ ] 1. 답 검토
-- [ ] 2. `infrastructure-design.md`: 함수·DB·cron·비밀값·환경 변수 매핑, CPU 한도 대응
-- [ ] 3. `deployment-architecture.md`: 배포 구성도, 반영 순서, 확인·되돌리기
-- [ ] 4. `shared-infrastructure.md`에 U6 비밀값·cron 추가
-- [ ] 5. 완료 안내
+- [x] 1. 답 검토
+- [x] 2. `infrastructure-design.md`: 함수·DB·cron·비밀값·환경 변수 매핑, CPU 한도 대응
+- [x] 3. `deployment-architecture.md`: 배포 구성도, 반영 순서, 확인·되돌리기
+- [x] 4. `shared-infrastructure.md`에 U6 비밀값·cron 추가
+- [x] 5. 완료 안내

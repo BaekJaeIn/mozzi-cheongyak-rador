@@ -32,4 +32,4 @@
 |---|---|
 | U2 | 마이그레이션 0006 (지구·기준표·표준 요건 시드, 판정 저장 RPC) |
 | U3 | Edge Function `collect`·`analyze` (`verify_jwt=false`), cron `collect-daily`(UTC `0 20 * * *` = KST 05:00)·`analyze-hourly`(`30 * * * *`), Vault `collect_url`·`analyze_url`·`cron_secret`, 함수 시크릿 `DATA_GO_KR_API_KEY`·`GEMINI_API_KEY`·`GEMINI_MODEL`(선택)·`CRON_SECRET`, 마이그레이션 0007 |
-| U6 | Edge Function `dispatch`, cron `dispatch-hourly`, Vault `dispatch_url`(+ U3의 `cron_secret` 재사용), VAPID 키 |
+| U6 | Edge Function `dispatch`(`verify_jwt=false`), cron `dispatch-hourly`(`0 * * * *` = KST 정각)·`cleanup-push`(UTC `10 19 * * *` = KST 04:10), Vault `dispatch_url`(+ U3 `cron_secret` 재사용), 함수 시크릿·Vercel(Production) `VAPID_PUBLIC_KEY`·`VAPID_PRIVATE_KEY`·`VAPID_SUBJECT`, 마이그레이션 0008(표 `push_test_log`·`dispatch_runs`, 칸 4개, 함수 7개), Vercel 정적 `sw.js`·manifest·아이콘 |
