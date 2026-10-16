@@ -912,3 +912,19 @@
 **Context**: CONSTRUCTION - U5 Code Generation Part 2 완료, 승인 대기
 
 ---
+
+## U5 Code Generation — 승인
+**Timestamp**: 2026-10-16T04:40:00Z
+**User Input**: "푸시하고 진행"
+**AI Response**: "U5 Code Generation 승인으로 기록. 11360ac~f48a26f push, CI 확인. 다음 단계 U6 pwa-push Functional Design 시작."
+**Context**: CONSTRUCTION - U5 Code Generation 승인 → U6 Functional Design
+
+---
+
+## U6 Functional Design — 계획·질문 작성
+**Timestamp**: 2026-10-16T04:55:00Z
+**User Input**: (없음 — U5 승인에 따라 다음 단계 시작)
+**AI Response**: "U6 pwa-push 기능 설계 계획과 질문 11개 작성 (aidlc-docs/construction/plans/U6-pwa-push-functional-design-plan.md): 첫 알림 기존 공고(OI-5), 고쳐서 새로 맞게 된 공고, 알림 문구, 하루 1번·놓친 시각, 발송 실패, 설치 안내 위치, iPhone 그림, 구독 재저장, 시험 알림, 아이콘·이름, 거부 시 안내. 답 대기."
+**Context**: CONSTRUCTION - U6 Functional Design, 질문 대기
+
+---
