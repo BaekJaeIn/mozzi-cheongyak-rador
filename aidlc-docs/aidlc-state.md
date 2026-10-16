@@ -44,12 +44,12 @@
 - [x] Units Generation (2026-10-13 승인)
 
 ### 🟢 CONSTRUCTION PHASE
-- [ ] Functional Design - EXECUTE (Unit별)
-- [ ] NFR Requirements - EXECUTE (Unit별)
-- [ ] NFR Design - EXECUTE (Unit별)
-- [ ] Infrastructure Design - EXECUTE (Unit별)
-- [ ] Code Generation - EXECUTE
-- [ ] Build and Test - EXECUTE
+- [x] Functional Design - EXECUTE (Unit별)
+- [x] NFR Requirements - EXECUTE (Unit별)
+- [x] NFR Design - EXECUTE (Unit별)
+- [x] Infrastructure Design - EXECUTE (Unit별)
+- [x] Code Generation - EXECUTE (U1~U6, 2026-10-17)
+- [ ] Build and Test - EXECUTE (문서·실행 완료 2026-10-17, 승인 대기)
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations (PLACEHOLDER)
