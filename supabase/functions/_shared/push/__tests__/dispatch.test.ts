@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildPayload, countsText, encodePayload, shortName, testPayload } from "../payload.ts";
 import { planDevice, visibleNoticeIds } from "../plan.ts";
 import { classifyStatus, sendPush, settleDevice } from "../send.ts";
-import { kstHour, runDispatch } from "../dispatch.ts";
+import { kstHour, partOf, runDispatch } from "../dispatch.ts";
 import { createVapidSigner, generateVapidKeys } from "../vapid.ts";
 import { fakePushService, feedRow, MemoryDispatchStore, silentLog, UA_KEYS } from "./sim.ts";
 
@@ -230,6 +230,17 @@ describe("runDispatch — business-logic-model §1.1", () => {
     expect(s.timeBudgetExceeded).toBe(true);
     expect(s.skippedBudget).toBeGreaterThan(0);
     expect(s.sent + s.skippedBudget).toBe(3);
+  });
+
+  it("나눠 부르기: 모든 기기가 정확히 한 몫에 들어간다", async () => {
+    const t = await setup();
+    const ids = Array.from({ length: 20 }, (_, i) => `d${i}`);
+    for (const id of ids) t.add(id, 9, null);
+    let total = 0;
+    for (let index = 0; index < 3; index++) total += (await runDispatch({ ...t.deps, part: { index, count: 3 } }, NOW_9)).devices;
+    expect(total).toBe(20);
+    expect(t.push.calls).toHaveLength(20);
+    expect(ids.map((id) => partOf(id, 3)).every((p) => p >= 0 && p < 3)).toBe(true);
   });
 
   it("KST 시", () => {

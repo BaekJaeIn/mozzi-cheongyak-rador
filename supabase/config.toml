@@ -420,3 +420,6 @@ verify_jwt = false
 
 [functions.analyze]
 verify_jwt = false
+
+[functions.dispatch]
+verify_jwt = false

@@ -36,12 +36,12 @@
 
 ## Part B. DB
 
-- [ ] **Step 6. 마이그레이션** `supabase/migrations/0008_push.sql`: 칸(`devices.last_push_on`·`push_baseline_at`, `notification_log.kind`, `push_subscriptions.failing_since`), 표(`push_test_log`, `dispatch_runs`) + RLS·권한, 함수 7개(`dispatch_candidates`, `dispatch_device_rows`, `claim_daily_push`, `release_daily_push`, `record_push_result`, `save_push_subscription`, `try_test_push`) + `run_cleanup_push`, cron `dispatch-hourly`·`cleanup-push` (logical-components §3)
-- [ ] **Step 7. pgTAP** `supabase/tests/push.test.sql`: claim 두 번째 null·release 조건, record 트랜잭션(기록·성공·실패 시각·만료 삭제·기준선 유지), 저장(옮기기·5개 제한·기준선 한 번), 시험 한도, 정리(실패 7일·보낼 일 없던 구독은 남음), 권한(anon 차단), cron 2개
+- [x] **Step 6. 마이그레이션** `supabase/migrations/0008_push.sql`: 칸(`devices.last_push_on`·`push_baseline_at`, `notification_log.kind`, `push_subscriptions.failing_since`), 표(`push_test_log`, `dispatch_runs`) + RLS·권한, 함수 7개(`dispatch_candidates`, `dispatch_device_rows`, `claim_daily_push`, `release_daily_push`, `record_push_result`, `save_push_subscription`, `try_test_push`) + `run_cleanup_push`, cron `dispatch-hourly`·`cleanup-push` (logical-components §3)
+- [x] **Step 7. pgTAP** `supabase/tests/push.test.sql`: claim 두 번째 null·release 조건, record 트랜잭션(기록·성공·실패 시각·만료 삭제·기준선 유지), 저장(옮기기·5개 제한·기준선 한 번), 시험 한도, 정리(실패 7일·보낼 일 없던 구독은 남음), 권한(anon 차단), cron 2개
 
 ## Part C. Edge Function
 
-- [ ] **Step 8. `dispatch`** `_lib/push-store.ts`(`DispatchStore` Deno 구현), `_lib/env.ts`에 VAPID 값, `supabase/functions/dispatch/index.ts`(`cronHandler` → `runDispatch` → `dispatch_runs`), `supabase/config.toml`(`verify_jwt = false`), deno check. **1,000건 암호화 CPU 시간 측정 스크립트**(`scripts/measure-push-cpu.ts`, Deno) — 결과를 code-summary에 (Q2=A)
+- [x] **Step 8. `dispatch`** `_lib/push-store.ts`(`DispatchStore` Deno 구현), `_lib/env.ts`에 VAPID 값, `supabase/functions/dispatch/index.ts`(`cronHandler` → `runDispatch` → `dispatch_runs`), `supabase/config.toml`(`verify_jwt = false`), deno check. **1,000건 암호화 CPU 시간 측정 스크립트**(`scripts/measure-push-cpu.ts`, Deno) — 결과를 code-summary에 (Q2=A)
 
 ## Part D. Next API
 

@@ -51,6 +51,8 @@ export interface DispatchDeps {
   concurrency?: number;
   budgetMs?: number;
   batchSize?: number;
+  /** 나눠 부르기 (infrastructure-design §4): 기기 ID 해시 % count === index 인 기기만. 없으면 전부 */
+  part?: { index: number; count: number };
 }
 
 export interface DispatchSummary {
@@ -70,6 +72,18 @@ export interface DispatchSummary {
 export const CONCURRENCY = 5;
 export const TIME_BUDGET_MS = 45_000;
 export const BATCH_SIZE = 100;
+/** 한 번 호출에서 이보다 많으면 나눠 부르라고 경고 (암호화 1,000건 ≈ 1.8초, Edge CPU 2초 한도) */
+export const SPLIT_WARN_DEVICES = 400;
+
+/** 기기 ID → 0 이상 정수 (FNV-1a 32비트) — 나눠 부르기용 */
+export function partOf(deviceId: string, count: number): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < deviceId.length; i++) {
+    h ^= deviceId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h % count;
+}
 
 /** 한국 시(0~23) */
 export function kstHour(now: Date): number {
@@ -108,9 +122,11 @@ export async function runDispatch(deps: DispatchDeps, now: Date): Promise<Dispat
     timeBudgetExceeded: false,
   };
 
-  const candidates = await deps.store.candidates(hour, today);
+  const part = deps.part;
+  const candidates = (await deps.store.candidates(hour, today)).filter((c) => !part || part.count <= 1 || partOf(c.deviceId, part.count) === part.index);
   summary.devices = candidates.length;
   if (candidates.length === 0) return summary;
+  if (candidates.length > SPLIT_WARN_DEVICES) deps.log.warn("dispatch.too_many", { devices: candidates.length, hint: "cron을 part별로 나눠 부르세요" });
 
   // 묶어 읽기 (P-9) → 오래된 판정만 다시 계산 (BR-U6-04, P-11)
   const rows = await readRows(deps.store, candidates.map((c) => c.deviceId), today, size);

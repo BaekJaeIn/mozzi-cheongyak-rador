@@ -7,6 +7,8 @@ export interface RunContext {
   runId: string;
   startedAtMs: number;
   log: Logger;
+  /** 본문을 읽어야 하는 함수용 (dispatch의 나눠 부르기) */
+  req: Request;
 }
 
 function json(status: number, body: unknown): Response {
@@ -24,7 +26,7 @@ export function cronHandler(name: string, run: (ctx: RunContext) => Promise<unkn
     const runId = crypto.randomUUID();
     const log = createLogger({ fn: name, runId });
     try {
-      const result = await run({ runId, startedAtMs, log });
+      const result = await run({ runId, startedAtMs, log, req });
       log.info("완료", { elapsedMs: Date.now() - startedAtMs });
       return json(200, result);
     } catch (e) {

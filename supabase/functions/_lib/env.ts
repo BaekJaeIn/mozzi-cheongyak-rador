@@ -11,6 +11,8 @@ export interface FunctionEnv {
   mock: boolean;
   amountEncKeys: Record<number, string>;
   amountEncKeyCurrent: number;
+  /** U6 dispatch — 없으면 dispatch가 실행을 거부한다 */
+  vapid: { publicKey: string | undefined; privateKey: string | undefined; subject: string | undefined };
 }
 
 function optional(name: string): string | undefined {
@@ -47,5 +49,6 @@ export function readFunctionEnv(): FunctionEnv {
     mock: optional("COLLECT_MOCK") === "1",
     amountEncKeys,
     amountEncKeyCurrent,
+    vapid: { publicKey: optional("VAPID_PUBLIC_KEY"), privateKey: optional("VAPID_PRIVATE_KEY"), subject: optional("VAPID_SUBJECT") },
   };
 }

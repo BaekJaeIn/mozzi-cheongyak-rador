@@ -1,4 +1,4 @@
-// collect·analyze 공통 조립 (CG-1): 환경 변수 → DB·저장소·재계산·Collector·PDF·Gemini
+// collect·analyze·dispatch 공통 조립 (CG-1): 환경 변수 → DB·저장소·재계산·Collector·PDF·Gemini
 import {
   applyhomeCollector,
   ghCollector,
@@ -55,5 +55,8 @@ export function createPipeline(env: FunctionEnv, log: Logger) {
     return { pdf: createPdfFetcher(), extractor: createGeminiExtractor(env.geminiKey, env.geminiModel) };
   }
 
-  return { repo: createCollectRepository(db), recomputer, collectors, ai };
+  /** U6 dispatch: 오래된 판정만 그 기기에서 다시 계산 (BR-U6-04) */
+  const recomputeDevice = (deviceId: string, asOf: string) => judgement.recomputeForDevice(deviceId, asOf);
+
+  return { repo: createCollectRepository(db), recomputer, collectors, ai, db, recomputeDevice };
 }
