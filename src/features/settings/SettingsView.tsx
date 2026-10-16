@@ -12,7 +12,8 @@ import { groupSummary } from "@/features/profile/model/summary";
 import type { FlushResult } from "@/features/profile/model/sync";
 import { useProfile } from "@/features/profile/ProfileProvider";
 import { ConfirmDialog, secondaryButton } from "@/features/profile/ui/controls";
-import { getPushPort } from "@/features/profile/ui/push-port";
+import { getPushPort, type PushSubscribeResult } from "@/features/profile/ui/push-port";
+import { DeniedHelp, InstallGuideButton, InstallSection, TestPushButton } from "@/features/pwa/ui/PwaPanels";
 
 const SAVED_TEXT: Partial<Record<FlushResult, string>> = {
   synced: "저장했어요.",
@@ -77,6 +78,7 @@ export function SettingsView({ saved }: { saved?: string }) {
       </section>
 
       <NotifySettings />
+      <InstallSection />
       <DisplayModeSelector />
       <DeleteAllSection />
     </div>
@@ -115,12 +117,20 @@ function SyncBanner() {
   );
 }
 
-/** 알림 켜기/끄기·시각 — 바꾸는 즉시 저장 (US-09, BR-U4-74~76) */
+const PUSH_TEXT: Record<PushSubscribeResult, string> = {
+  subscribed: "알림이 켜졌어요.",
+  denied: "",
+  unsupported: "이 휴대폰에서는 알림을 켤 수 없어요.",
+  needs_install: "알림을 받으려면 먼저 홈 화면에 추가해 주세요.",
+  error: "알림을 켜지 못했어요. 잠시 뒤에 다시 시도해 주세요.",
+};
+
+/** 알림 켜기/끄기·시각 — 바꾸는 즉시 저장 (US-09, BR-U4-74~76, U6 BR-U6-63) */
 function NotifySettings() {
   const { notify, saveNotify } = useProfile();
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pushNote, setPushNote] = useState<string | null>(null);
+  const [pushResult, setPushResult] = useState<PushSubscribeResult | null>(null);
 
   const change = async (next: { hour: number; enabled: boolean }) => {
     const result = await saveNotify(next);
@@ -130,8 +140,7 @@ function NotifySettings() {
     // 켰는데 이 기기 구독이 없으면 알림 허용으로 이어 준다 (U6 연결 시)
     const port = getPushPort();
     if (next.enabled && port && port.supported() && !(await port.isSubscribed())) {
-      const r = await port.subscribe();
-      setPushNote(r === "subscribed" ? "알림이 켜졌어요." : r === "denied" ? "휴대폰 설정 → 알림에서 이 앱을 허용해 주세요." : null);
+      setPushResult(await port.subscribe().catch(() => "error" as const));
     }
   };
 
@@ -171,8 +180,11 @@ function NotifySettings() {
         </select>
       </label>
       <p aria-live="polite" className="min-h-touch text-body font-bold text-primary">
-        {toast ?? pushNote ?? ""}
+        {toast ?? (pushResult ? PUSH_TEXT[pushResult] : "")}
       </p>
+      {pushResult === "denied" && <DeniedHelp />}
+      {pushResult === "needs_install" && <InstallGuideButton />}
+      {notify.enabled && <TestPushButton />}
     </section>
   );
 }

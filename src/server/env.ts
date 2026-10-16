@@ -49,3 +49,11 @@ export function getServerEnv(): ServerEnv {
 export function resetServerEnvForTest(): void {
   cached = null;
 }
+
+/** U6 웹 푸시 VAPID 값 — 없으면 null (미리보기 배포 등, infrastructure-design §3) */
+export function getVapidEnv(): { publicKey: string; privateKey: string; subject: string } | null {
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  const subject = process.env.VAPID_SUBJECT?.trim();
+  return publicKey && privateKey && subject ? { publicKey, privateKey, subject } : null;
+}

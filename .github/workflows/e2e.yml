@@ -43,6 +43,7 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY:-$SECRET_KEY}"
             echo "AMOUNT_ENC_KEY_V1=${KEY}"
             echo "AMOUNT_ENC_KEY_CURRENT=1"
+            node scripts/generate-vapid.mjs --env
           } > .env.local
 
       - name: install browsers

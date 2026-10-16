@@ -45,18 +45,18 @@
 
 ## Part D. Next API
 
-- [ ] **Step 9. API** `src/server/db/push-repository.ts`, `src/server/handlers/push.ts`(`POST /api/push/subscribe` 4KB·검사·저장, `POST /api/push/test` 한도·보내기·결과 반영, `GET /api/push/key` — 미설정이면 503 `PUSH_NOT_CONFIGURED`), 라우트 3개, `deps.ts`, 오류 코드(`TOO_MANY_TESTS`·`NO_SUBSCRIPTION`·`PUSH_NOT_CONFIGURED`), 핸들러 테스트(401·400·413·409·429·503·로그에 주소·키 없음) — US-03
+- [x] **Step 9. API** `src/server/db/push-repository.ts`, `src/server/handlers/push.ts`(`POST /api/push/subscribe` 4KB·검사·저장, `POST /api/push/test` 한도·보내기·결과 반영, `GET /api/push/key` — 미설정이면 503 `PUSH_NOT_CONFIGURED`), 라우트 3개, `deps.ts`, 오류 코드(`TOO_MANY_TESTS`·`NO_SUBSCRIPTION`·`PUSH_NOT_CONFIGURED`), 핸들러 테스트(401·400·413·409·429·503·로그에 주소·키 없음) — US-03
 
 ## Part E. 브라우저
 
-- [ ] **Step 10. 설치 요건** `public/sw.js`(push·notificationclick·pushsubscriptionchange, 캐시 없음 — P-18·19·22), `src/app/manifest.ts`(이름·아이콘·색), `layout.tsx` iPhone 메타·`apple-touch-icon`, `next.config` `sw.js` 헤더(`no-cache`), `scripts/render-icons.mjs` → `public/icons/` PNG(192·512·maskable·180), 임시 SVG 정리 — US-01
-- [ ] **Step 11. 화면 순수 로직** `src/features/pwa/model/`: `installPlatform`, `isStandalone`, `shouldShowInstallHint`(7일), `deniedHelp`, `safeClickUrl`(sw와 같은 규칙 — sw는 같은 함수를 복사하지 않고 테스트로 두 구현이 같은지 확인), 공개 키 변경 감지 + 예시 테스트
-- [ ] **Step 12. 알림 연결** `PwaProvider`(SW 등록, 설치 상태·`beforeinstallprompt`, `setPushPort` 구현: supported·needs_install·denied·subscribe — P-20·21, 앱 열 때 구독 다시 저장·SW 메시지 — P-22), U4 `push-port.ts`에 `needs_install`, `NotifyStep`·`SettingsView` 결과 연결(BR-U6-61·63·81), `layout.tsx` — US-03
-- [ ] **Step 13. 안내 화면** `src/features/pwa/ui/`: `InstallHintBanner`(U5 피드 위), `InstallGuide`(대화 상자·초점), `IosInstallSteps`(SVG 그림 3장 + 글), `AndroidInstall`, `DeniedHelp`, `InstallSection`·`TestPushButton`(설정) — US-01·03
+- [x] **Step 10. 설치 요건** `public/sw.js`(push·notificationclick·pushsubscriptionchange, 캐시 없음 — P-18·19·22), `src/app/manifest.ts`(이름·아이콘·색), `layout.tsx` iPhone 메타·`apple-touch-icon`, `next.config` `sw.js` 헤더(`no-cache`), `scripts/render-icons.mjs` → `public/icons/` PNG(192·512·maskable·180), 임시 SVG 정리 — US-01
+- [x] **Step 11. 화면 순수 로직** `src/features/pwa/model/`: `installPlatform`, `isStandalone`, `shouldShowInstallHint`(7일), `deniedHelp`, `safeClickUrl`(sw와 같은 규칙 — sw는 같은 함수를 복사하지 않고 테스트로 두 구현이 같은지 확인), 공개 키 변경 감지 + 예시 테스트
+- [x] **Step 12. 알림 연결** `PwaProvider`(SW 등록, 설치 상태·`beforeinstallprompt`, `setPushPort` 구현: supported·needs_install·denied·subscribe — P-20·21, 앱 열 때 구독 다시 저장·SW 메시지 — P-22), U4 `push-port.ts`에 `needs_install`, `NotifyStep`·`SettingsView` 결과 연결(BR-U6-61·63·81), `layout.tsx` — US-03
+- [x] **Step 13. 안내 화면** `src/features/pwa/ui/`: `InstallHintBanner`(U5 피드 위), `InstallGuide`(대화 상자·초점), `IosInstallSteps`(SVG 그림 3장 + 글), `AndroidInstall`, `DeniedHelp`, `InstallSection`·`TestPushButton`(설정) — US-01·03
 
 ## Part F. 스크립트·E2E·문서·검증
 
-- [ ] **Step 14. 스크립트·CI** `scripts/generate-vapid.mjs`(`npm run vapid:generate`: 화면에 3값 출력, `--env` 옵션은 CI용으로 `.env.local`에 덧붙임), `.github/workflows/e2e.yml`에 임시 VAPID, `.env.example` 갱신
+- [x] **Step 14. 스크립트·CI** `scripts/generate-vapid.mjs`(`npm run vapid:generate`: 화면에 3값 출력, `--env` 옵션은 CI용으로 `.env.local`에 덧붙임), `.github/workflows/e2e.yml`에 임시 VAPID, `.env.example` 갱신
 - [ ] **Step 15. E2E** `e2e/pwa.spec.ts`: manifest·SW 등록, 설치 안내 띠(닫기 → 7일), 설정의 설치 칸, 알림 켜기(Chromium: 권한 허용 흉내 → 구독 저장 → 서버 행 확인), 시험 알림(푸시 서비스 요청 가로채기 → 200 결과 문구), 거부 안내, `/api/push/key`, axe. iPhone(WebKit)은 `needs_install` 안내 확인
 - [ ] **Step 16. 문서** README("알림과 설치 (U6)"), `aidlc-docs/construction/U6-pwa-push/code/setup-guide-u6.md`(운영 반영 ①~⑧, 키 교체, 되돌리기, 확인 쿼리), `code-summary.md`
 - [ ] **Step 17. 검증**: typecheck·lint·test(+PBT seed 반복)·build·deno check, 로컬 Supabase pgTAP·E2E(Android·iPhone), 커밋 (push는 사용자 확인 후)

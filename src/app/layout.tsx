@@ -6,6 +6,7 @@ import { BottomNav } from "@/features/app-chrome/BottomNav";
 import { APP_NAME } from "@/features/app-chrome/constants";
 import { DeviceBootstrap } from "@/features/device/DeviceBootstrap";
 import { DISPLAY_MODE_SCRIPT } from "@/features/display-mode/display-mode";
+import { PushResync, PwaProvider } from "@/features/pwa/PwaProvider";
 import {
   ProfileProvider,
   SyncOnReady,
@@ -17,6 +18,13 @@ export const metadata: Metadata = {
   description:
     "3기 신도시 분양·임대 공고 중 우리 집에 맞는 것만 골라 알려 드려요",
   applicationName: APP_NAME,
+  // iPhone 홈 화면 앱 (U6 BR-U6-75, NFR-U6-22·26). manifest는 src/app/manifest.ts
+  appleWebApp: {
+    capable: true,
+    title: "청약 알리미",
+    statusBarStyle: "default",
+  },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 // 글자 확대를 막지 않는다 (NFR-U1-28)
@@ -35,16 +43,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="min-h-dvh bg-canvas">
         <ProfileProvider>
-          <BookmarksProvider>
-            <AppHeader title={APP_NAME} />
-            <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
-              <DeviceBootstrap>
-                <SyncOnReady />
-                {children}
-              </DeviceBootstrap>
-            </main>
-            <BottomNav />
-          </BookmarksProvider>
+          <PwaProvider>
+            <BookmarksProvider>
+              <AppHeader title={APP_NAME} />
+              <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
+                <DeviceBootstrap>
+                  <SyncOnReady />
+                  <PushResync />
+                  {children}
+                </DeviceBootstrap>
+              </main>
+              <BottomNav />
+            </BookmarksProvider>
+          </PwaProvider>
         </ProfileProvider>
       </body>
     </html>

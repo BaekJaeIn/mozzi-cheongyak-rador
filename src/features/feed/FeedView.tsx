@@ -14,6 +14,7 @@ import { isNew, periodLabel } from "@/features/notice/model/display";
 import { DdayBadge, NewBadge, VerdictBadge } from "@/features/notice/ui/badges";
 import { feedItemSnapshot, kstTimeLabel, listWithMore } from "@/features/notice/ui/format";
 import { useProfile } from "@/features/profile/ProfileProvider";
+import { InstallHintBanner } from "@/features/pwa/ui/PwaPanels";
 import { loadFeedCache, redrawCachedFeed, saveFeedCache } from "./model/cache";
 import { loadSeen, seenSet } from "./model/seen";
 
@@ -108,6 +109,7 @@ export function FeedView() {
   const now = new Date();
   return (
     <section className="flex flex-col gap-4" aria-labelledby="feed-title">
+      <InstallHintBanner />
       <div className="flex items-baseline justify-between gap-2">
         <h1 id="feed-title" className="text-heading font-bold">
           맞춤 공고

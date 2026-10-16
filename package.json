@@ -14,6 +14,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "deno:check": "node scripts/deno-check.mjs",
+    "vapid:generate": "node scripts/generate-vapid.mjs",
+    "icons:render": "node scripts/render-icons.mjs",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db"

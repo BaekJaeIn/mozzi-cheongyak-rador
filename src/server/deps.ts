@@ -12,6 +12,9 @@ import { createReferenceRepository } from "./db/reference-repository";
 import { getKeyring } from "./security/keyring";
 import { districtsCache, supplyTypeLabelsCache } from "./cache/reference-cache";
 import { createFeedRepository } from "./db/feed-repository";
+import { createPushRepository } from "./db/push-repository";
+import { getVapidEnv } from "./env";
+import { createPushKeyHandler, createSubscribeHandler, createTestPushHandler, type PushDeps, SUBSCRIBE_MAX_BODY_BYTES } from "./handlers/push";
 import type { TypeLabels } from "./feed/build";
 import { createCalendarHandler, createFeedHandler, createNoticeDetailHandler, createNoticeSummariesHandler } from "./handlers/feed";
 import {
@@ -84,3 +87,24 @@ export const feedRoute = withDevice(createFeedHandler(feedDeps), { route: "GET /
 export const noticeDetailRoute = withDevice(createNoticeDetailHandler(feedDeps), { route: "GET /api/notices/[id]" });
 export const noticeSummariesRoute = withDevice(createNoticeSummariesHandler(feedDeps), { route: "GET /api/notices" });
 export const noticeCalendarRoute = createCalendarHandler(feedDeps);
+
+// ---------- U6 API (S6) ----------
+export const pushRepository = () => createPushRepository(getDb());
+
+const pushDeps: PushDeps = {
+  vapid: getVapidEnv,
+  feed: feedRepository,
+  saveSubscription: (input) => pushRepository().save(input),
+  tryTestPush: (deviceId) => pushRepository().tryTest(deviceId),
+  listSubscriptions: (deviceId) => pushRepository().list(deviceId),
+  recordResult: (deviceId, result) => pushRepository().record(deviceId, result),
+  transport: (url, init) => fetch(url, init),
+  now: () => new Date(),
+};
+
+export const pushKeyRoute = createPushKeyHandler(pushDeps);
+export const pushSubscribeRoute = withDevice(createSubscribeHandler(pushDeps), {
+  route: "POST /api/push/subscribe",
+  maxBodyBytes: SUBSCRIBE_MAX_BODY_BYTES,
+});
+export const pushTestRoute = withDevice(createTestPushHandler(pushDeps), { route: "POST /api/push/test" });
