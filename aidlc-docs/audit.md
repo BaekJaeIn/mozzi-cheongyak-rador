@@ -928,3 +928,19 @@
 **Context**: CONSTRUCTION - U6 Functional Design, 질문 대기
 
 ---
+
+## U6 Functional Design — 답변
+**Timestamp**: 2026-10-16T05:10:00Z
+**User Input**: "모두 추천으로 진행해줘"
+**AI Response**: "Q1~Q3는 사용자가 A로 기입, Q4~Q11은 요청대로 추천(A)으로 기입. 모호한 답 없음 → 기능 설계 문서 작성."
+**Context**: CONSTRUCTION - U6 Functional Design, 답 수집 완료
+
+---
+
+## U5 — push 뒤 CI 실패 수정
+**Timestamp**: 2026-10-16T05:30:00Z
+**User Input**: (없음 — CI 결과 확인)
+**AI Response**: "f48a26f CI: ci 성공, db-and-e2e 실패(E2E 41/42). 원인: feed.spec 쉬운 모드 테스트의 h1 locator가 앱 머리글 h1까지 잡음(strict mode). 앱 결함 아님. 공고 제목으로 기다리게 고침, 로컬 feed E2E 16/16. 로컬 커밋, push는 사용자 확인 후."
+**Context**: CONSTRUCTION - U5 후속 (U6 FD 진행 중)
+
+---

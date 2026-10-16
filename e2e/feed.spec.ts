@@ -150,7 +150,9 @@ test("쉬운 모드에서도 상세에 가로 스크롤이 없다 (NFR-1)", asyn
   await page.addInitScript(() => window.localStorage.setItem("mz.display", "easy"));
   await openFeed(page);
   await page.goto(`/notice/${fx.open.id}`);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // 상세 내용이 다 그려진 뒤에 잰다 (앱 머리글에도 h1이 있으므로 공고 제목으로 기다린다)
+  await expect(page.getByRole("heading", { level: 1, name: `${fx.open.name} 입주자 모집공고` })).toBeVisible();
+  await expect(page.getByText("판정 이유")).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
   await axe(page);
