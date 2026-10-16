@@ -10,7 +10,10 @@ import { createNoticeRepository } from "./db/notice-repository";
 import { createProfileRepository } from "./db/profile-repository";
 import { createReferenceRepository } from "./db/reference-repository";
 import { getKeyring } from "./security/keyring";
-import { districtsCache } from "./cache/reference-cache";
+import { districtsCache, supplyTypeLabelsCache } from "./cache/reference-cache";
+import { createFeedRepository } from "./db/feed-repository";
+import type { TypeLabels } from "./feed/build";
+import { createCalendarHandler, createFeedHandler, createNoticeDetailHandler, createNoticeSummariesHandler } from "./handlers/feed";
 import {
   createDeleteDeviceHandler,
   createNotifySettingsHandler,
@@ -60,3 +63,24 @@ export const notifySettingsRoute = withDevice(createNotifySettingsHandler(device
 });
 
 export const deleteDeviceRoute = withDevice(createDeleteDeviceHandler(deviceRepository), { route: "DELETE /api/device" });
+
+// ---------- U5 API (S4) ----------
+export const feedRepository = () => createFeedRepository(getDb());
+
+async function typeLabels(): Promise<TypeLabels> {
+  const labels = await supplyTypeLabelsCache.get();
+  return new Map(labels.map((l) => [l.code, { plain: l.plainLabel, formal: l.formalLabel }]));
+}
+
+const feedDeps = {
+  feed: feedRepository,
+  profiles: profileRepository,
+  labels: typeLabels,
+  recompute: (deviceId: string, asOf: string) => judgementService().recomputeForDevice(deviceId, asOf),
+  now: () => new Date(),
+};
+
+export const feedRoute = withDevice(createFeedHandler(feedDeps), { route: "GET /api/feed" });
+export const noticeDetailRoute = withDevice(createNoticeDetailHandler(feedDeps), { route: "GET /api/notices/[id]" });
+export const noticeSummariesRoute = withDevice(createNoticeSummariesHandler(feedDeps), { route: "GET /api/notices" });
+export const noticeCalendarRoute = createCalendarHandler(feedDeps);

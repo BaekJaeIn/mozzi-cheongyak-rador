@@ -29,19 +29,19 @@
 
 ## Part A. 순수 로직 (React 없음)
 
-- [ ] **Step 1. 표시 함수** `src/features/notice/model/display.ts`: `ddayLabel`(BR-U5-30~37), `periodLabel`(BR-U5-23), `isNew`(BR-U5-40), `timeline`(BR-U5-75~77), `areaLabel`·`unitRows`(BR-U5-78~81), 조건 이름 표 — US-12·13
-- [ ] **Step 2. 판정 이유** `src/features/notice/model/judgement.ts`: `groupJudgement`(BR-U5-86·87), `withUserValue`(BR-U5-90, U4 `formatManwon` 사용), 한 줄 요약 문구(BR-U5-85), 행동 문구의 설정 링크 대상(BR-U5-89) — US-14
-- [ ] **Step 3. 캘린더** `src/features/notice/model/calendar.ts`: `calendarEvent`(BR-U5-105·110), `buildIcs`(이스케이프·75바이트 접기·UTF-8 경계·DTEND+1·마감 전날 09:00 KST 알림 — BR-U5-107·108), `googleCalendarUrl`(BR-U5-109), `calendarTarget`(iOS·iPadOS 판별 — BR-U5-106) — US-16
-- [ ] **Step 4. 기기 저장** `src/features/bookmarks/model/store.ts`(`BookmarkStore`: list·has·toggle·remove·refresh, 100개, 깨진 항목 버림 — BR-U5-115~124, `sortBookmarks` — BR-U5-121), `src/features/feed/model/seen.ts`(`mz.seen` 기록·정리 — BR-U5-41~43), `src/features/feed/model/cache.ts`(`mz.feed` 저장·읽기·버전 검사, `redrawCachedFeed` — BR-U5-50~55). U4 `clearAllPersonal`에 `mz.seen`·`mz.feed` 추가 — US-12·17
-- [ ] **Step 5. 서버 순수 로직** `src/server/feed/`: `buildFeed`(isVisible·카드 공급유형·지구 순서·compareFeedItems — BR-U5-01·10·22·25), `judgementFreshness`(BR-U5-04 판단), `pickSources`(http(s)·대표 — BR-U5-100~102), `toNoticeDetail`·`toNoticeSummary`(응답에서 빼는 값 — BR-U5-134), 요약 표시 조건(BR-U5-95) — US-12·13·15
-- [ ] **Step 6. 예시 테스트** 각 `model/__tests__/*.test.ts`, `src/server/feed/__tests__/`: D-day 표 각 줄, 타임라인 오늘 위치(앞·중간·끝·날짜 없음·순서 어긋남), 면적 표기(59·84.97·0.5·null), 세대수 합계("이상"), 판정 묶기(같음·주택형마다 다름·미충족만), 내 금액 붙이기, .ics 내용(고정 날짜 2026-10-20~23), Google 링크, 관심 공고(가득 참·깨짐·gone), 저장본 다시 그리기, business-logic-model §8 예시 4건 → 피드
-- [ ] **Step 7. 속성 기반 테스트** `*.pbt.test.ts` + 생성기 `arbitraries.ts`(판정 행·주택형 판정·일정·관심 공고 명령열): P-U5-1~13 (domain-entities §7)
+- [x] **Step 1. 표시 함수** `src/features/notice/model/display.ts`: `ddayLabel`(BR-U5-30~37), `periodLabel`(BR-U5-23), `isNew`(BR-U5-40), `timeline`(BR-U5-75~77), `areaLabel`·`unitRows`(BR-U5-78~81), 조건 이름 표 — US-12·13
+- [x] **Step 2. 판정 이유** `src/features/notice/model/judgement.ts`: `groupJudgement`(BR-U5-86·87), `withUserValue`(BR-U5-90, U4 `formatManwon` 사용), 한 줄 요약 문구(BR-U5-85), 행동 문구의 설정 링크 대상(BR-U5-89) — US-14
+- [x] **Step 3. 캘린더** `src/features/notice/model/calendar.ts`: `calendarEvent`(BR-U5-105·110), `buildIcs`(이스케이프·75바이트 접기·UTF-8 경계·DTEND+1·마감 전날 09:00 KST 알림 — BR-U5-107·108), `googleCalendarUrl`(BR-U5-109), `calendarTarget`(iOS·iPadOS 판별 — BR-U5-106) — US-16
+- [x] **Step 4. 기기 저장** `src/features/bookmarks/model/store.ts`(`BookmarkStore`: list·has·toggle·remove·refresh, 100개, 깨진 항목 버림 — BR-U5-115~124, `sortBookmarks` — BR-U5-121), `src/features/feed/model/seen.ts`(`mz.seen` 기록·정리 — BR-U5-41~43), `src/features/feed/model/cache.ts`(`mz.feed` 저장·읽기·버전 검사, `redrawCachedFeed` — BR-U5-50~55). U4 `clearAllPersonal`에 `mz.seen`·`mz.feed` 추가 — US-12·17
+- [x] **Step 5. 서버 순수 로직** `src/server/feed/`: `buildFeed`(isVisible·카드 공급유형·지구 순서·compareFeedItems — BR-U5-01·10·22·25), `judgementFreshness`(BR-U5-04 판단), `pickSources`(http(s)·대표 — BR-U5-100~102), `toNoticeDetail`·`toNoticeSummary`(응답에서 빼는 값 — BR-U5-134), 요약 표시 조건(BR-U5-95) — US-12·13·15
+- [x] **Step 6. 예시 테스트** 각 `model/__tests__/*.test.ts`, `src/server/feed/__tests__/`: D-day 표 각 줄, 타임라인 오늘 위치(앞·중간·끝·날짜 없음·순서 어긋남), 면적 표기(59·84.97·0.5·null), 세대수 합계("이상"), 판정 묶기(같음·주택형마다 다름·미충족만), 내 금액 붙이기, .ics 내용(고정 날짜 2026-10-20~23), Google 링크, 관심 공고(가득 참·깨짐·gone), 저장본 다시 그리기, business-logic-model §8 예시 4건 → 피드
+- [x] **Step 7. 속성 기반 테스트** `*.pbt.test.ts` + 생성기 `arbitraries.ts`(판정 행·주택형 판정·일정·관심 공고 명령열): P-U5-1~13 (domain-entities §7)
 
 ## Part B. 서버 API (S4)
 
-- [ ] **Step 8. 저장소**: `JudgementRepository.listFeedRows(deviceId, today)`(verdict≠ineligible·in_district·마감일≥오늘 또는 없음 + 공고·지구), `freshness(deviceId)`(개수·최소 profile_version), `getForNotice(deviceId, noticeId)`; `NoticeRepository.getDetail(id)`(주택형·지구·출처), `listSummaries(ids)`, `countRetained()`. 인터페이스 `_shared/db/repositories.ts`, Node 구현 `src/server/db/`, 테스트 가짜 — US-12·13·17
-- [ ] **Step 9. 핸들러·라우트** `src/server/handlers/feed.ts`: `GET /api/feed`(no_profile·재계산 1번·outdated — BR-U5-03~05·130), `GET /api/notices/[id]`(UUID 검사·404 — BR-U5-131), `GET /api/notices?ids=`(1~100, 400 — BR-U5-132), `GET /api/notices/[id]/calendar`(인증 없음, text/calendar — BR-U5-133). 라우트 `src/app/api/feed/route.ts`, `src/app/api/notices/route.ts`, `src/app/api/notices/[id]/route.ts`, `src/app/api/notices/[id]/calendar/route.ts`. `deps.ts` 연결, 로그(건수만) — US-12·13·16·17
-- [ ] **Step 10. 핸들러 테스트** `src/server/handlers/__tests__/feed.test.ts`: 401, no_profile, ready 정렬·노출, 오래된 판정 → 재계산 1번 → ready, 재계산 실패 → outdated, 상세 404(형식·없음)·판정 없음·프로필 없음·지구 밖·마감, ids 400(형식·101개)·missing, 캘린더 404·헤더·내용, 응답·로그에 금지 값 없음(BR-U5-134)
+- [x] **Step 8. 저장소**: `JudgementRepository.listFeedRows(deviceId, today)`(verdict≠ineligible·in_district·마감일≥오늘 또는 없음 + 공고·지구), `freshness(deviceId)`(개수·최소 profile_version), `getForNotice(deviceId, noticeId)`; `NoticeRepository.getDetail(id)`(주택형·지구·출처), `listSummaries(ids)`, `countRetained()`. 인터페이스 `_shared/db/repositories.ts`, Node 구현 `src/server/db/`, 테스트 가짜 — US-12·13·17
+- [x] **Step 9. 핸들러·라우트** `src/server/handlers/feed.ts`: `GET /api/feed`(no_profile·재계산 1번·outdated — BR-U5-03~05·130), `GET /api/notices/[id]`(UUID 검사·404 — BR-U5-131), `GET /api/notices?ids=`(1~100, 400 — BR-U5-132), `GET /api/notices/[id]/calendar`(인증 없음, text/calendar — BR-U5-133). 라우트 `src/app/api/feed/route.ts`, `src/app/api/notices/route.ts`, `src/app/api/notices/[id]/route.ts`, `src/app/api/notices/[id]/calendar/route.ts`. `deps.ts` 연결, 로그(건수만) — US-12·13·16·17
+- [x] **Step 10. 핸들러 테스트** `src/server/handlers/__tests__/feed.test.ts`: 401, no_profile, ready 정렬·노출, 오래된 판정 → 재계산 1번 → ready, 재계산 실패 → outdated, 상세 404(형식·없음)·판정 없음·프로필 없음·지구 밖·마감, ids 400(형식·101개)·missing, 캘린더 404·헤더·내용, 응답·로그에 금지 값 없음(BR-U5-134)
 
 ## Part C. 화면
 

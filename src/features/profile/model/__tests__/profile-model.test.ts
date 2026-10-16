@@ -309,6 +309,8 @@ describe("기기 저장 (domain-entities §3)", () => {
       "mz.profile.draft": "{}",
       "mz.notify": "{}",
       "mz.bookmarks": "[]",
+      "mz.seen": "{}",
+      "mz.feed": "{}",
       "mz.device": "{}",
       "mz.display": "easy",
     });

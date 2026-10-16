@@ -11,6 +11,9 @@ export const NOTIFY_KEY = "mz.notify";
 export const DISPLAY_KEY = "mz.display";
 /** U5 관심 공고 — 모두 지우기에서 함께 지운다 (BR-U4-94) */
 export const BOOKMARKS_KEY = "mz.bookmarks";
+/** U5 열어 본 공고·피드 저장본 — 모두 지우기에서 함께 지운다 (U5 BR-U5-42·53) */
+export const SEEN_KEY = "mz.seen";
+export const FEED_CACHE_KEY = "mz.feed";
 
 export type SyncState =
   | { state: "synced"; at: string }
@@ -161,7 +164,9 @@ export function saveDisplayMode(storage: KeyValueStorage, mode: DisplayMode): vo
 
 // ---------- 모두 지우기 (BR-U4-94) ----------
 
-/** 프로필·초안·알림 설정·관심 공고·기기 ID를 지운다. 화면 모드는 남긴다 */
+/** 프로필·초안·알림 설정·관심 공고·열어 본 공고·피드 저장본·기기 ID를 지운다. 화면 모드는 남긴다 */
 export function clearAllPersonal(storage: KeyValueStorage): void {
-  for (const key of [PROFILE_KEY, DRAFT_KEY, NOTIFY_KEY, BOOKMARKS_KEY, DEVICE_STORAGE_KEY]) storage.removeItem(key);
+  for (const key of [PROFILE_KEY, DRAFT_KEY, NOTIFY_KEY, BOOKMARKS_KEY, SEEN_KEY, FEED_CACHE_KEY, DEVICE_STORAGE_KEY]) {
+    storage.removeItem(key);
+  }
 }

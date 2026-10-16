@@ -9,6 +9,7 @@ export const ERROR_MESSAGES = {
   TOO_MANY_REGISTRATIONS: "잠시 후 다시 시도해 주세요.",
   PAYLOAD_TOO_LARGE: "보내는 내용이 너무 커요. 다시 시도해 주세요.",
   BAD_REQUEST: "요청 내용이 올바르지 않아요. 앱을 다시 열어 주세요.",
+  NOT_FOUND: "공고를 찾을 수 없어요.",
   NETWORK: "인터넷 연결을 확인해 주세요.",
   SERVER: "잠시 문제가 생겼어요. 조금 뒤에 다시 시도해 주세요.",
 } as const;

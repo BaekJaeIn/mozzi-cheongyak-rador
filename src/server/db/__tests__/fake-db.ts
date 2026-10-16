@@ -4,6 +4,8 @@ import type { DbClient } from "../client";
 export interface FakeResponse {
   data: unknown;
   error: { message: string; code?: string } | null;
+  /** select(…, { count: "exact" }) 결과 */
+  count?: number | null;
 }
 
 export interface FakeCall {
@@ -18,7 +20,7 @@ export function createFakeDb(responder: (call: FakeCall) => FakeResponse) {
 
   const builder = (call: FakeCall) => {
     const proxy: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "update", "insert", "delete", "order", "maybeSingle", "single", "in", "lt", "range", "limit"]) {
+    for (const method of ["select", "eq", "neq", "or", "update", "insert", "delete", "order", "maybeSingle", "single", "in", "lt", "range", "limit"]) {
       proxy[method] = (...args: unknown[]) => {
         call.chain.push({ method, args });
         return proxy;
