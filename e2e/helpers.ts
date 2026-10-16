@@ -183,3 +183,9 @@ export async function cleanupFeedNotices(tag: string): Promise<void> {
   if (!hasLocalDb()) return;
   await rest(`notices?dedup_key=like.${encodeURIComponent(`e2e:${tag}:*`)}`, { method: "DELETE" });
 }
+
+// ---------- U6 구독 확인 (로컬 Supabase 전용) ----------
+export async function subscriptionCount(deviceId: string): Promise<number> {
+  const rows = (await rest(`push_subscriptions?select=endpoint&device_id=eq.${deviceId}`, { method: "GET", prefer: "return=representation" })) as unknown[];
+  return rows.length;
+}

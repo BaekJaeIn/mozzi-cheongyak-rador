@@ -7,6 +7,11 @@ select plan(31);
 
 create temp table t as select (now() at time zone 'Asia/Seoul')::date as today;
 
+-- 이 테스트가 만든 기기만 센다 (로컬 DB에는 E2E가 남긴 기기·구독이 있을 수 있다)
+create or replace function pg_temp.mine(p jsonb) returns jsonb language sql as $$
+  select coalesce(jsonb_agg(e), '[]'::jsonb) from jsonb_array_elements(p) e where e ->> 'device_id' like 'aaaaaaaa-0000-4000-8000-%';
+$$;
+
 -- 기기 2대 (9시 알림), 공고 3건
 insert into public.devices (id, token_hash, notify_hour) values
   ('aaaaaaaa-0000-4000-8000-000000000001', repeat('a', 64), 9),
@@ -41,11 +46,11 @@ select is((select count(*)::int from public.push_subscriptions where device_id =
 select is(public.save_push_subscription(gen_random_uuid(), 'https://fcm.googleapis.com/fcm/send/x', 'k', 'a', '{}') ->> 'saved', 'false', '없는 기기는 저장 안 함');
 
 -- ---------- 발송 대상 (BR-U6-02) ----------
-select is(jsonb_array_length(public.dispatch_candidates(9, (select today from t))), 2, '9시 + 구독 있음 → 2대');
-select is(jsonb_array_length(public.dispatch_candidates(10, (select today from t))), 0, '10시 → 0대');
+select is(jsonb_array_length(pg_temp.mine(public.dispatch_candidates(9, (select today from t)))), 2, '9시 + 구독 있음 → 2대');
+select is(jsonb_array_length(pg_temp.mine(public.dispatch_candidates(10, (select today from t)))), 0, '10시 → 0대');
 update public.devices set notify_enabled = false where id = 'aaaaaaaa-0000-4000-8000-000000000002';
-select is(jsonb_array_length(public.dispatch_candidates(9, (select today from t))), 1, '알림 끈 기기 제외');
-select is(public.dispatch_candidates(9, (select today from t)) -> 0 -> 'subscriptions' -> 0 ->> 'endpoint',
+select is(jsonb_array_length(pg_temp.mine(public.dispatch_candidates(9, (select today from t)))), 1, '알림 끈 기기 제외');
+select is(pg_temp.mine(public.dispatch_candidates(9, (select today from t))) -> 0 -> 'subscriptions' -> 0 ->> 'endpoint',
   'https://fcm.googleapis.com/fcm/send/e1', '구독 목록 포함');
 
 -- ---------- 판정 묶음 (1차 거름) ----------
@@ -59,7 +64,7 @@ select is(public.dispatch_device_rows(array['aaaaaaaa-0000-4000-8000-00000000000
 -- ---------- 몫 잡기·되돌리기 (P-1) ----------
 select is(public.claim_daily_push('aaaaaaaa-0000-4000-8000-000000000001', (select today from t)) ->> 'claimed', 'true', '첫 몫 잡기 성공');
 select is(public.claim_daily_push('aaaaaaaa-0000-4000-8000-000000000001', (select today from t)) ->> 'claimed', 'false', '같은 날 두 번째는 실패');
-select is(jsonb_array_length(public.dispatch_candidates(9, (select today from t))), 0, '오늘 보낸 기기는 대상 아님');
+select is(jsonb_array_length(pg_temp.mine(public.dispatch_candidates(9, (select today from t)))), 0, '오늘 보낸 기기는 대상 아님');
 select public.release_daily_push('aaaaaaaa-0000-4000-8000-000000000001', (select today from t), null);
 select is((select last_push_on from public.devices where id = 'aaaaaaaa-0000-4000-8000-000000000001'), null, '되돌리기');
 update public.devices set last_push_on = (select today from t) where id = 'aaaaaaaa-0000-4000-8000-000000000001';

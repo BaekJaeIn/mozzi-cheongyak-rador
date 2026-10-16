@@ -57,9 +57,9 @@
 ## Part F. 스크립트·E2E·문서·검증
 
 - [x] **Step 14. 스크립트·CI** `scripts/generate-vapid.mjs`(`npm run vapid:generate`: 화면에 3값 출력, `--env` 옵션은 CI용으로 `.env.local`에 덧붙임), `.github/workflows/e2e.yml`에 임시 VAPID, `.env.example` 갱신
-- [ ] **Step 15. E2E** `e2e/pwa.spec.ts`: manifest·SW 등록, 설치 안내 띠(닫기 → 7일), 설정의 설치 칸, 알림 켜기(Chromium: 권한 허용 흉내 → 구독 저장 → 서버 행 확인), 시험 알림(푸시 서비스 요청 가로채기 → 200 결과 문구), 거부 안내, `/api/push/key`, axe. iPhone(WebKit)은 `needs_install` 안내 확인
-- [ ] **Step 16. 문서** README("알림과 설치 (U6)"), `aidlc-docs/construction/U6-pwa-push/code/setup-guide-u6.md`(운영 반영 ①~⑧, 키 교체, 되돌리기, 확인 쿼리), `code-summary.md`
-- [ ] **Step 17. 검증**: typecheck·lint·test(+PBT seed 반복)·build·deno check, 로컬 Supabase pgTAP·E2E(Android·iPhone), 커밋 (push는 사용자 확인 후)
+- [x] **Step 15. E2E** `e2e/pwa.spec.ts`: manifest·SW 등록, 설치 안내 띠(닫기 → 7일), 설정의 설치 칸, 알림 켜기(Chromium: 권한 허용 흉내 → 구독 저장 → 서버 행 확인), 시험 알림(푸시 서비스 요청 가로채기 → 200 결과 문구), 거부 안내, `/api/push/key`, axe. iPhone(WebKit)은 `needs_install` 안내 확인
+- [x] **Step 16. 문서** README("알림과 설치 (U6)"), `aidlc-docs/construction/U6-pwa-push/code/setup-guide-u6.md`(운영 반영 ①~⑧, 키 교체, 되돌리기, 확인 쿼리), `code-summary.md`
+- [x] **Step 17. 검증**: typecheck·lint·test(+PBT seed 반복)·build·deno check, 로컬 Supabase pgTAP·E2E(Android·iPhone), 커밋 (push는 사용자 확인 후)
 
 ## 스토리 추적
 

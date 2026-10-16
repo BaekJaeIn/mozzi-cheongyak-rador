@@ -137,13 +137,18 @@ test("관심 공고: 별로 저장 → 관심 공고 화면 → 지우기 (US-17
   await expect(page.getByText("별 버튼을 누르면 여기에 모아 볼 수 있어요")).toBeVisible();
 });
 
-test("인터넷이 끊겨도 마지막으로 받은 피드를 보여 준다 (NFR-4.1, BR-U5-51)", async ({ page }) => {
-  await openFeed(page);
-  await expect(page.getByText("새 공고를 확인하고 있어요")).toHaveCount(0);
-  await page.route("**/api/feed", (route) => route.abort("internetdisconnected"));
-  await page.reload();
-  await expect(card(page, fx.open.name)).toBeVisible();
-  await expect(page.getByText(/인터넷 연결을 확인해 주세요\. .+에 확인한 목록이에요/)).toBeVisible();
+// 서비스워커(U6)가 등록된 페이지는 WebKit에서 page.route 가로채기를 거치지 않는다 → 끊김 흉내 테스트만 서비스워커를 막는다
+test.describe("인터넷 끊김", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("인터넷이 끊겨도 마지막으로 받은 피드를 보여 준다 (NFR-4.1, BR-U5-51)", async ({ page }) => {
+    await openFeed(page);
+    await expect(page.getByText("새 공고를 확인하고 있어요")).toHaveCount(0);
+    await page.route("**/api/feed", (route) => route.abort("internetdisconnected"));
+    await page.reload();
+    await expect(card(page, fx.open.name)).toBeVisible();
+    await expect(page.getByText(/인터넷 연결을 확인해 주세요\. .+에 확인한 목록이에요/)).toBeVisible();
+  });
 });
 
 test("쉬운 모드에서도 상세에 가로 스크롤이 없다 (NFR-1)", async ({ page }) => {

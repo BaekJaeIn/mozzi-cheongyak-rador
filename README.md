@@ -62,6 +62,8 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'
 | `npm run db:reset` | 로컬 DB 초기화 + 마이그레이션 + `seed.sql` |
 | `npm run db:test` | DB 테스트 (pgTAP) |
 | `npm run e2e` | E2E (빌드 후 실행, 로컬 Supabase 필요) |
+| `npm run vapid:generate` | 웹 푸시 VAPID 키 1쌍 출력 (파일에 쓰지 않음, `-- --env`는 CI용) |
+| `npm run icons:render` | `assets/icon-source.jpg`로 홈 화면 아이콘 PNG 다시 만들기 (`-- --source <사진>`이면 원본부터) |
 
 ## 속성 기반 테스트(PBT) seed 재현
 
@@ -110,6 +112,21 @@ FC_SEED=123456 npm test -- supabase/functions/_shared/domain
 
 - 피드는 마지막 응답을 기기(`mz.feed`)에 저장해 다음에 열 때 먼저 보여 줍니다. 내 정보를 저장하거나 모두 지우면 함께 지웁니다.
 - E2E의 피드 공고는 `e2e/helpers.ts`가 **로컬 Supabase(127.0.0.1·localhost)일 때만** 넣고 지웁니다. 운영 주소면 피드 E2E는 건너뜁니다.
+
+## 알림과 설치 (U6)
+
+| 경로 | 내용 |
+|---|---|
+| Edge Function `dispatch` | 매시 정각(pg_cron `dispatch-hourly`): 알림 시각이 지금인 기기에 **피드와 같은 규칙**으로 새로 맞는 공고를 모아 하루 1번 웹 푸시. 같은 공고는 두 번 알리지 않음 |
+| `POST /api/push/subscribe` | 구독 저장. 기기의 첫 구독이면 지금 피드에 보이는 공고를 "기준선"으로 기록(첫 알림이 이미 본 공고로 오지 않게) |
+| `POST /api/push/test` | 시험 알림 (1시간에 3번까지) |
+| `GET /api/push/key` | VAPID 공개 키 (없으면 503 — 미리보기 배포) |
+| `/sw.js`, `/manifest.webmanifest`, `/icons/*` | 서비스워커(알림 표시·클릭 이동만, 화면 캐시 없음), 홈 화면 앱 정보·아이콘 |
+
+- 웹 푸시 암호화(RFC 8291)·서명(RFC 8292 VAPID)은 `supabase/functions/_shared/push/`에 Web Crypto로 구현했고 Deno·Node가 함께 씁니다. RFC 8291 부록 A 시험 값으로 검증합니다.
+- 구독 주소는 알려진 푸시 서비스(FCM·Apple·Mozilla·Windows)만 받습니다.
+- iPhone은 iOS 16.4 이상, **홈 화면에 추가한 앱에서만** 알림을 받습니다. 앱이 설치 방법을 그림으로 안내합니다.
+- 운영 반영 순서·키 교체·되돌리기: [setup-guide-u6.md](aidlc-docs/construction/U6-pwa-push/code/setup-guide-u6.md)
 
 ## 수집·분석 함수 (Edge Functions)
 

@@ -17,6 +17,12 @@ async function pickBirth(page: Page, year: number, month: number, day: number) {
   await page.getByRole("radiogroup", { name: "태어난 날" }).getByRole("radio", { name: String(day), exact: true }).click();
 }
 
+/** 처음 입력 저장 뒤 알림 단계 (U6가 연결, US-03) — "나중에"(알림 미지원이면 "맞춤 공고 보러 가기")로 홈으로 */
+async function skipNotify(page: Page) {
+  await heading(page, "새 공고 알림을 받으시겠어요?");
+  await page.getByRole("button", { name: /^(나중에|맞춤 공고 보러 가기)$/ }).click();
+}
+
 async function axe(page: Page) {
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations).toEqual([]);
@@ -82,6 +88,7 @@ test("처음 실행 → 마법사 → 저장하면 서버에 저장되고 홈으
   const saved = page.waitForResponse((r) => r.url().endsWith("/api/profile") && r.request().method() === "PUT");
   await page.getByRole("button", { name: "저장" }).click();
   expect((await saved).status()).toBe(200);
+  await skipNotify(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("navigation", { name: "주요 메뉴" })).toBeVisible();
 
@@ -133,6 +140,7 @@ test("설정: 그룹 고치기, 알림 시각 즉시 저장, 쉬운 모드 유�
   await page.goto("/profile/setup");
   await fillToReview(page);
   await page.getByRole("button", { name: "저장" }).click();
+  await skipNotify(page);
   await expect(page).toHaveURL(/\/$/);
 
   await page.getByRole("navigation", { name: "주요 메뉴" }).getByRole("link", { name: "설정" }).click();
@@ -173,6 +181,7 @@ test("내 정보 모두 지우기: 서버 먼저 지우고 처음 실행 안내�
   await page.goto("/profile/setup");
   await fillToReview(page);
   await page.getByRole("button", { name: "저장" }).click();
+  await skipNotify(page);
   await expect(page).toHaveURL(/\/$/);
   await page.evaluate(() => window.localStorage.setItem("mz.display", "easy"));
 
@@ -195,24 +204,29 @@ test("저장된 프로필이 있으면 홈에 피드 자리와 하단 메뉴가 
   await expect(page.getByRole("navigation", { name: "주요 메뉴" })).toBeVisible();
 });
 
-test("서버 저장이 실패해도 기기에 저장되고, 다음에 앱을 열 때 다시 보낸다 (US-08, BR-U4-63·64)", async ({ page }) => {
-  await page.goto("/profile/setup");
-  await fillToReview(page);
-  await page.route("**/api/profile", (route) => route.abort("internetdisconnected"));
-  await page.getByRole("button", { name: "저장" }).click();
-  await expect(page.getByText("이 휴대폰에는 저장했어요. 인터넷 연결을 확인해 주세요. 다음에 앱을 열 때 다시 보낼게요.")).toBeVisible();
-  await page.getByRole("button", { name: "맞춤 공고 보러 가기" }).click();
-  await expect(page).toHaveURL(/\/$/);
-  let stored = JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!);
-  expect(stored.sync.state).toBe("pending");
+// 서비스워커(U6)가 등록된 페이지는 WebKit에서 page.route 가로채기를 거치지 않는다 → 끊김 흉내 테스트만 서비스워커를 막는다
+test.describe("인터넷 끊김", () => {
+  test.use({ serviceWorkers: "block" });
 
-  await page.unroute("**/api/profile");
-  const resent = page.waitForResponse((r) => r.url().endsWith("/api/profile") && r.request().method() === "PUT");
-  await page.reload();
-  expect((await resent).status()).toBe(200);
-  await expect
-    .poll(async () => JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!).sync.state)
-    .toBe("synced");
-  stored = JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!);
-  expect(stored.profile.residence.sigungu).toBe("하남시");
+  test("서버 저장이 실패해도 기기에 저장되고, 다음에 앱을 열 때 다시 보낸다 (US-08, BR-U4-63·64)", async ({ page }) => {
+    await page.goto("/profile/setup");
+    await fillToReview(page);
+    await page.route("**/api/profile", (route) => route.abort("internetdisconnected"));
+    await page.getByRole("button", { name: "저장" }).click();
+    await expect(page.getByText("이 휴대폰에는 저장했어요. 인터넷 연결을 확인해 주세요. 다음에 앱을 열 때 다시 보낼게요.")).toBeVisible();
+    await page.getByRole("button", { name: /^(나중에|맞춤 공고 보러 가기)$/ }).click();
+    await expect(page).toHaveURL(/\/$/);
+    let stored = JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!);
+    expect(stored.sync.state).toBe("pending");
+
+    await page.unroute("**/api/profile");
+    const resent = page.waitForResponse((r) => r.url().endsWith("/api/profile") && r.request().method() === "PUT");
+    await page.reload();
+    expect((await resent).status()).toBe(200);
+    await expect
+      .poll(async () => JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!).sync.state)
+      .toBe("synced");
+    stored = JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!);
+    expect(stored.profile.residence.sigungu).toBe("하남시");
+  });
 });
