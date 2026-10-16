@@ -848,3 +848,19 @@
 **Context**: CONSTRUCTION - U4 Code Generation, 승인 대기
 
 ---
+
+## U4 Code Generation — 승인
+**Timestamp**: 2026-10-16T01:00:00Z
+**User Input**: "푸시하고 승인"
+**AI Response**: "U4 Code Generation 승인으로 기록. c59c580·3aedd52·68fddb4 push(c0e87a1..68fddb4), CI ci·db-and-e2e 모두 success. 다음 단계 U5 feed-detail Functional Design 시작."
+**Context**: CONSTRUCTION - U4 Code Generation 승인 → U5 Functional Design
+
+---
+
+## U5 Functional Design — 계획·질문 작성
+**Timestamp**: 2026-10-16T01:15:00Z
+**User Input**: (없음 — U4 승인에 따라 다음 단계 시작)
+**AI Response**: "U5 feed-detail 기능 설계 계획과 질문 12개 작성 (aidlc-docs/construction/plans/U5-feed-detail-functional-design-plan.md): 피드 정렬, NEW 기준, D-day, 카드 공급유형, 서버 판정 없을 때, 피드 저장본, 판정 이유 묶기, 내 금액 붙이기, 면적 표시, 캘린더, 관심 공고 저장, 원문 링크. 답 대기."
+**Context**: CONSTRUCTION - U5 Functional Design, 질문 대기
+
+---
