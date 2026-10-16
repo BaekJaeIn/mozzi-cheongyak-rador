@@ -944,3 +944,11 @@
 **Context**: CONSTRUCTION - U5 후속 (U6 FD 진행 중)
 
 ---
+
+## U6 Functional Design — 완료, 승인 요청
+**Timestamp**: 2026-10-16T05:50:00Z
+**User Input**: (없음 — 답에 따라 설계 문서 작성)
+**AI Response**: "U6 기능 설계 문서 4개 작성 (business-rules BR-U6-01~94, domain-entities: DB 추가 칸(notification_log.kind, devices.last_push_on·push_baseline_at, push_test_log)·발송 계획·알림 내용·발송 결과·구독 검사·PBT P-U6-1~10, business-logic-model, frontend-components). 추가 결정: 구독 주소는 알려진 푸시 서비스 호스트만(서버가 임의 주소로 요청하지 않게), 보내기 전에 오늘 몫을 먼저 잡고 실패 시 되돌림(멱등), 기준선은 기기 첫 구독 때 한 번만, 서비스워커는 페이지 캐시 없음. 승인 대기."
+**Context**: CONSTRUCTION - U6 Functional Design 완료, 승인 대기
+
+---
