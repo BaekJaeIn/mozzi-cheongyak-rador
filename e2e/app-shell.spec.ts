@@ -2,7 +2,9 @@
 // 실행 전제: 로컬 Supabase(Docker) + 마이그레이션 적용 + .env.local
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { seedStoredProfile } from "./helpers";
+import { releaseRegistrationLimit, seedStoredProfile } from "./helpers";
+
+test.beforeEach(releaseRegistrationLimit);
 
 test("첫 실행 시 기기를 등록하고 이후에는 네트워크 없이 뜬다", async ({ page }) => {
   const registrations: number[] = [];

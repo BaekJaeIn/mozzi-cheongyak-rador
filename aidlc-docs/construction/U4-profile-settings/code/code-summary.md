@@ -13,7 +13,7 @@
 | 서버 | `src/server/handlers/profile-settings.ts`(API 3개), `src/server/deps.ts`(연결), `DeviceRepository.updateNotifySettings`(`_shared/db/repositories.ts`, `src/server/db/device-repository.ts`) |
 | U1 수정 | `api-client.ts`(`request(…, { reregister: false })`), `BottomNav.tsx`(`shouldShowNav` — 마법사·처음 실행에서 숨김) |
 | U3 수정 | `_shared/collect/dates.ts` `parseSourceDate`: 문자열·숫자만 받음 (전체 검증 중 PBT가 새 seed로 찾은 예외 — 객체 입력에서 `String()` 예외) |
-| 테스트 | `model/__tests__/profile-model.test.ts`·`sync.test.ts`(예시), `profile-model.pbt.test.ts`(P-U4-1~10 + 1b), `arbitraries.ts`, `src/server/handlers/__tests__/profile-settings.test.ts`, api-client·device-repository·bottom-nav 테스트 추가, `e2e/profile.spec.ts`(7개), `e2e/helpers.ts`, `e2e/app-shell.spec.ts`(처음 실행 안내 반영) |
+| 테스트 | `e2e/helpers.ts` `releaseRegistrationLimit`(로컬 전용), `model/__tests__/profile-model.test.ts`·`sync.test.ts`(예시), `profile-model.pbt.test.ts`(P-U4-1~10 + 1b), `arbitraries.ts`, `src/server/handlers/__tests__/profile-settings.test.ts`, api-client·device-repository·bottom-nav 테스트 추가, `e2e/profile.spec.ts`(7개), `e2e/helpers.ts`, `e2e/app-shell.spec.ts`(처음 실행 안내 반영) |
 | 문서 | README "화면과 API (U4)" 절, 기능 설계 조정 반영(BR-U4-04·25·52·63) |
 
 ## 2. 설계 대비 조정
@@ -36,13 +36,15 @@
 | `npm test` | ✅ 43개 파일, **419개 테스트** (U4 추가 약 69개), 서로 다른 seed 4번 반복 |
 | `npm run deno:check` | ✅ |
 | `npm run build` | ✅ (`/profile/setup`, `/profile/edit/[group]`, `/settings`, `/api/profile`, `/api/notify-settings`) |
-| E2E (로컬 확인) | ✅ Docker가 없어 **API를 메모리 가짜 서버로 대신**해 빌드한 앱에 Playwright(Chromium, Galaxy S9+)로 실행: `profile.spec.ts` 7/7, `app-shell.spec.ts` 6/6, axe 위반 0. 확인 후 임시 파일 삭제. **실제 DB와 함께 도는 E2E는 push 후 CI `db-and-e2e`에서 (Chromium·WebKit)** |
+| DB 테스트 (pgTAP, 로컬 Supabase) | ✅ 로컬 DB에 0006·0007 적용 후 4개 파일 **89/89** (U3의 0007 실제 pgTAP 포함) |
+| E2E (로컬 Supabase, 실제 DB) | ✅ **26/26** — Android(Chromium)·iPhone(WebKit), axe 위반 0. 운영을 가리키는 `.env.local` 대신 로컬 Supabase 값을 환경 변수로 넣어 실행 |
+| E2E 환경 보완 | 기기 등록 한도(U1: 최근 1시간 신규 20대)에 E2E가 걸려 iPhone 쪽 5개가 실패 → `e2e/helpers.ts` `releaseRegistrationLimit`: **로컬 Supabase일 때만** 테스트 기기의 `created_at`을 2시간 전으로 옮김(한도 자체는 그대로, 운영 주소면 아무것도 안 함). CI에서도 같은 문제가 났을 것 |
 
 ## 4. 남은 일
 
 | 단계 | 내용 |
 |---|---|
-| push | 사용자 확인 후 → CI `ci`·`db-and-e2e`(실제 로컬 Supabase로 E2E, iPhone 13 WebKit 포함) |
+| push | 사용자 확인 후 → CI `ci`·`db-and-e2e` (로컬에서 이미 같은 구성으로 통과) |
 | 배포 | `main` push 시 Vercel 자동 배포. DB 변경 없음 |
 | U6 연결 | `setPushPort`(알림 구독), 설정의 알림 켜기 → 권한 요청 |
 | U5 연결 | 홈의 피드 자리(`HomeGate`의 `feed`), `mz.bookmarks` 저장소 |

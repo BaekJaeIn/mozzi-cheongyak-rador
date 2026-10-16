@@ -832,3 +832,19 @@
 **Context**: CONSTRUCTION - U4 Code Generation Part 2 완료, 승인 대기
 
 ---
+
+## U4 Code Generation — Docker 있음
+**Timestamp**: 2026-10-16T00:05:00Z
+**User Input**: "나 도커있는데"
+**AI Response**: "Docker 사용 가능 여부 확인 후, 로컬 Supabase로 pgTAP·실제 E2E 실행 시도."
+**Context**: CONSTRUCTION - U4 Code Generation, 승인 대기 중 로컬 검증
+
+---
+
+## U4 Code Generation — 로컬 Supabase로 DB 테스트·E2E
+**Timestamp**: 2026-10-16T00:40:00Z
+**User Input**: (없음 — "나 도커있는데"에 따른 검증)
+**AI Response**: "Docker CLI가 PATH에 없었을 뿐(Docker Desktop 실행 중, resources\bin\docker.exe). 로컬 Supabase(mojjine-alimi)에 0006·0007 적용(migration up --local), pgTAP 89/89. .env.local은 운영 주소라 로컬 Supabase 값을 환경 변수로 덮어 E2E 실행 → 기기 등록 한도(1시간 20대)로 iPhone 5개 실패 → e2e/helpers.ts에 로컬 전용 한도 풀기(created_at 2시간 전으로) 추가 → 26/26 통과(Android·iPhone, axe 0). 커밋, push는 확인 후."
+**Context**: CONSTRUCTION - U4 Code Generation, 승인 대기
+
+---

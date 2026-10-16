@@ -2,7 +2,9 @@
 // 실행 전제: 로컬 Supabase(Docker) + 마이그레이션 적용 + .env.local (CI db-and-e2e)
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { seedStoredProfile } from "./helpers";
+import { releaseRegistrationLimit, seedStoredProfile } from "./helpers";
+
+test.beforeEach(releaseRegistrationLimit);
 
 const next = (page: Page) => page.getByRole("button", { name: "다음", exact: true }).click();
 const unknown = (page: Page) => page.getByRole("button", { name: "잘 모르겠어요" }).click();

@@ -65,7 +65,7 @@
 | U1 setup-data-platform | ✅ | ✅ | ✅ | ✅ | ✅ | 완료 (2026-10-14 승인). 외부 구축 완료 (Docker·GitHub·Supabase·암호화 키·Vercel https://mozzi-cheongyak-rador.vercel.app·keepalive, 2026-10-14). 남은 것: setup-guide 6단계 2주 점검 (~2026-10-28) (2026-10-14) |
 | U2 eligibility-engine | ✅ | ✅ | ✅ | – | ✅ | 완료 (2026-10-14 승인, push d2e18ee). 운영 DB 0006 적용 완료 (2026-10-15) |
 | U3 collection-pipeline | ✅ | ✅ | ✅ | ✅ | ✅ | 완료 (2026-10-15 승인). 운영 배포·수동 실행 확인 (collect 3소스 성공·analyze done). 남은 것: 7단계 자동 실행 확인(2026-10-16 05:00 이후), Step 16 골든 세트(공고가 쌓인 뒤) |
-| U4 profile-settings | ✅ | – | – | – | ✅ | FD 완료 (2026-10-15 승인). Code 생성 Step 1~18 완료 (테스트 419, 로컬 E2E 13/13 — API 가짜). 승인 대기, push 전 |
+| U4 profile-settings | ✅ | – | – | – | ✅ | FD 완료 (2026-10-15 승인). Code 생성 Step 1~18 완료 (테스트 419, pgTAP 89, 로컬 Supabase E2E 26/26). 승인 대기, push 전 |
 | U5 feed-detail | ✅ | – | – | – | ✅ | 대기 |
 | U6 pwa-push | ✅ | ✅ | ✅ | ✅ | ✅ | 대기 |
 (✅ = 실행 예정, – = 생략)
