@@ -1008,3 +1008,19 @@
 **Context**: CONSTRUCTION - U6 NFR Design 완료, 승인 대기
 
 ---
+
+## U6 NFR Design — 승인
+**Timestamp**: 2026-10-16T07:35:00Z
+**User Input**: "진행"
+**AI Response**: "U6 NFR Design 승인으로 기록. 다음 단계 U6 Infrastructure Design 시작. (아이콘 사진 공개 여부는 아직 답 없음 — 코드 생성 전 확인)"
+**Context**: CONSTRUCTION - U6 NFR Design 승인 → U6 Infrastructure Design
+
+---
+
+## U6 Infrastructure Design — 계획·질문 작성
+**Timestamp**: 2026-10-16T07:40:00Z
+**User Input**: (없음 — NFR-D 승인에 따라 다음 단계 시작)
+**AI Response**: "U6 Infrastructure Design 계획과 질문 4개 작성: VAPID 키 생성·등록 방식, Edge CPU 2초 한도 대응, Vercel 환경 변수 범위, 운영 반영 순서. 답 대기."
+**Context**: CONSTRUCTION - U6 Infrastructure Design, 질문 대기
+
+---
