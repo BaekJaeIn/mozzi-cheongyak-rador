@@ -976,3 +976,19 @@
 **Context**: CONSTRUCTION - U6 NFR Requirements 완료, 승인 대기
 
 ---
+
+## U6 NFR Requirements — 승인
+**Timestamp**: 2026-10-16T06:50:00Z
+**User Input**: "진행"
+**AI Response**: "U6 NFR Requirements 승인으로 기록. 아이콘 원본 사진의 공개 저장소 포함 여부는 명시 답이 없어 코드 생성(사진을 넣기 전)에서 다시 확인. 다음 단계 U6 NFR Design 시작."
+**Context**: CONSTRUCTION - U6 NFR Requirements 승인 → U6 NFR Design
+
+---
+
+## U6 NFR Design — 계획·질문 작성
+**Timestamp**: 2026-10-16T06:55:00Z
+**User Input**: (없음 — NFR-R 승인에 따라 다음 단계 시작)
+**AI Response**: "U6 NFR Design 계획과 질문 5개 작성 (aidlc-docs/construction/plans/U6-pwa-push-nfr-design-plan.md): 하루 몫 잡기, 1,000대 묶어 읽기, 동시 처리 단위, 보낸 뒤 기록, 오래 실패한 구독 정리. 답 대기."
+**Context**: CONSTRUCTION - U6 NFR Design, 질문 대기
+
+---
