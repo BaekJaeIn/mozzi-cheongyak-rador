@@ -2,30 +2,11 @@
 import type { IsoDate } from "@shared/domain/dates.ts";
 import type { SourceCode } from "@shared/db/types.ts";
 import type { UnitJudgement, Verdict } from "@shared/eligibility/types.ts";
+import type { DistrictRef, FeedItem } from "@shared/feed/visible.ts";
+
+export type { DistrictRef, FeedItem };
 
 export type FeedState = "ready" | "outdated" | "no_profile";
-
-export interface DistrictRef {
-  id: string;
-  name: string;
-}
-
-export interface FeedItem {
-  id: string;
-  title: string;
-  complexName: string | null;
-  /** 관심 지구 먼저, 이름 순 (BR-U5-25) */
-  districts: DistrictRef[];
-  tenure: "sale" | "rent";
-  applyStart: IsoDate | null;
-  applyEnd: IsoDate | null;
-  status: "open" | "upcoming";
-  verdict: "eligible" | "unknown";
-  score: number;
-  /** 충족·확인 필요 주택형의 공급유형, 중복 없음 (BR-U5-22) */
-  supplyTypes: { code: string; plain: string }[];
-  firstSeenAt: string;
-}
 
 export interface FeedResponse {
   state: FeedState;

@@ -20,7 +20,7 @@
 
 | 항목 | 결정 | 이유 |
 |---|---|---|
-| 아이콘 원본 사진 | **저장소에 넣지 않는다.** `scripts/render-icons.mjs <사진 경로>`가 PC의 사진을 읽어 PNG만 `public/icons/`에 만든다. 자르기 값(중심·크기)은 스크립트에 기록 | 사진 공개 여부 답을 받지 못함 — 안전한 쪽. 아이콘 PNG는 앱이 쓰므로 어차피 공개된다. 원본도 넣어도 된다고 하시면 그때 추가 |
+| 아이콘 원본 사진 | **사용자 허락(2026-10-16 "공개해도 돼")으로 저장소에 넣는다**: 첨부 사진에서 머리 부분만 잘라 줄인 `assets/icon-source.png`(1024px 이하). `scripts/render-icons.mjs`가 이것을 읽어 `public/icons/` PNG를 만든다. 자르기 값은 스크립트에 기록 | 다른 PC에서도 아이콘을 다시 만들 수 있게 |
 | U5 피드 로직 이동 | `src/server/feed/build.ts`의 노출·카드 공급유형·정렬 핵심을 `_shared/feed/visible.ts`(Deno 호환 import)로 옮기고, U5 `buildFeed`는 그것을 감싼다. U5 테스트는 그대로 통과해야 함 | 피드와 알림이 같은 코드 (US-10) |
 | CI 임시 VAPID | `db-and-e2e`가 실행마다 `npm run vapid:generate -- --env`로 임시 키를 만들어 `.env.local`에 넣는다 | 운영 키를 CI에 두지 않음 |
 
@@ -28,11 +28,11 @@
 
 ## Part A. 공용 순수 로직 (`_shared`, Deno·Node 공용)
 
-- [ ] **Step 1. 웹 푸시 기본** `_shared/push/base64url.ts`, `vapid.ts`(키 가져오기·ES256 JWT·Authorization 헤더 — P-12·15), `encrypt.ts`(RFC 8291 aes128gcm, 임시 키·salt 주입 가능), `endpoint.ts`(`isAllowedPushEndpoint`·`validateSubscription`·`endpointHash` — BR-U6-50~52, P-14·16) — US-03·10
-- [ ] **Step 2. 계획·문구** `_shared/feed/visible.ts`(U5에서 옮김, U5 `build.ts` 수정), `_shared/push/plan.ts`(`planDevice` — BR-U6-03·05·06), `payload.ts`(`buildPayload`·`testPayload` — BR-U6-30~36·65) — US-10·11
-- [ ] **Step 3. 보내기·실행기** `send.ts`(`sendPush`: TTL·Urgency·시간 제한·재시도 1번·결과 분류 — BR-U6-40~43, NFR-U6-02·10), `settle.ts`(P-6), `ports.ts`(`DispatchStore`·`PushTransport`·`Clock`), `dispatch.ts`(`runDispatch`: 대상 → 묶음 읽기 → 다시 계산 → 작업 풀 5 → claim·send·record/release → 시간 예산 → 집계 — P-1·3·5·9·10·11) — US-10
-- [ ] **Step 4. 예시 테스트** `_shared/push/__tests__/`: **RFC 8291 부록 A 시험 값 바이트 비교**, VAPID JWT 서명 검증(공개 키), 허용 호스트·키 길이, 문구(1건·2건·한쪽만·24글자 자르기), 이동 주소, 결과 분류(201·404·410·429·500·400·네트워크·시간 초과), business-logic-model §1.1 예시(3기기), 기준선 뒤 0건, 모두 실패 → 되돌림
-- [ ] **Step 5. 속성 기반 테스트** `push.pbt.test.ts` + 생성기 + **메모리 `DispatchStore`·가짜 푸시 서비스 시뮬레이터**: P-U6-1~10 (domain-entities §7), 1,000대 시간 측정(P-13, 결과 기록)
+- [x] **Step 1. 웹 푸시 기본** `_shared/push/base64url.ts`, `vapid.ts`(키 가져오기·ES256 JWT·Authorization 헤더 — P-12·15), `encrypt.ts`(RFC 8291 aes128gcm, 임시 키·salt 주입 가능), `endpoint.ts`(`isAllowedPushEndpoint`·`validateSubscription`·`endpointHash` — BR-U6-50~52, P-14·16) — US-03·10
+- [x] **Step 2. 계획·문구** `_shared/feed/visible.ts`(U5에서 옮김, U5 `build.ts` 수정), `_shared/push/plan.ts`(`planDevice` — BR-U6-03·05·06), `payload.ts`(`buildPayload`·`testPayload` — BR-U6-30~36·65) — US-10·11
+- [x] **Step 3. 보내기·실행기** `send.ts`(`sendPush`: TTL·Urgency·시간 제한·재시도 1번·결과 분류 — BR-U6-40~43, NFR-U6-02·10), `settle.ts`(P-6), `ports.ts`(`DispatchStore`·`PushTransport`·`Clock`), `dispatch.ts`(`runDispatch`: 대상 → 묶음 읽기 → 다시 계산 → 작업 풀 5 → claim·send·record/release → 시간 예산 → 집계 — P-1·3·5·9·10·11) — US-10
+- [x] **Step 4. 예시 테스트** `_shared/push/__tests__/`: **RFC 8291 부록 A 시험 값 바이트 비교**, VAPID JWT 서명 검증(공개 키), 허용 호스트·키 길이, 문구(1건·2건·한쪽만·24글자 자르기), 이동 주소, 결과 분류(201·404·410·429·500·400·네트워크·시간 초과), business-logic-model §1.1 예시(3기기), 기준선 뒤 0건, 모두 실패 → 되돌림
+- [x] **Step 5. 속성 기반 테스트** `push.pbt.test.ts` + 생성기 + **메모리 `DispatchStore`·가짜 푸시 서비스 시뮬레이터**: P-U6-1~10 (domain-entities §7), 1,000대 시간 측정(P-13, 결과 기록)
 
 ## Part B. DB
 

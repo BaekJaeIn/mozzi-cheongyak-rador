@@ -2,11 +2,9 @@
 import type { IsoDate } from "@shared/domain/dates.ts";
 import type { SourceCode, SummaryStatus, Tenure, Verdict } from "@shared/db/types.ts";
 
-export interface DistrictInfo {
-  id: string;
-  name: string;
-  sortOrder: number;
-}
+import type { DistrictInfo, FeedRow, JudgementStats } from "@shared/feed/visible.ts";
+
+export type { DistrictInfo, FeedRow, JudgementStats };
 
 export interface NoticeCore {
   id: string;
@@ -26,16 +24,6 @@ export interface NoticeCore {
   summaryStatus: SummaryStatus;
   /** ISO 시각 */
   firstSeenAt: string;
-}
-
-/** 피드 후보 1행: 판정 + 공고 + 지구 */
-export interface FeedRow {
-  verdict: Verdict;
-  inDistrict: boolean;
-  score: number | null;
-  detail: unknown;
-  notice: Pick<NoticeCore, "id" | "title" | "complexName" | "tenure" | "applyStart" | "applyEnd" | "firstSeenAt">;
-  districts: DistrictInfo[];
 }
 
 export interface UnitRow {
@@ -65,11 +53,6 @@ export interface JudgementRecord {
   inDistrict: boolean;
   detail: unknown;
   profileVersion: number;
-}
-
-export interface JudgementStats {
-  count: number;
-  minProfileVersion: number | null;
 }
 
 export interface FeedQueryRepository {
