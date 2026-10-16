@@ -992,3 +992,19 @@
 **Context**: CONSTRUCTION - U6 NFR Design, 질문 대기
 
 ---
+
+## U6 NFR Design — 답변
+**Timestamp**: 2026-10-16T07:05:00Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q5 모두 A로 기입. 모호한 답 없음 → NFR 설계 문서 작성."
+**Context**: CONSTRUCTION - U6 NFR Design, 답 수집 완료
+
+---
+
+## U6 NFR Design — 완료, 승인 요청
+**Timestamp**: 2026-10-16T07:25:00Z
+**User Input**: (없음 — 답에 따라 설계 문서 작성)
+**AI Response**: "nfr-design-patterns.md(P-1~24), logical-components.md(_shared/push 모듈, 0008 마이그레이션 표·함수·cron, 실행 조립, 브라우저, 테스트) 작성. 조정 1건: Q5 추천안이 보낼 일이 없던 정상 구독까지 지우는 결함 → push_subscriptions.failing_since(실패 시작 시각, 성공 시 비움)로 7일 넘게 계속 실패한 구독만 삭제. 승인 대기."
+**Context**: CONSTRUCTION - U6 NFR Design 완료, 승인 대기
+
+---

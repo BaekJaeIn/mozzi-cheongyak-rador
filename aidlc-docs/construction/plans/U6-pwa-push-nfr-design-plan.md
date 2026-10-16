@@ -19,7 +19,7 @@ C) A와 B 둘 다
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -31,7 +31,7 @@ B) 기기마다 따로 조회 (단순하지만 1,000대면 수천 번 왕복)
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -43,7 +43,7 @@ B) 구독 단위로 5개 동시 (기기 결과를 모아서 판단)
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -55,7 +55,7 @@ B) 실행이 끝날 때 모든 기기 결과를 한 번에 기록 (중간에 끊
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
@@ -67,13 +67,13 @@ B) `dispatch`가 실행할 때마다 정리
 
 X) 기타 (아래 [Answer]: 태그 뒤에 설명해 주세요)
 
-[Answer]:
+[Answer]:A
 
 ---
 
 ## 진행 단계 (답을 받은 뒤)
 
-- [ ] 1. 답 검토, 모호한 답이 있으면 추가 질문
-- [ ] 2. `nfr-design-patterns.md`: 멱등(몫 잡기·유일 기록), 격리, 재시도·시간 예산, 묶어 읽기, 동시성 제한, 보안(호스트 제한·비밀값·로그 가리기), iOS 대응
-- [ ] 3. `logical-components.md`: `_shared/push/`(암호화·VAPID·보내기), 발송 계획·실행기, DB 함수·표·cron, Next API, 서비스워커·PwaProvider
-- [ ] 4. 완료 안내
+- [x] 1. 답 검토, 모호한 답이 있으면 추가 질문
+- [x] 2. `nfr-design-patterns.md`: 멱등(몫 잡기·유일 기록), 격리, 재시도·시간 예산, 묶어 읽기, 동시성 제한, 보안(호스트 제한·비밀값·로그 가리기), iOS 대응
+- [x] 3. `logical-components.md`: `_shared/push/`(암호화·VAPID·보내기), 발송 계획·실행기, DB 함수·표·cron, Next API, 서비스워커·PwaProvider
+- [x] 4. 완료 안내
