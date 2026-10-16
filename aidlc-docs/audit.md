@@ -1040,3 +1040,19 @@
 **Context**: CONSTRUCTION - U6 Infrastructure Design 완료, 승인 대기
 
 ---
+
+## U6 Infrastructure Design — 승인
+**Timestamp**: 2026-10-16T08:15:00Z
+**User Input**: "진행"
+**AI Response**: "U6 Infrastructure Design 승인으로 기록. U6 Code Generation Part 1(계획) 시작. 아이콘 원본 사진 공개 여부는 답이 없어, 원본은 저장소에 넣지 않고(로컬 경로 인자) 아이콘 PNG만 넣는 쪽으로 계획."
+**Context**: CONSTRUCTION - U6 Infrastructure Design 승인 → U6 Code Generation
+
+---
+
+## U6 Code Generation — Part 1 계획, 승인 요청
+**Timestamp**: 2026-10-16T08:25:00Z
+**User Input**: (없음 — Infra 승인에 따라 계획 작성)
+**AI Response**: "U6 코드 생성 계획 17단계 작성: A 공용 순수 로직(웹 푸시·계획·실행기·예시·PBT), B DB(0008·pgTAP), C Edge dispatch(+CPU 측정), D Next API, E 브라우저(sw·manifest·아이콘·PwaProvider·안내 화면), F 스크립트·CI·E2E·문서·검증. 결정: 아이콘 원본 사진은 저장소에 넣지 않고 PNG만, U5 피드 노출 로직을 _shared로 옮김, CI는 임시 VAPID. 승인 대기."
+**Context**: CONSTRUCTION - U6 Code Generation Part 1, 승인 대기
+
+---

@@ -4,7 +4,7 @@
 - **Project Name**: 모찌네 청약 알리미 (저장소명: silverCheongYak-radar)
 - **Project Type**: Greenfield
 - **Start Date**: 2026-10-13T12:55:00Z
-- **Current Stage**: CONSTRUCTION - U6 Infrastructure Design
+- **Current Stage**: CONSTRUCTION - U6 Code Generation (Part 1 계획)
 
 ## Workspace State
 - **Existing Code**: No (SPEC.md, .gitignore, aidlc-rule-details/ 만 존재)
@@ -56,8 +56,8 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Stage**: U6 Infrastructure Design
-- **Next Stage**: U6 Code Generation
+- **Current Stage**: U6 Code Generation (Part 1)
+- **Next Stage**: Build and Test
 
 ## Unit Progress (CONSTRUCTION, 순서대로)
 | Unit | FD | NFR-R | NFR-D | Infra | Code | 상태 |
@@ -67,5 +67,5 @@
 | U3 collection-pipeline | ✅ | ✅ | ✅ | ✅ | ✅ | 완료 (2026-10-15 승인). 운영 배포·수동 실행 확인 (collect 3소스 성공·analyze done). 남은 것: 7단계 자동 실행 확인(2026-10-16 05:00 이후), Step 16 골든 세트(공고가 쌓인 뒤) |
 | U4 profile-settings | ✅ | – | – | – | ✅ | FD 완료 (2026-10-15 승인). Code 생성 Step 1~18 완료 (테스트 419, pgTAP 89, 로컬 Supabase E2E 26/26). 완료 (2026-10-16 승인, push 68fddb4) |
 | U5 feed-detail | ✅ | – | – | – | ✅ | FD 완료 (2026-10-16 승인). Code 생성 Step 1~17 완료 (테스트 520, pgTAP 89, 로컬 Supabase E2E 42/42). 완료 (2026-10-16 승인, push f48a26f) |
-| U6 pwa-push | ✅ | ✅ | ✅ | ✅ | ✅ | FD 완료 (2026-10-16 승인). NFR-R 완료 (2026-10-16 승인). NFR-D 완료 (2026-10-16 승인). Infra 문서 완료, 승인 대기 |
+| U6 pwa-push | ✅ | ✅ | ✅ | ✅ | ✅ | FD 완료 (2026-10-16 승인). NFR-R 완료 (2026-10-16 승인). NFR-D 완료 (2026-10-16 승인). Infra 완료 (2026-10-16 승인). Code 계획 작성, 승인 대기 |
 (✅ = 실행 예정, – = 생략)
