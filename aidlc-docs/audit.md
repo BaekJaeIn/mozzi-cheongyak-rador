@@ -864,3 +864,19 @@
 **Context**: CONSTRUCTION - U5 Functional Design, 질문 대기
 
 ---
+
+## U5 Functional Design — 답변
+**Timestamp**: 2026-10-16T01:40:00Z
+**User Input**: "완료"
+**AI Response**: "질문 12개 답 확인: 모두 A(추천). 모호한 답 없음 → 기능 설계 문서 작성."
+**Context**: CONSTRUCTION - U5 Functional Design, 답 수집 완료
+
+---
+
+## U5 Functional Design — 완료, 승인 요청
+**Timestamp**: 2026-10-16T02:20:00Z
+**User Input**: (없음 — 답에 따라 설계 문서 작성)
+**AI Response**: "U5 기능 설계 문서 4개 작성 (business-rules BR-U5-01~134, domain-entities: 피드·상세·요약 API 형식·기기 저장 mz.bookmarks/mz.seen/mz.feed·PBT P-U5-1~13, business-logic-model, frontend-components). 추가 결정: 피드 API가 판정이 오래됐으면 그 자리에서 1번 재계산(BR-U5-04), 관심 공고 갱신용 GET /api/notices?ids=, iPhone 캘린더용 GET /api/notices/[id]/calendar(인증 없음, 공고 정보만), U4 clearAllPersonal에 mz.seen·mz.feed 추가. U2 compareFeedItems·isVisible 재사용. 승인 대기."
+**Context**: CONSTRUCTION - U5 Functional Design 완료, 승인 대기
+
+---
