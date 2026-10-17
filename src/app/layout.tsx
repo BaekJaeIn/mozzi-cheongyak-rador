@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   // iPhone 홈 화면 앱 (U6 BR-U6-75, NFR-U6-22·26). manifest는 src/app/manifest.ts
   appleWebApp: {
     capable: true,
-    title: "청약 알리미",
+    title: APP_NAME,
     statusBarStyle: "default",
   },
   icons: { apple: "/icons/apple-touch-icon.png" },

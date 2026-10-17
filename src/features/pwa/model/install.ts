@@ -71,10 +71,10 @@ export const KEEP_USING = "다른 기능은 그대로 쓰실 수 있어요.";
 export function deniedHelp(platform: Platform, installed: boolean): Help {
   const intro = "알림이 꺼져 있어요. 아래 순서로 켜면 새 공고를 알려 드려요.";
   if (platform === "ios_safari" || platform === "ios_other") {
-    return { intro, steps: ["휴대폰의 설정 앱을 열어요", "알림 → 청약 알리미를 눌러요", "알림 허용을 켜요"] };
+    return { intro, steps: ["휴대폰의 설정 앱을 열어요", "알림 → 모찌네 청약 알리미를 눌러요", "알림 허용을 켜요"] };
   }
   if (platform === "android" && installed) {
-    return { intro, steps: ["휴대폰 설정 → 애플리케이션을 열어요", "청약 알리미 → 알림을 눌러요", "알림 허용을 켜요"] };
+    return { intro, steps: ["휴대폰 설정 → 애플리케이션을 열어요", "모찌네 청약 알리미 → 알림을 눌러요", "알림 허용을 켜요"] };
   }
   return { intro, steps: ["주소창 왼쪽의 자물쇠(또는 설정) 표시를 눌러요", "권한 → 알림을 눌러요", "허용으로 바꿔요"] };
 }

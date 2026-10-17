@@ -3,7 +3,7 @@
 // 마법사 입력 부품 (frontend-components §4·§6)
 // - 보기·버튼 높이 ≥ --spacing-touch, 글씨는 크기 토큰만 → 쉬운 모드에서 함께 커진다
 // - 선택 표시는 색 + 체크 아이콘 + 굵기 (색만으로 구분하지 않음)
-// - 작은 휠 대신 큰 목록 버튼
+// - 보기는 큰 목록 버튼, 생년월일만 드롭다운(휴대폰 기본 선택 휠)
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { ageAt } from "@shared/domain/profile.ts";
 import { exceedsMax, formatManwon, parseAmountInput } from "../model/amount";
@@ -99,7 +99,7 @@ export function MultiChoice<T>({
   );
 }
 
-/** 생년월일: 연·월·일 큰 목록 (BR-U4-20~23). 셋 다 골라야 값이 정해진다 */
+/** 생년월일: 연·월·일 드롭다운 (BR-U4-20~23). 셋 다 골라야 값이 정해진다 */
 export function BirthDatePicker({
   value,
   years,
@@ -113,15 +113,8 @@ export function BirthDatePicker({
 }) {
   const initial = value ? value.split("-").map(Number) : [];
   const [parts, setParts] = useState<{ y?: number; m?: number; d?: number }>({ y: initial[0], m: initial[1], d: initial[2] });
-  const yearRef = useRef<HTMLDivElement>(null);
   const yearList = Array.from({ length: years.to - years.from + 1 }, (_, i) => years.to - i);
   const { y, m, d } = parts;
-
-  useEffect(() => {
-    // 연도 목록을 처음 위치(고른 해 또는 1960년)로 스크롤 — 처음 한 번만
-    yearRef.current?.querySelector<HTMLElement>(`[data-year="${initial[0] ?? years.initial}"]`)?.scrollIntoView({ block: "center" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const update = (next: { y?: number; m?: number; d?: number }) => {
     const merged = { ...parts, ...next };
@@ -136,36 +129,16 @@ export function BirthDatePicker({
     }
   };
   const future = !!(y && m && d) && toBirthDate(y, m, d) > today;
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const days = Array.from({ length: daysInMonth(y ?? years.initial, m ?? 1) }, (_, i) => i + 1);
 
   return (
     <div className="flex flex-col gap-4">
-      <PickerSection title="태어난 해">
-        <div ref={yearRef} className="grid max-h-64 grid-cols-3 gap-2 overflow-y-auto rounded-xl border-2 border-line p-2" role="radiogroup" aria-label="태어난 해">
-          {yearList.map((year) => (
-            <button key={year} type="button" role="radio" aria-checked={year === y} data-year={year} onClick={() => update({ y: year })} className={optionClass(year === y)}>
-              {year}년
-            </button>
-          ))}
-        </div>
-      </PickerSection>
-      <PickerSection title="태어난 달">
-        <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="태어난 달">
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-            <button key={month} type="button" role="radio" aria-checked={month === m} onClick={() => update({ m: month })} className={optionClass(month === m)}>
-              {month}월
-            </button>
-          ))}
-        </div>
-      </PickerSection>
-      <PickerSection title="태어난 날">
-        <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-label="태어난 날">
-          {Array.from({ length: daysInMonth(y ?? years.initial, m ?? 1) }, (_, i) => i + 1).map((day) => (
-            <button key={day} type="button" role="radio" aria-checked={day === d} onClick={() => update({ d: day })} className={optionClass(day === d)}>
-              {day}
-            </button>
-          ))}
-        </div>
-      </PickerSection>
+      <div className="grid grid-cols-[3fr_2fr_2fr] gap-2">
+        <BirthSelect label="태어난 해" placeholder="연도" value={y} options={yearList} unit="년" onChange={(v) => update({ y: v })} />
+        <BirthSelect label="태어난 달" placeholder="월" value={m} options={months} unit="월" onChange={(v) => update({ m: v })} />
+        <BirthSelect label="태어난 날" placeholder="일" value={d} options={days} unit="일" onChange={(v) => update({ d: v })} />
+      </div>
       <p aria-live="polite" className="rounded-xl bg-primary-soft p-4 text-center text-title font-bold">
         {value ? `${y}년 ${m}월 ${d}일 · 만 ${ageAt(value, today)}세` : future ? "오늘보다 뒤의 날짜는 고를 수 없어요" : "연·월·일을 모두 골라 주세요"}
       </p>
@@ -173,12 +146,48 @@ export function BirthDatePicker({
   );
 }
 
-function PickerSection({ title, children }: { title: string; children: ReactNode }) {
+/** 생년월일 한 칸: 기본 select → 휴대폰에서는 OS 선택 휠이 열린다 */
+function BirthSelect({
+  label,
+  placeholder,
+  value,
+  options,
+  unit,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: number | undefined;
+  options: readonly number[];
+  unit: string;
+  onChange: (value: number) => void;
+}) {
+  const id = useId();
   return (
-    <section>
-      <h2 className="mb-2 text-body font-bold">{title}</h2>
-      {children}
-    </section>
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-body font-bold">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value ?? ""}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className={[
+          "min-h-touch w-full rounded-xl border-2 bg-surface px-3 text-body text-ink",
+          value ? "border-primary font-bold" : "border-line",
+        ].join(" ")}
+      >
+        <option value="" disabled>
+          {placeholder}
+        </option>
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+            {unit}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

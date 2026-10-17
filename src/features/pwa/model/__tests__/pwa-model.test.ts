@@ -43,7 +43,7 @@ describe("기기 판별·지원", () => {
   });
 
   it("거부 안내는 기기별", () => {
-    expect(deniedHelp("ios_safari", true).steps[1]).toContain("청약 알리미");
+    expect(deniedHelp("ios_safari", true).steps[1]).toContain("모찌네 청약 알리미");
     expect(deniedHelp("android", true).steps[0]).toContain("애플리케이션");
     expect(deniedHelp("android", false).steps[0]).toContain("자물쇠");
   });

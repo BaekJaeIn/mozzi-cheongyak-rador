@@ -4,7 +4,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "모찌네 청약 알리미",
-    short_name: "청약 알리미",
+    short_name: "모찌네 청약 알리미",
     description: "3기 신도시 분양·임대 공고 중 우리 집에 맞는 것만 골라 알려 드려요",
     lang: "ko",
     start_url: "/",

@@ -56,7 +56,7 @@ function ConfirmStep() {
       </text>
       <rect x="22" y="56" width="40" height="40" rx="10" className="fill-surface stroke-line" strokeWidth="2" />
       <text x="72" y="81" fontSize="13" className="fill-ink">
-        청약 알리미
+        모찌네 청약 알리미
       </text>
     </svg>
   );

@@ -12,9 +12,9 @@ const pick = (page: Page, name: string) => page.getByRole("radio", { name, exact
 const heading = (page: Page, name: string) => expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
 
 async function pickBirth(page: Page, year: number, month: number, day: number) {
-  await page.getByRole("radiogroup", { name: "태어난 해" }).getByRole("radio", { name: `${year}년` }).click();
-  await page.getByRole("radiogroup", { name: "태어난 달" }).getByRole("radio", { name: `${month}월`, exact: true }).click();
-  await page.getByRole("radiogroup", { name: "태어난 날" }).getByRole("radio", { name: String(day), exact: true }).click();
+  await page.getByLabel("태어난 해").selectOption(String(year));
+  await page.getByLabel("태어난 달").selectOption(String(month));
+  await page.getByLabel("태어난 날").selectOption(String(day));
 }
 
 /** 처음 입력 저장 뒤 알림 단계 (U6가 연결, US-03) — "나중에"(알림 미지원이면 "맞춤 공고 보러 가기")로 홈으로 */

@@ -2,26 +2,35 @@
 
 /*
  * 디자인 토큰 (frontend-components.md §3, NFR-1, NFR-U1-26)
- * - 모든 크기는 --scale(일반 1, 쉬운 모드 1.25)을 곱한다. 쉬운 모드 전환은 U4가 html[data-mode]를 바꿔서 한다.
+ * - 간격·터치 크기는 --scale(일반 1, 쉬운 모드 1.25)을 곱하고, 글씨는 --fs-* 값을 모드별로 둔다. 쉬운 모드 전환은 U4가 html[data-mode]를 바꿔서 한다.
  * - 색은 흰 배경 기준 본문 대비 4.5:1 이상(WCAG AA).
  * - 화면에서는 아래 토큰 유틸리티만 쓰고 임의 px 값은 쓰지 않는다.
  */
 :root {
   --scale: 1;
+  /* 글씨 크기만 따로: 일반 모드는 조금 작게, 쉬운 모드는 그대로(일반의 약 1.4배) */
+  --fs-caption: 14px;
+  --fs-body: 16px;
+  --fs-title: 19px;
+  --fs-heading: 22px;
 }
 
 html[data-mode="easy"] {
   --scale: 1.25;
+  --fs-caption: 20px;
+  --fs-body: 22.5px;
+  --fs-title: 27.5px;
+  --fs-heading: 32.5px;
 }
 
 @theme inline {
   --font-sans: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
 
-  /* 글씨: 16px 미만은 쓰지 않는다 */
-  --text-caption: calc(16px * var(--scale));
-  --text-body: calc(18px * var(--scale));
-  --text-title: calc(22px * var(--scale));
-  --text-heading: calc(26px * var(--scale));
+  /* 글씨: 일반 모드 본문 16px·보조 14px (2026-10-17 사용자 요청으로 18px에서 줄임) */
+  --text-caption: var(--fs-caption);
+  --text-body: var(--fs-body);
+  --text-title: var(--fs-title);
+  --text-heading: var(--fs-heading);
 
   /* 터치 영역 최소 48px */
   --spacing-touch: calc(48px * var(--scale));

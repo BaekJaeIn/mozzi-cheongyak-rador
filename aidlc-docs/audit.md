@@ -1104,3 +1104,29 @@
 **Context**: Build and Test 승인 질문은 계속 답변 대기
 
 ---
+
+## 운영 반영 지원 — 앱 QR 코드
+**Timestamp**: 2026-10-17T02:30:00Z
+**User Input**: "모찌네 청약 알리미 어플 링크를 qr코드를 타고 들어갈 수 있도록 qr을 만들어줘"
+**AI Response**: "운영 주소 https://mozzi-cheongyak-rador.vercel.app 의 QR(1024px, 오류 정정 M)을 assets/app-qr.png로 만듦. 커밋하지 않음."
+**Context**: Build and Test 승인 대기 중
+
+---
+
+## 변경 요청 — 글씨 크기·생년월일 선택·앱 이름
+**Timestamp**: 2026-10-17T02:50:00Z
+**User Input**: "1. 일반모드 글씨가 너무 큰 것 같아. 일반모드에서 글씨를 좀 줄여줘
+2. 생년월일 선택할때 저렇게 다 표출되는 것 보다 드롭박스 형태로 바꾸는게 좋을 것 같아.
+3. 앱으로 설치하면 앱 이름이 '청약 알리미'로 나오는데 '모찌네 청약 알리미'로 수정해줘."
+**AI Response**: "1) 글씨 토큰을 모드별 값(--fs-*)으로 분리: 일반 본문 18→16px·보조 16→14px·제목 22→19px·큰 제목 26→22px, 쉬운 모드는 그대로, 터치 48px 유지. NFR-1.1을 16px 이상으로 갱신. 2) BirthDatePicker를 연·월·일 select 3개로 교체(BR-U4-20 갱신), E2E pickBirth를 selectOption으로. 3) manifest short_name·appleWebApp title·설치/거부 안내 문구를 '모찌네 청약 알리미'로(BR-U6-75 갱신). 검증: typecheck·lint 통과, 단위 611/611, 로컬 E2E 53 통과+3 건너뜀. 커밋·push는 사용자 확인 뒤."
+**Context**: Build and Test 이후 변경 요청(작은 UI 변경, 설계 문서 해당 줄만 갱신). Build and Test 승인 질문은 계속 대기
+
+---
+
+## 변경 요청 — push
+**Timestamp**: 2026-10-17T03:00:00Z
+**User Input**: "푸시해줘"
+**AI Response**: "글씨 크기·생년월일 드롭다운·앱 이름 변경을 커밋하고 push. QR 이미지(assets/app-qr.png)는 올릴지 답이 없어 제외."
+**Context**: Build and Test 승인 질문은 계속 대기
+
+---

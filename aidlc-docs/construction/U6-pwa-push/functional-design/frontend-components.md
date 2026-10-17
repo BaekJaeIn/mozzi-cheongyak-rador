@@ -9,7 +9,7 @@
 
 | 항목 | 값 |
 |---|---|
-| `name` / `short_name` | "모찌네 청약 알리미" / **"청약 알리미"** (BR-U6-75) |
+| `name` / `short_name` | "모찌네 청약 알리미" / **"모찌네 청약 알리미"** (BR-U6-75, (2026-10-17 사용자 요청으로 변경)) |
 | `start_url` / `scope` / `display` | `/` / `/` / `standalone` |
 | 색 | `theme_color` #0b5cad(U1 primary), `background_color` #f6f7f9(canvas) |
 | 아이콘 | 192·512 PNG(`any`), 192·512 PNG(`maskable`, 가장자리 여백), iPhone `apple-touch-icon` 180 PNG |

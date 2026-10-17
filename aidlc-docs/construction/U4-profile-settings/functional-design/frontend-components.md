@@ -29,7 +29,7 @@ RootLayout
 │       ├─ ProfileWizard
 │       │   ├─ WizardProgress        ("주택·통장 7/16")
 │       │   ├─ StepScreen (화면 ID별)
-│       │   │   ├─ BirthDatePicker   (연·월·일 큰 목록 + "만 N세")
+│       │   │   ├─ BirthDatePicker   (연·월·일 드롭다운 + "만 N세")
 │       │   │   ├─ ChoiceList        (큰 보기 버튼, 단일 선택, [잘 모르겠어요] 옵션)
 │       │   │   ├─ RegionPicker      (시도 17 → 서울·경기·인천 시군구)
 │       │   │   ├─ BandPicker        (기간 구간)
@@ -80,7 +80,7 @@ RootLayout
 | `Welcome` | `onStart()` | 제목·설명 3줄·[시작하기] 하나 (BR-U4-01) |
 | `ProfileWizard` | `mode: "setup" \| "edit"`, `group?`, `initial?: WizardAnswers` | setup: 초안에서 시작(없으면 빈 답), 화면을 넘길 때 초안 저장. edit: `fromProfile` 값으로 시작, 그 그룹 화면만, 초안 저장 안 함, [취소] 있음 |
 | `WizardProgress` | `groupLabel`, `index`, `total` | `aria-label="7번째 화면, 전체 16개 중"` |
-| `BirthDatePicker` | `value`, `yearRange`, `onChange` | 큰 목록 3개(연·월·일), 일 목록은 달에 맞춤(BR-U4-21), 미래 날짜 막음, 다 고르면 "만 N세" |
+| `BirthDatePicker` | `value`, `yearRange`, `onChange` | 드롭다운 3개(연·월·일, (2026-10-17 사용자 요청으로 변경)), 일 목록은 달에 맞춤(BR-U4-21), 미래 날짜 막음, 다 고르면 "만 N세" |
 | `ChoiceList` | `options[{ value, label, help? }]`, `allowUnknown` | 보기 버튼 높이 ≥ `--spacing-touch`, 선택 표시는 색 + 체크 아이콘(색만으로 구분하지 않음) |
 | `RegionPicker` | `value { sido, sigungu }` | 시도 고른 뒤 서울·경기·인천이면 시군구 목록 이어서 표시, 다른 시도면 바로 [다음] 가능 |
 | `BandPicker` | `bands`, `value`, `allowUnknown` | 구간 이름 그대로 표시("2~3년") |
@@ -110,4 +110,4 @@ RootLayout
 - 화면마다 질문이 제목(`h1`)이고, 화면이 바뀌면 초점을 제목으로 옮긴다(화면 낭독기가 새 질문을 읽음).
 - 오류·안내 문구는 `role="alert"` 또는 `aria-live`로 읽힌다. 빨간색만으로 오류를 표시하지 않는다(아이콘 + 문구).
 - 가로 스크롤 없음: 목록·카드는 한 줄 1개, 긴 이름은 줄바꿈 (쉬운 모드 포함, 폭 320px 기준 확인).
-- 목록 선택(생년월일·시군구)은 휠 대신 **큰 목록 버튼**으로 만든다(작은 휠은 손떨림에 불리). 연도 목록은 처음 위치(1960년)로 스크롤해서 연다.
+- 시군구 등 목록 선택은 **큰 목록 버튼**으로 만든다. 생년월일만 드롭다운(휴대폰 기본 선택 휠) (2026-10-17 사용자 요청으로 변경).

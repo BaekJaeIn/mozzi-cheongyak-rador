@@ -64,7 +64,7 @@ async function toggleNotifyOn(page: Page) {
 
 test("앱 정보·서비스워커·아이콘·공개 키 (US-01, NFR-U6-26)", async ({ page, request }) => {
   const manifest = await (await request.get("/manifest.webmanifest")).json();
-  expect(manifest).toMatchObject({ name: "모찌네 청약 알리미", short_name: "청약 알리미", display: "standalone", start_url: "/" });
+  expect(manifest).toMatchObject({ name: "모찌네 청약 알리미", short_name: "모찌네 청약 알리미", display: "standalone", start_url: "/" });
   expect(manifest.icons.map((i: { purpose: string; sizes: string }) => `${i.purpose}:${i.sizes}`)).toEqual([
     "any:192x192",
     "any:512x512",
