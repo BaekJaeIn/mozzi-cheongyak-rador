@@ -6,6 +6,7 @@ import type { HouseholdProfile } from "@shared/domain/profile.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useLastList } from "@/features/app-chrome/BackNavigation";
 import { ErrorMessage } from "@/features/app-chrome/ErrorMessage";
 import { BookmarkButton } from "@/features/bookmarks/BookmarkButton";
 import { useBookmarks } from "@/features/bookmarks/BookmarksProvider";
@@ -13,7 +14,7 @@ import type { BookmarkSnapshot } from "@/features/bookmarks/model/store";
 import { getApiClient } from "@/features/device/api-client";
 import { markSeen } from "@/features/feed/model/seen";
 import { useProfile } from "@/features/profile/ProfileProvider";
-import { linkButton, primaryButton, secondaryButton } from "@/features/profile/ui/controls";
+import { card, linkButton, primaryButton, secondaryButton } from "@/features/profile/ui/controls";
 import type { JudgementView, NoticeDetail, NoticeDetailResponse } from "./model/api-types";
 import { calendarEvent, calendarTarget, googleCalendarUrl, NO_DATES_TEXT } from "./model/calendar";
 import { areaLabel, CRITERION_NAMES, dateLabel, shortAreaLabel, supplyCountLabel, timeline, unitRows } from "./model/display";
@@ -71,14 +72,15 @@ export function NoticeDetailView({ id }: { id: string }) {
 
 function BackButton() {
   const router = useRouter();
-  const back = () => {
-    // 알림·외부에서 바로 열었으면 돌아갈 곳이 없다 → 피드로
-    if (window.history.length > 1 && document.referrer.startsWith(window.location.origin)) router.back();
-    else router.push("/");
-  };
+  const lastList = useLastList();
+  // 들어온 목록으로 (휴대폰 뒤로 버튼과 같은 규칙, back-target.ts). 알림으로 바로 열었으면 맞춤 공고
+  const back = () => router.replace(lastList());
   return (
-    <button type="button" onClick={back} className={`${linkButton} self-start no-underline`}>
-      ‹ 뒤로
+    <button type="button" onClick={back} className="-ml-2 flex min-h-touch items-center gap-1 self-start rounded-2xl px-2 text-body font-bold text-muted active:bg-fill">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+      뒤로
     </button>
   );
 }
@@ -86,9 +88,9 @@ function BackButton() {
 function NotFound({ id }: { id: string }) {
   const { has, remove } = useBookmarks();
   return (
-    <section className="flex flex-col gap-4 rounded-xl bg-surface p-6">
+    <section className={`${card} flex flex-col gap-4 p-6`}>
       <h1 className="text-title font-bold">{DETAIL_TEXT.notFound}</h1>
-      <Link href="/" className={`${primaryButton} flex items-center justify-center`}>
+      <Link replace href="/" className={`${primaryButton} flex items-center justify-center`}>
         맞춤 공고로
       </Link>
       {has(id) && (
@@ -118,37 +120,41 @@ function Detail({ data }: { data: NoticeDetailResponse }) {
   const { stored } = useProfile();
   const supplyTypes = [...new Map(notice.units.map((u) => [u.supplyType, u])).values()];
   return (
-    <article className="flex flex-col gap-6" aria-labelledby="notice-title">
-      <OriginalLink notice={notice} />
+    <article className="flex flex-col gap-4" aria-labelledby="notice-title">
       <StatusNotice notice={notice} judgement={judgement} />
 
-      <header className="flex flex-col gap-2">
-        <h1 id="notice-title" className="text-heading font-bold">
-          {notice.title}
-        </h1>
-        {notice.complexName && <p className="text-title">{notice.complexName}</p>}
-        <p className="text-body text-muted">
-          {[notice.provider, notice.tenure === "sale" ? "분양" : "임대", ...notice.districts.map((d) => d.name)].join(" · ")}
-        </p>
-        {supplyTypes.length > 0 && (
-          <ul className="flex flex-col text-body">
-            {supplyTypes.map((u) => (
-              <li key={u.supplyType}>
-                {u.plain}
-                {u.formal !== u.plain && <span className="text-muted"> ({u.formal})</span>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </header>
+      <section className={`${card} flex flex-col gap-4 p-5`}>
+        <header className="flex flex-col gap-2">
+          <p className="text-caption font-bold text-muted">
+            {[notice.provider, notice.tenure === "sale" ? "분양" : "임대", ...notice.districts.map((d) => d.name)].join(" · ")}
+          </p>
+          <h1 id="notice-title" className="text-heading font-bold leading-snug tracking-tight">
+            {notice.title}
+          </h1>
+          {notice.complexName && <p className="text-body text-muted">{notice.complexName}</p>}
+          {supplyTypes.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5 pt-1">
+              {supplyTypes.map((u) => (
+                <li key={u.supplyType} className="rounded-lg bg-fill px-2 py-0.5 text-caption text-ink">
+                  {u.plain}
+                  {u.formal !== u.plain && <span className="text-muted"> ({u.formal})</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </header>
+        <OriginalLink notice={notice} />
+        <div className="grid grid-cols-2 gap-2">
+          <BookmarkButton id={notice.id} snapshot={snapshotOf(notice)} size="large" />
+          <CalendarButton notice={notice} />
+        </div>
+      </section>
 
       <VerdictSummary profile={profile} judgement={judgement} />
-      <BookmarkButton id={notice.id} snapshot={snapshotOf(notice)} size="large" />
       <ScheduleTimeline notice={notice} today={today} />
       <UnitList notice={notice} />
       {judgement && <JudgementReasons judgement={judgement} notice={notice} profile={stored?.profile ?? null} />}
       <AiSummary notice={notice} />
-      <CalendarButton notice={notice} />
     </article>
   );
 }
@@ -185,7 +191,7 @@ function StatusNotice({ notice, judgement }: { notice: NoticeDetail; judgement: 
   if (judgement && !judgement.inDistrict) lines.push(DETAIL_TEXT.outOfDistrict);
   if (lines.length === 0) return null;
   return (
-    <div className="rounded-xl border-2 border-ink bg-surface p-4 text-body font-bold">
+    <div className="flex flex-col gap-1 rounded-card bg-ink px-5 py-4 text-body font-bold text-surface">
       {lines.map((l) => (
         <p key={l}>{l}</p>
       ))}
@@ -198,17 +204,18 @@ function StatusNotice({ notice, judgement }: { notice: NoticeDetail; judgement: 
 function VerdictSummary({ profile, judgement }: { profile: NoticeDetailResponse["profile"]; judgement: JudgementView | null }) {
   if (profile === "none") {
     return (
-      <section className="flex flex-col gap-3 rounded-xl bg-primary-soft p-4">
+      <section className="flex flex-col gap-3 rounded-card bg-primary-soft p-5">
         <p className="text-body">{DETAIL_TEXT.noProfile}</p>
-        <Link href="/profile/setup" className={`${primaryButton} flex items-center justify-center`}>
+        <Link replace href="/profile/setup" className={`${primaryButton} flex items-center justify-center`}>
           내 정보 넣기
         </Link>
       </section>
     );
   }
-  if (!judgement) return <p className="rounded-xl bg-surface p-4 text-body">{DETAIL_TEXT.noJudgement}</p>;
+  if (!judgement) return <p className={`${card} p-5 text-body`}>{DETAIL_TEXT.noJudgement}</p>;
+  const tone = judgement.verdict === "eligible" ? "bg-primary-soft" : judgement.verdict === "ineligible" ? "bg-danger-soft" : "bg-surface shadow-card";
   return (
-    <section className="flex flex-col gap-2 rounded-xl bg-surface p-4" aria-label="내 자격 판정">
+    <section className={`flex flex-col items-start gap-2 rounded-card p-5 ${tone}`} aria-label="내 자격 판정">
       <VerdictBadge verdict={judgement.verdict} />
       <p className="text-title font-bold">{VERDICT_SUMMARY[judgement.verdict]}</p>
       {judgement.outdated && <p className="text-body text-muted">{DETAIL_TEXT.outdated}</p>}
@@ -221,8 +228,8 @@ function VerdictSummary({ profile, judgement }: { profile: NoticeDetailResponse[
 function ScheduleTimeline({ notice, today }: { notice: NoticeDetail; today: string }) {
   const t = timeline(notice.schedule, today);
   const marker = (
-    <li key="today-marker" className="flex items-center gap-3 text-body font-bold text-primary">
-      <span aria-hidden className="h-1 w-6 rounded bg-primary" />
+    <li key="today-marker" className="relative flex items-center pb-4 text-caption font-bold text-primary">
+      <span aria-hidden className="absolute -left-7 h-0.5 w-5 rounded bg-primary" />
       오늘 ({dateLabel(today, today)})
     </li>
   );
@@ -230,7 +237,11 @@ function ScheduleTimeline({ notice, today }: { notice: NoticeDetail; today: stri
     const when = s.date ? `${dateLabel(s.date, today)}${s.endDate && s.endDate !== s.date ? ` ~ ${dateLabel(s.endDate, today)}` : ""}` : "미정";
     const tag = s.state === "past" ? "지남" : s.state === "today" ? "오늘" : null;
     return (
-      <li key={s.key} className={`flex flex-col border-l-4 pl-3 ${s.state === "today" ? "border-primary" : s.state === "past" ? "border-line text-muted" : "border-ink"}`}>
+      <li key={s.key} className={`relative flex flex-col pb-4 last:pb-0 ${s.state === "past" ? "text-muted" : ""}`}>
+        <span
+          aria-hidden
+          className={`absolute -left-8 top-1.5 h-3.5 w-3.5 rounded-full border-2 ${s.state === "today" ? "border-primary bg-primary" : s.state === "past" ? "border-field bg-surface" : "border-ink bg-surface"}`}
+        />
         <span className="text-body font-bold">
           {s.label}
           {tag && <span className={s.state === "today" ? "text-primary" : ""}> · {tag}</span>}
@@ -241,11 +252,11 @@ function ScheduleTimeline({ notice, today }: { notice: NoticeDetail; today: stri
   });
   if (t.todayIndex !== null) items.splice(t.todayIndex, 0, marker);
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="schedule-title">
+    <section className={`${card} flex flex-col gap-4 p-5`} aria-labelledby="schedule-title">
       <h2 id="schedule-title" className="text-title font-bold">
         일정
       </h2>
-      <ol className="flex flex-col gap-3">{items}</ol>
+      <ol className="ml-2 flex flex-col border-l-2 border-line pl-6">{items}</ol>
     </section>
   );
 }
@@ -256,18 +267,20 @@ function UnitList({ notice }: { notice: NoticeDetail }) {
   if (notice.units.length === 0) return null;
   const { rows, total } = unitRows(notice.units);
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="units-title">
+    <section className={`${card} flex flex-col gap-2 p-5`} aria-labelledby="units-title">
       <h2 id="units-title" className="text-title font-bold">
         공급 세대수 <span className="text-body font-normal text-muted">(합계 {total})</span>
       </h2>
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col divide-y divide-line">
         {rows.map((u) => (
-          <li key={u.id} className="flex flex-col rounded-xl border-2 border-line bg-surface p-3">
-            <span className="text-body font-bold">
-              {u.label ?? shortAreaLabel(u.exclusiveAreaM2)} · {u.plain}
+          <li key={u.id} className="flex items-start justify-between gap-3 py-3">
+            <span className="flex min-w-0 flex-col">
+              <span className="text-body font-bold">
+                {u.label ?? shortAreaLabel(u.exclusiveAreaM2)} · {u.plain}
+              </span>
+              <span className="text-caption text-muted">{areaLabel(u.exclusiveAreaM2)}</span>
             </span>
-            <span className="text-body">{areaLabel(u.exclusiveAreaM2)}</span>
-            <span className="text-body">{supplyCountLabel(u.supplyCount)}</span>
+            <span className="shrink-0 text-body font-bold">{supplyCountLabel(u.supplyCount)}</span>
           </li>
         ))}
       </ul>
@@ -280,7 +293,7 @@ function UnitList({ notice }: { notice: NoticeDetail }) {
 function JudgementReasons({ judgement, notice, profile }: { judgement: JudgementView; notice: NoticeDetail; profile: HouseholdProfile | null }) {
   const { open, folded } = splitGroups(groupJudgement(judgement.units, notice.units));
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="reasons-title">
+    <section className={`${card} flex flex-col gap-3 p-5`} aria-labelledby="reasons-title">
       <h2 id="reasons-title" className="text-title font-bold">
         판정 이유
       </h2>
@@ -288,7 +301,7 @@ function JudgementReasons({ judgement, notice, profile }: { judgement: Judgement
         <GroupBlock key={g.unitIds.join(",")} group={g} profile={profile} />
       ))}
       {folded.length > 0 && (
-        <details className="rounded-xl border-2 border-line bg-surface p-3">
+        <details className="rounded-2xl bg-canvas px-4 py-2">
           <summary className="min-h-touch cursor-pointer content-center text-body font-bold">신청이 어려운 유형 {folded.length}개</summary>
           <div className="mt-3 flex flex-col gap-3">
             {folded.map((g) => (
@@ -305,7 +318,7 @@ function JudgementReasons({ judgement, notice, profile }: { judgement: Judgement
 function GroupBlock({ group, profile }: { group: JudgementGroup; profile: HouseholdProfile | null }) {
   const areas = group.areas.map(shortAreaLabel).join(", ");
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-surface p-4">
+    <div className="flex flex-col gap-2 rounded-2xl bg-canvas p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-body font-bold">
           {group.plain}
@@ -333,7 +346,7 @@ function GroupBlock({ group, profile }: { group: JudgementGroup; profile: Househ
                 {c.verdict === "unknown" && c.action && (
                   <span className="text-caption text-muted">
                     {link ? (
-                      <Link href={link} className="text-primary underline">
+                      <Link replace href={link} className="text-primary underline">
                         {c.action}
                       </Link>
                     ) : (
@@ -359,7 +372,7 @@ function paragraphs(text: string): string[] {
 function AiSummary({ notice }: { notice: NoticeDetail }) {
   const s = notice.summary;
   return (
-    <section className="flex flex-col gap-3 rounded-xl bg-surface p-4" aria-labelledby="ai-title">
+    <section className={`${card} flex flex-col gap-3 p-5`} aria-labelledby="ai-title">
       <h2 id="ai-title" className="text-title font-bold">
         쉽게 보는 자격 조건
       </h2>
@@ -370,7 +383,7 @@ function AiSummary({ notice }: { notice: NoticeDetail }) {
               {p}
             </p>
           ))}
-          <h3 className="text-body font-bold">노부부 가구가 볼 점</h3>
+          <h3 className="pt-2 text-body font-bold">노부부 가구가 볼 점</h3>
           {paragraphs(s.forSeniorCouple).map((p, i) => (
             <p key={i} className="text-body">
               {p}

@@ -97,6 +97,37 @@ test("상세: 피드 밖 공고도 열리고 상태를 알려 준다, 없는 공
   await expect(page.getByText("공고를 찾을 수 없어요. 오래된 공고는 1년이 지나면 지워져요")).toBeVisible();
 });
 
+test("뒤로 버튼: 상세 → 목록, 목록에서는 한 번 더 누르면 종료 안내 (2026-10-17 요청)", async ({ page }) => {
+  await openFeed(page);
+  await card(page, fx.open.name).getByRole("link").click();
+  await expect(page).toHaveURL(new RegExp(`/notice/${fx.open.id}$`));
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(card(page, fx.open.name)).toBeVisible();
+
+  // 관심 공고·설정에서도 맞춤 공고로 (방문 기록을 거슬러 가지 않는다)
+  const nav = page.getByRole("navigation", { name: "주요 메뉴" });
+  await nav.getByRole("link", { name: "관심 공고" }).click();
+  await nav.getByRole("link", { name: "설정" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goBack();
+  await expect(page.getByText("뒤로 버튼을 한 번 더 누르면 종료돼요")).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(card(page, fx.open.name)).toBeVisible();
+});
+
+test("뒤로 버튼: 알림으로 상세를 바로 열었어도 맞춤 공고로 (2026-10-17 요청)", async ({ page }) => {
+  await openFeed(page);
+  await page.goto(`/notice/${fx.open.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: `${fx.open.name} 입주자 모집공고` })).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(card(page, fx.open.name)).toBeVisible();
+});
+
 test("캘린더에 추가: Android는 Google 캘린더, iPhone은 캘린더 파일 (US-16)", async ({ page, context }, testInfo) => {
   await openFeed(page);
   await page.goto(`/notice/${fx.open.id}`);

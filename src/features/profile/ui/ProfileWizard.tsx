@@ -140,8 +140,8 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   const onBack = () => {
     const prev = prevStep(answers, stepId, group);
     if (prev) go(prev);
-    else if (mode.kind === "setup") router.push("/");
-    else router.push("/settings");
+    else if (mode.kind === "setup") router.replace("/");
+    else router.replace("/settings");
   };
 
   const onRestart = () => {
@@ -165,7 +165,7 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
         setPhase("saved"); // 서버에 못 보냈다는 안내를 보여 준 뒤 이동 (BR-U4-63)
         return;
       }
-      router.push(mode.kind === "edit" ? `/settings?saved=${result}` : mode.kind === "redo" ? `/settings?saved=${result}` : "/");
+      router.replace(mode.kind === "edit" ? `/settings?saved=${result}` : mode.kind === "redo" ? `/settings?saved=${result}` : "/");
     } catch (e) {
       setPhase("input");
       setError(e instanceof LocalSaveError ? e.message : "저장하지 못했어요. 다시 시도해 주세요.");
@@ -173,18 +173,18 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   };
 
   if (phase === "notify") {
-    return <NotifyStep titleRef={titleRef} savedMessage={message} onDone={() => router.push("/")} />;
+    return <NotifyStep titleRef={titleRef} savedMessage={message} onDone={() => router.replace("/")} />;
   }
   if (phase === "saved") {
     return (
       <div className="flex flex-col gap-6 pb-8">
-        <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold outline-none">
+        <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold leading-snug tracking-tight outline-none">
           내 정보를 저장했어요
         </h1>
-        <p role="status" className="rounded-xl bg-surface p-4 text-body">
+        <p role="status" className="rounded-card bg-surface p-5 shadow-card text-body">
           {message}
         </p>
-        <button type="button" className={primaryButton} onClick={() => router.push(mode.kind === "redo" ? "/settings" : "/")}>
+        <button type="button" className={primaryButton} onClick={() => router.replace(mode.kind === "redo" ? "/settings" : "/")}>
           {mode.kind === "redo" ? "설정으로 돌아가기" : "맞춤 공고 보러 가기"}
         </button>
       </div>
@@ -209,11 +209,11 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
           </button>
         )}
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-line" aria-hidden>
-        <div className="h-full bg-primary" style={{ width: `${(index / total) * 100}%` }} />
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" aria-hidden>
+        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(index / total) * 100}%` }} />
       </div>
 
-      <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold outline-none">
+      <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold leading-snug tracking-tight outline-none">
         {STEP_TITLES[stepId]}
       </h1>
       {hint && <p className="-mt-3 text-body text-muted">{hint}</p>}
@@ -297,7 +297,7 @@ function ReviewScreen({
     <div className="flex flex-col gap-3">
       <ul className="flex flex-col gap-3">
         {groups.map((g) => (
-          <li key={g} className="rounded-xl bg-surface p-4">
+          <li key={g} className="rounded-card bg-surface p-5 shadow-card">
             <p className="text-caption text-muted">{GROUP_LABELS[g]}</p>
             <p className="text-body font-bold">{groupSummary(p, g, today)}</p>
             {!group && (

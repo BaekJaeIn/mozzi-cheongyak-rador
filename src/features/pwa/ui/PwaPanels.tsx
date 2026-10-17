@@ -3,7 +3,7 @@
 // 설치·알림 안내 부품 (US-01·03, BR-U6-65~72·80)
 import { useEffect, useState } from "react";
 import { getApiClient } from "@/features/device/api-client";
-import { secondaryButton } from "@/features/profile/ui/controls";
+import { card, secondaryButton } from "@/features/profile/ui/controls";
 import { deniedHelp, KEEP_USING, loadHintDismissedAt, saveHintDismissed, shouldShowInstallHint } from "../model/install";
 import { usePwa } from "../PwaProvider";
 import { InstallGuide } from "./InstallGuide";
@@ -13,7 +13,7 @@ export function DeniedHelp() {
   const { platform, installed } = usePwa();
   const help = deniedHelp(platform, installed);
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-surface p-4">
+    <div className={`${card} flex flex-col gap-2 p-5`}>
       <p className="text-body">{help.intro}</p>
       <ol className="flex list-decimal flex-col gap-1 pl-6 text-body">
         {help.steps.map((s) => (
@@ -49,15 +49,15 @@ export function InstallHintBanner() {
   }, [ready, installed]);
   if (!show) return null;
   return (
-    <section aria-labelledby="install-hint" className="flex flex-col gap-3 rounded-xl border-2 border-primary bg-primary-soft p-4">
-      <h2 id="install-hint" className="text-body font-bold">
+    <section aria-labelledby="install-hint" className="flex flex-col gap-3 rounded-card bg-primary-soft p-5">
+      <h2 id="install-hint" className="text-body font-bold text-ink">
         홈 화면에 추가하면 알림을 받고 더 쉽게 열 수 있어요
       </h2>
-      <div className="grid grid-cols-2 gap-2">
-        <InstallGuideButton className="min-h-touch rounded-xl bg-primary px-3 text-body font-bold text-surface" />
+      <div className="flex gap-2">
+        <InstallGuideButton className="min-h-touch flex-1 rounded-2xl bg-primary px-3 text-body font-bold text-surface active:bg-primary-strong" />
         <button
           type="button"
-          className="min-h-touch rounded-xl border-2 border-line bg-surface px-3 text-body font-bold"
+          className="min-h-touch rounded-2xl px-4 text-body font-bold text-muted active:bg-surface"
           onClick={() => {
             saveHintDismissed(window.localStorage, new Date());
             setShow(false);
@@ -75,13 +75,13 @@ export function InstallSection() {
   const { ready, installed } = usePwa();
   return (
     <section aria-labelledby="install" className="flex flex-col gap-3">
-      <h2 id="install" className="text-title font-bold">
+      <h2 id="install" className="px-1 text-title font-bold">
         홈 화면에 설치
       </h2>
       {ready && installed ? (
-        <p className="rounded-xl bg-surface p-4 text-body">홈 화면 앱으로 쓰고 계세요.</p>
+        <p className={`${card} p-5 text-body`}>홈 화면 앱으로 쓰고 계세요.</p>
       ) : (
-        <div className="flex flex-col gap-3 rounded-xl bg-surface p-4">
+        <div className={`${card} flex flex-col gap-3 p-5`}>
           <p className="text-body">홈 화면에 추가하면 알림을 받고, 아이콘을 눌러 바로 열 수 있어요.</p>
           <InstallGuideButton />
         </div>

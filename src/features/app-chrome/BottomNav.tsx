@@ -2,7 +2,7 @@
 
 // 하단 메뉴: 피드 / 관심 공고 / 설정 (frontend-components.md §2, U4 BR-U4-03 숨김)
 // - 터치 영역 48px 이상, 라벨 16px 이상
-// - 현재 위치는 색 + 굵기 + 위쪽 막대로 표시 (색만으로 구분하지 않음)
+// - 현재 위치는 색 + 굵기 + 아이콘 뒤 둥근 배경으로 표시 (색만으로 구분하지 않음)
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -15,8 +15,8 @@ interface NavItem {
 }
 
 const iconProps = {
-  width: 28,
-  height: 28,
+  width: 26,
+  height: 26,
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
@@ -73,21 +73,21 @@ export function BottomNav() {
   const { loaded, stored } = useProfile();
   if (!shouldShowNav(pathname, loaded, stored !== null)) return null;
   return (
-    <nav aria-label="주요 메뉴" className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface">
+    <nav aria-label="주요 메뉴" className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface/95 backdrop-blur" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       <ul className="mx-auto flex w-full max-w-xl">
         {ITEMS.map((item) => {
           const active = isActive(pathname, item.href);
           return (
             <li key={item.href} className="flex-1">
-              <Link
+              <Link replace
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={[
-                  "flex min-h-touch flex-col items-center justify-center gap-1 border-t-4 py-2 text-caption",
-                  active ? "border-primary font-bold text-primary" : "border-transparent font-normal text-muted",
+                  "flex min-h-touch flex-col items-center justify-center gap-0.5 py-2 text-caption",
+                  active ? "font-bold text-primary" : "font-normal text-muted",
                 ].join(" ")}
               >
-                {item.icon}
+                <span className={["flex h-8 w-14 items-center justify-center rounded-full", active ? "bg-primary-soft" : ""].join(" ")}>{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
             </li>

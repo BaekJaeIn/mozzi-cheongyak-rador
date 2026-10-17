@@ -11,13 +11,13 @@ import { daysInMonth, toBirthDate } from "../model/steps";
 
 const optionClass = (selected: boolean) =>
   [
-    "flex min-h-touch w-full items-center gap-3 rounded-xl border-2 px-4 py-2 text-left text-body",
-    selected ? "border-primary bg-primary-soft font-bold text-ink" : "border-line bg-surface text-ink",
+    "flex min-h-touch w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-body transition-colors",
+    selected ? "border-primary bg-primary-soft font-bold text-ink" : "border-transparent bg-surface text-ink shadow-card",
   ].join(" ");
 
 function Check({ on }: { on: boolean }) {
   return (
-    <span aria-hidden className={["flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2", on ? "border-primary bg-primary text-surface" : "border-line"].join(" ")}>
+    <span aria-hidden className={["flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-caption", on ? "border-primary bg-primary text-surface" : "border-field"].join(" ")}>
       {on ? "✓" : ""}
     </span>
   );
@@ -139,7 +139,7 @@ export function BirthDatePicker({
         <BirthSelect label="태어난 달" placeholder="월" value={m} options={months} unit="월" onChange={(v) => update({ m: v })} />
         <BirthSelect label="태어난 날" placeholder="일" value={d} options={days} unit="일" onChange={(v) => update({ d: v })} />
       </div>
-      <p aria-live="polite" className="rounded-xl bg-primary-soft p-4 text-center text-title font-bold">
+      <p aria-live="polite" className="rounded-2xl bg-primary-soft p-4 text-center text-title font-bold">
         {value ? `${y}년 ${m}월 ${d}일 · 만 ${ageAt(value, today)}세` : future ? "오늘보다 뒤의 날짜는 고를 수 없어요" : "연·월·일을 모두 골라 주세요"}
       </p>
     </div>
@@ -173,8 +173,8 @@ function BirthSelect({
         value={value ?? ""}
         onChange={(e) => onChange(Number(e.target.value))}
         className={[
-          "min-h-touch w-full rounded-xl border-2 bg-surface px-3 text-body text-ink",
-          value ? "border-primary font-bold" : "border-line",
+          "min-h-touch w-full rounded-2xl border bg-surface px-3 text-body text-ink",
+          value ? "border-2 border-primary font-bold" : "border-field",
         ].join(" ")}
       >
         <option value="" disabled>
@@ -220,11 +220,11 @@ export function AmountInput({
           autoComplete="off"
           value={value === undefined ? "" : String(value)}
           onChange={(e) => onChange(parseAmountInput(e.target.value) ?? undefined)}
-          className="min-h-touch w-full rounded-xl border-2 border-line bg-surface px-4 text-right text-title"
+          className="min-h-touch w-full rounded-2xl border border-field bg-surface px-4 text-right text-title focus:border-2 focus:border-primary"
         />
         <span className="shrink-0 text-title">만원</span>
       </div>
-      <p aria-live="polite" className="rounded-xl bg-primary-soft p-4 text-center text-heading font-bold">
+      <p aria-live="polite" className="rounded-2xl bg-primary-soft p-4 text-center text-heading font-bold">
         {value === undefined ? "금액을 넣어 주세요" : `${monthly ? "월 " : ""}${formatManwon(value)}`}
       </p>
       {value !== undefined && exceedsMax(value) && (
@@ -263,7 +263,7 @@ export function CountInput({
           const n = parseAmountInput(e.target.value);
           onChange(n === null ? undefined : Math.min(n, max));
         }}
-        className="min-h-touch w-full rounded-xl border-2 border-line bg-surface px-4 text-right text-title"
+        className="min-h-touch w-full rounded-2xl border border-field bg-surface px-4 text-right text-title focus:border-2 focus:border-primary"
       />
       <span className="shrink-0 text-title">{unit}</span>
     </div>
@@ -293,7 +293,7 @@ export function ConfirmDialog({
   useEffect(() => cancelRef.current?.focus(), []);
   return (
     <div className="fixed inset-0 z-20 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
-      <div role="alertdialog" aria-modal="true" aria-labelledby={titleId} className="w-full max-w-xl rounded-xl bg-surface p-6">
+      <div role="alertdialog" aria-modal="true" aria-labelledby={titleId} className="w-full max-w-xl rounded-card bg-surface p-6 shadow-card">
         <h2 id={titleId} className="text-title font-bold">
           {title}
         </h2>
@@ -302,11 +302,11 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            className={["min-h-touch rounded-xl px-4 text-body font-bold text-surface", danger ? "bg-danger" : "bg-primary"].join(" ")}
+            className={["min-h-touch rounded-2xl px-4 text-body font-bold text-surface", danger ? "bg-danger" : "bg-primary"].join(" ")}
           >
             {confirmLabel}
           </button>
-          <button ref={cancelRef} type="button" onClick={onCancel} className="min-h-touch rounded-xl border-2 border-line bg-surface px-4 text-body font-bold">
+          <button ref={cancelRef} type="button" onClick={onCancel} className="min-h-touch rounded-2xl bg-fill px-4 text-body font-bold active:bg-line">
             {cancelLabel}
           </button>
         </div>
@@ -315,6 +315,8 @@ export function ConfirmDialog({
   );
 }
 
-export const primaryButton = "min-h-touch w-full rounded-xl bg-primary px-4 text-body font-bold text-surface disabled:opacity-40";
-export const secondaryButton = "min-h-touch w-full rounded-xl border-2 border-line bg-surface px-4 text-body font-bold text-ink";
+export const primaryButton = "min-h-touch w-full rounded-2xl bg-primary px-4 text-body font-bold text-surface active:bg-primary-strong disabled:opacity-40";
+export const secondaryButton = "min-h-touch w-full rounded-2xl border border-line bg-surface px-4 text-body font-bold text-ink active:bg-fill disabled:opacity-50";
+/** 흰 카드 — 테두리 대신 옅은 그림자 */
+export const card = "rounded-card bg-surface shadow-card";
 export const linkButton = "min-h-touch px-2 text-body text-primary underline";

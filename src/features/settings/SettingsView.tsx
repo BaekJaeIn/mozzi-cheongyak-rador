@@ -11,7 +11,7 @@ import { GROUP_LABELS, GROUP_ORDER } from "@/features/profile/model/steps";
 import { groupSummary } from "@/features/profile/model/summary";
 import type { FlushResult } from "@/features/profile/model/sync";
 import { useProfile } from "@/features/profile/ProfileProvider";
-import { ConfirmDialog, secondaryButton } from "@/features/profile/ui/controls";
+import { card, ConfirmDialog, secondaryButton } from "@/features/profile/ui/controls";
 import { getPushPort, type PushSubscribeResult } from "@/features/profile/ui/push-port";
 import { DeniedHelp, InstallGuideButton, InstallSection, TestPushButton } from "@/features/pwa/ui/PwaPanels";
 
@@ -43,36 +43,36 @@ export function SettingsView({ saved }: { saved?: string }) {
 
   return (
     <div className="flex flex-col gap-8 pb-8">
-      <h1 className="text-heading font-bold">설정</h1>
+      <h1 className="px-1 pt-2 text-heading font-bold tracking-tight">설정</h1>
       {savedText && (
-        <p role="status" className="rounded-xl bg-primary-soft p-4 text-body font-bold">
+        <p role="status" className="rounded-card bg-primary-soft p-4 text-body font-bold text-primary">
           {savedText}
         </p>
       )}
       <SyncBanner />
 
       <section aria-labelledby="my-info" className="flex flex-col gap-3">
-        <h2 id="my-info" className="text-title font-bold">
+        <h2 id="my-info" className="px-1 text-title font-bold">
           내 정보
         </h2>
-        <ul className="flex flex-col gap-3">
+        <ul className={`${card} flex flex-col divide-y divide-line overflow-hidden`}>
           {GROUP_ORDER.map((g) => (
-            <li key={g} className="flex items-center gap-3 rounded-xl bg-surface p-4">
+            <li key={g} className="flex items-center gap-3 px-5 py-4">
               <div className="min-w-0 flex-1">
                 <p className="text-caption text-muted">{GROUP_LABELS[g]}</p>
                 <p className="text-body font-bold break-words">{groupSummary(p, g, today)}</p>
               </div>
-              <Link
+              <Link replace
                 href={`/profile/edit/${g}`}
                 aria-label={`${GROUP_LABELS[g]} 고치기`}
-                className="flex min-h-touch shrink-0 items-center rounded-xl border-2 border-line px-4 text-body font-bold"
+                className="flex min-h-touch shrink-0 items-center rounded-2xl bg-fill px-4 text-body font-bold active:bg-line"
               >
                 고치기
               </Link>
             </li>
           ))}
         </ul>
-        <Link href="/profile/setup?redo=1" className={`${secondaryButton} flex items-center justify-center`}>
+        <Link replace href="/profile/setup?redo=1" className={`${secondaryButton} flex items-center justify-center`}>
           처음부터 다시 입력하기
         </Link>
       </section>
@@ -97,7 +97,7 @@ function SyncBanner() {
       : null;
   if (!text) return null;
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-xl border-2 border-line bg-surface p-4">
+    <div role="status" className={`${card} flex flex-col gap-3 p-5`}>
       <p className="text-body">⚠ {text}</p>
       {!states.includes("failed") && (
         <button
@@ -146,7 +146,7 @@ function NotifySettings() {
 
   return (
     <section aria-labelledby="notify" className="flex flex-col gap-3">
-      <h2 id="notify" className="text-title font-bold">
+      <h2 id="notify" className="px-1 text-title font-bold">
         알림
       </h2>
       <button
@@ -154,23 +154,23 @@ function NotifySettings() {
         role="switch"
         aria-checked={notify.enabled}
         onClick={() => void change({ ...notify, enabled: !notify.enabled })}
-        className="flex min-h-touch items-center justify-between rounded-xl bg-surface px-4 py-3 text-body font-bold"
+        className={`${card} flex min-h-touch items-center justify-between gap-3 px-5 py-4 text-body font-bold`}
       >
         <span>새 공고 알림 받기</span>
-        <span
-          aria-hidden
-          className={["rounded-full px-4 py-1 text-body", notify.enabled ? "bg-primary text-surface" : "border-2 border-line text-muted"].join(" ")}
-        >
-          {notify.enabled ? "켜짐" : "꺼짐"}
+        <span aria-hidden className="flex items-center gap-2">
+          <span className={notify.enabled ? "text-primary" : "text-muted"}>{notify.enabled ? "켜짐" : "꺼짐"}</span>
+          <span className={["relative h-8 w-14 rounded-full transition-colors", notify.enabled ? "bg-primary" : "bg-field"].join(" ")}>
+            <span className={["absolute top-1 h-6 w-6 rounded-full bg-surface shadow-card transition-all", notify.enabled ? "left-7" : "left-1"].join(" ")} />
+          </span>
         </span>
       </button>
-      <label className="flex flex-col gap-2 rounded-xl bg-surface p-4">
+      <label className={`${card} flex flex-col gap-2 p-5`}>
         <span className="text-body font-bold">알림 받을 시각</span>
         <select
           value={notify.hour}
           disabled={!notify.enabled}
           onChange={(e) => void change({ ...notify, hour: Number(e.target.value) })}
-          className="min-h-touch rounded-xl border-2 border-line bg-surface px-4 text-body disabled:opacity-50"
+          className="min-h-touch rounded-2xl border border-field bg-surface px-4 text-body disabled:opacity-50"
         >
           {HOURS.map((h) => (
             <option key={h} value={h}>
@@ -179,7 +179,7 @@ function NotifySettings() {
           ))}
         </select>
       </label>
-      <p aria-live="polite" className="min-h-touch text-body font-bold text-primary">
+      <p aria-live="polite" className="min-h-6 px-1 text-body font-bold text-primary">
         {toast ?? (pushResult ? PUSH_TEXT[pushResult] : "")}
       </p>
       {pushResult === "denied" && <DeniedHelp />}
@@ -194,10 +194,10 @@ function DisplayModeSelector() {
   const { mode, setMode } = useDisplayMode();
   return (
     <section aria-labelledby="display" className="flex flex-col gap-3">
-      <h2 id="display" className="text-title font-bold">
+      <h2 id="display" className="px-1 text-title font-bold">
         화면
       </h2>
-      <div role="radiogroup" aria-label="화면 모드" className="grid grid-cols-2 gap-2">
+      <div role="radiogroup" aria-label="화면 모드" className="grid grid-cols-2 gap-1 rounded-2xl bg-fill p-1">
         {(
           [
             ["normal", "일반"],
@@ -211,8 +211,8 @@ function DisplayModeSelector() {
             aria-checked={mode === value}
             onClick={() => setMode(value)}
             className={[
-              "min-h-touch rounded-xl border-2 px-4 text-body",
-              mode === value ? "border-primary bg-primary-soft font-bold" : "border-line bg-surface",
+              "min-h-touch rounded-xl px-4 text-body transition-colors",
+              mode === value ? "bg-surface font-bold text-primary shadow-card" : "text-muted",
             ].join(" ")}
           >
             {mode === value ? "✓ " : ""}
@@ -220,7 +220,7 @@ function DisplayModeSelector() {
           </button>
         ))}
       </div>
-      <p className="text-caption text-muted">쉬운 모드는 글씨와 버튼을 더 크게 보여 드려요.</p>
+      <p className="px-1 text-caption text-muted">쉬운 모드는 글씨와 버튼을 더 크게 보여 드려요. 화면 위쪽 [큰 글씨] 버튼으로도 바꿀 수 있어요.</p>
     </section>
   );
 }
@@ -234,8 +234,8 @@ function DeleteAllSection() {
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <section aria-labelledby="danger" className="mt-8 flex flex-col gap-3 border-t-2 border-line pt-8">
-      <h2 id="danger" className="text-title font-bold">
+    <section aria-labelledby="danger" className="mt-4 flex flex-col gap-3">
+      <h2 id="danger" className="px-1 text-title font-bold">
         내 정보 지우기
       </h2>
       {error && (
@@ -247,7 +247,7 @@ function DeleteAllSection() {
         type="button"
         disabled={busy}
         onClick={() => setOpen(true)}
-        className="min-h-touch rounded-xl border-2 border-danger bg-surface px-4 text-body font-bold text-danger"
+        className="min-h-touch rounded-2xl bg-danger-soft px-4 text-body font-bold text-danger active:opacity-80"
       >
         {busy ? "지우는 중이에요…" : "내 정보 모두 지우기"}
       </button>

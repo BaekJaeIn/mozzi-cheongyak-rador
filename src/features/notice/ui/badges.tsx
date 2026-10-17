@@ -3,25 +3,25 @@ import type { IsoDate } from "@shared/domain/dates.ts";
 import type { Verdict } from "@shared/eligibility/types.ts";
 import { ddayLabel } from "../model/display";
 
-const pill = "inline-flex min-h-8 items-center rounded-full border-2 px-3 text-caption font-bold";
+const pill = "inline-flex items-center rounded-lg px-2 py-0.5 text-caption font-bold";
 
 export function DdayBadge({ applyStart, applyEnd, today }: { applyStart: IsoDate | null; applyEnd: IsoDate | null; today: IsoDate }) {
   const { text, urgent } = ddayLabel(applyStart, applyEnd, today);
-  return <span className={`text-caption ${urgent ? "font-bold text-danger" : "text-ink"}`}>{text}</span>;
+  return <span className={`${pill} ${urgent ? "bg-danger-soft text-danger" : "bg-fill text-muted"}`}>{text}</span>;
 }
 
 export function NewBadge() {
   return (
-    <span className={`${pill} border-primary bg-primary text-surface`}>
+    <span className={`${pill} bg-primary text-surface`}>
       NEW<span className="sr-only"> 새 공고</span>
     </span>
   );
 }
 
 const VERDICT_BADGE: Readonly<Record<Verdict, { text: string; className: string }>> = {
-  eligible: { text: "자격 충족", className: "border-primary bg-primary-soft text-primary" },
-  unknown: { text: "확인 필요", className: "border-ink bg-surface text-ink" },
-  ineligible: { text: "신청 어려움", className: "border-danger bg-surface text-danger" },
+  eligible: { text: "자격 충족", className: "bg-primary-soft text-primary" },
+  unknown: { text: "확인 필요", className: "bg-fill text-ink" },
+  ineligible: { text: "신청 어려움", className: "bg-danger-soft text-danger" },
 };
 
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {

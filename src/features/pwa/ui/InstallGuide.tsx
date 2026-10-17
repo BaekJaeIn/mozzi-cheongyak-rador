@@ -71,7 +71,7 @@ export function IosInstallSteps() {
   return (
     <ol className="flex flex-col gap-4">
       {steps.map((s) => (
-        <li key={s.title} className="flex flex-col gap-2 rounded-xl border-2 border-line p-3">
+        <li key={s.title} className="flex flex-col gap-2 rounded-2xl bg-canvas p-4">
           {s.art}
           <p className="text-body font-bold">{s.title}</p>
           <p className="text-caption text-muted">{s.help}</p>
@@ -137,13 +137,13 @@ export function InstallGuide({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className="flex max-h-[90dvh] w-full max-w-xl flex-col gap-4 overflow-y-auto rounded-xl bg-surface p-6">
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className="flex max-h-[90dvh] w-full max-w-xl flex-col gap-4 overflow-y-auto rounded-card bg-surface p-6 shadow-card">
         <h2 id={titleId} ref={titleRef} tabIndex={-1} className="text-title font-bold outline-none">
           홈 화면에 추가하기
         </h2>
         <p className="text-body">홈 화면에 추가하면 알림을 받고, 아이콘을 눌러 바로 열 수 있어요.</p>
         {platform === "ios_other" && (
-          <p className="rounded-xl bg-primary-soft p-3 text-body font-bold">먼저 이 주소를 Safari로 열어 주세요. 홈 화면 추가는 Safari에서만 돼요.</p>
+          <p className="rounded-2xl bg-primary-soft p-4 text-body font-bold">먼저 이 주소를 Safari로 열어 주세요. 홈 화면 추가는 Safari에서만 돼요.</p>
         )}
         {platform === "ios_safari" || platform === "ios_other" ? <IosInstallSteps /> : <AndroidInstall onDone={onClose} />}
         <button type="button" className={secondaryButton} onClick={onClose}>

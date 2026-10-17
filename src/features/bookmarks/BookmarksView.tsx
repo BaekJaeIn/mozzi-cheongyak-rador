@@ -54,14 +54,14 @@ export function BookmarksView() {
   const sorted = sortBookmarks(items, today);
   return (
     <section className="flex flex-col gap-4" aria-labelledby="bookmarks-title">
-      <div className="flex items-baseline justify-between gap-2">
-        <h1 id="bookmarks-title" className="text-heading font-bold">
+      <div className="flex items-center gap-2 px-1 pt-2">
+        <h1 id="bookmarks-title" className="text-heading font-bold tracking-tight">
           관심 공고
         </h1>
-        <p className="text-body text-muted">{items.length}개</p>
+        <p className="rounded-full bg-fill px-3 py-0.5 text-body font-bold text-muted">{items.length}개</p>
       </div>
       {sorted.length === 0 ? (
-        <p className="rounded-xl bg-surface p-6 text-body">{BOOKMARKS_TEXT.empty}</p>
+        <p className="rounded-card bg-surface p-6 text-center text-body text-muted shadow-card">{BOOKMARKS_TEXT.empty}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {sorted.map((b) => (
@@ -86,23 +86,25 @@ function BookmarkItem({ bookmark, today }: { bookmark: Bookmark; today: string }
         {bookmark.gone ? (
           <span className="text-caption font-bold text-muted">{BOOKMARKS_TEXT.gone}</span>
         ) : closed ? (
-          <span className="inline-flex min-h-8 items-center rounded-full border-2 border-ink px-3 text-caption font-bold">{BOOKMARKS_TEXT.closed}</span>
+          <span className="inline-flex items-center rounded-lg bg-ink px-2 py-0.5 text-caption font-bold text-surface">{BOOKMARKS_TEXT.closed}</span>
         ) : (
           <DdayBadge applyStart={s.applyStart} applyEnd={s.applyEnd} today={today} />
         )}
       </span>
-      <span className="text-title font-bold text-ink">{name}</span>
-      {s.districts.length > 0 && <span className="text-body text-muted">{listWithMore(s.districts, 2, "")}</span>}
+      <span className="text-title font-bold leading-snug tracking-tight text-ink">{name}</span>
       {s.supplyTypes.length > 0 && <span className="text-body">{listWithMore(s.supplyTypes, 2)}</span>}
-      <span className="text-caption text-muted">접수 {periodLabel(s.applyStart, s.applyEnd, today)}</span>
+      <span className="flex flex-col text-caption text-muted">
+        {s.districts.length > 0 && <span>{listWithMore(s.districts, 2, "")}</span>}
+        <span>접수 {periodLabel(s.applyStart, s.applyEnd, today)}</span>
+      </span>
     </>
   );
   return (
-    <article className={`flex items-start gap-2 rounded-xl border-2 border-line p-4 ${closed || bookmark.gone ? "bg-canvas" : "bg-surface"}`}>
+    <article className={`flex items-start gap-2 rounded-card p-5 ${closed || bookmark.gone ? "bg-fill" : "bg-surface shadow-card"}`}>
       {bookmark.gone ? (
         <div className="flex flex-1 flex-col gap-2">{body}</div>
       ) : (
-        <Link href={`/notice/${bookmark.id}`} className="flex min-h-touch flex-1 flex-col gap-2">
+        <Link replace href={`/notice/${bookmark.id}`} className="flex min-h-touch min-w-0 flex-1 flex-col gap-2">
           {body}
         </Link>
       )}
@@ -110,7 +112,7 @@ function BookmarkItem({ bookmark, today }: { bookmark: Bookmark; today: string }
         type="button"
         onClick={() => remove(bookmark.id)}
         aria-label={`${name} 지우기`}
-        className="min-h-touch shrink-0 rounded-xl border-2 border-line bg-surface px-3 text-body font-bold text-ink"
+        className="min-h-touch shrink-0 rounded-2xl bg-fill px-3 text-body font-bold text-ink active:bg-line"
       >
         지우기
       </button>

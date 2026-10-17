@@ -109,7 +109,7 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     <BookmarksContext.Provider value={value}>
       {children}
       <div className="pointer-events-none fixed inset-x-0 bottom-28 z-20 flex justify-center px-4">
-        <p role="status" className={toast ? "rounded-xl bg-ink px-4 py-3 text-body text-surface shadow-lg" : "sr-only"}>
+        <p role="status" className={toast ? "rounded-full bg-ink/90 px-5 py-3 text-body text-surface shadow-card" : "sr-only"}>
           {toast}
         </p>
       </div>

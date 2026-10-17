@@ -187,7 +187,7 @@ export function PushResync() {
     const onMessage = (e: MessageEvent) => {
       const data = e.data as { type?: string; url?: string } | null;
       if (data?.type === "resubscribe") resync();
-      if (data?.type === "navigate") router.push(safeClickUrl(data.url, window.location.origin));
+      if (data?.type === "navigate") router.replace(safeClickUrl(data.url, window.location.origin));
     };
     navigator.serviceWorker.addEventListener("message", onMessage);
     return () => navigator.serviceWorker.removeEventListener("message", onMessage);

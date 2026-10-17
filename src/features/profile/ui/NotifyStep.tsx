@@ -30,16 +30,16 @@ export function NotifyStep({
   return (
     <div className="flex flex-col gap-6 pb-8">
       {savedMessage && (
-        <p role="status" className="rounded-xl bg-primary-soft p-4 text-body font-bold">
+        <p role="status" className="rounded-card bg-primary-soft p-4 text-body font-bold">
           {savedMessage}
         </p>
       )}
-      <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold outline-none">
+      <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold leading-snug tracking-tight outline-none">
         새 공고 알림을 받으시겠어요?
       </h1>
       <p className="text-body">하루 1번, 새 공고가 있을 때만 알려 드려요.</p>
       {result && result !== "denied" && (
-        <p role="status" className="rounded-xl bg-surface p-4 text-body">
+        <p role="status" className="rounded-card bg-surface p-5 shadow-card text-body">
           {RESULT_TEXT[result]}
         </p>
       )}

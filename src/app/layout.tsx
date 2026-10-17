@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppHeader } from "@/features/app-chrome/AppHeader";
+import { BackNavigation } from "@/features/app-chrome/BackNavigation";
 import { BookmarksProvider } from "@/features/bookmarks/BookmarksProvider";
 import { BottomNav } from "@/features/app-chrome/BottomNav";
 import { APP_NAME } from "@/features/app-chrome/constants";
@@ -45,8 +46,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ProfileProvider>
           <PwaProvider>
             <BookmarksProvider>
+              <BackNavigation>
               <AppHeader title={APP_NAME} />
-              <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-4">
+              <main className="mx-auto w-full max-w-xl px-4 pb-32 pt-2">
                 <DeviceBootstrap>
                   <SyncOnReady />
                   <PushResync />
@@ -54,6 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </DeviceBootstrap>
               </main>
               <BottomNav />
+              </BackNavigation>
             </BookmarksProvider>
           </PwaProvider>
         </ProfileProvider>

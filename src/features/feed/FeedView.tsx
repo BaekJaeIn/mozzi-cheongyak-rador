@@ -14,6 +14,7 @@ import { isNew, periodLabel } from "@/features/notice/model/display";
 import { DdayBadge, NewBadge, VerdictBadge } from "@/features/notice/ui/badges";
 import { feedItemSnapshot, kstTimeLabel, listWithMore } from "@/features/notice/ui/format";
 import { useProfile } from "@/features/profile/ProfileProvider";
+import { card } from "@/features/profile/ui/controls";
 import { InstallHintBanner } from "@/features/pwa/ui/PwaPanels";
 import { loadFeedCache, redrawCachedFeed, saveFeedCache } from "./model/cache";
 import { loadSeen, seenSet } from "./model/seen";
@@ -110,11 +111,11 @@ export function FeedView() {
   return (
     <section className="flex flex-col gap-4" aria-labelledby="feed-title">
       <InstallHintBanner />
-      <div className="flex items-baseline justify-between gap-2">
-        <h1 id="feed-title" className="text-heading font-bold">
+      <div className="flex items-center gap-2 px-1 pt-2">
+        <h1 id="feed-title" className="text-heading font-bold tracking-tight">
           맞춤 공고
         </h1>
-        <p className="text-body text-muted">{response.items.length}건</p>
+        <p className="rounded-full bg-primary-soft px-3 py-0.5 text-body font-bold text-primary">{response.items.length}건</p>
       </div>
 
       <div role="status" className="flex flex-col gap-3">
@@ -128,7 +129,7 @@ export function FeedView() {
       </div>
 
       {response.items.length === 0 ? (
-        <p className="rounded-xl bg-surface p-6 text-body">{FEED_TEXT.empty}</p>
+        <p className={`${card} p-6 text-center text-body text-muted`}>{FEED_TEXT.empty}</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {response.items.map((item) => (
@@ -145,17 +146,19 @@ export function FeedView() {
 export function NoticeCard({ item, today, isNew: fresh }: { item: FeedItem; today: string; isNew: boolean }) {
   const name = item.complexName ?? item.title;
   return (
-    <article className="flex items-start gap-2 rounded-xl border-2 border-line bg-surface p-4">
-      <Link href={`/notice/${item.id}`} className="flex min-h-touch flex-1 flex-col gap-2">
-        <span className="flex flex-wrap items-center gap-2">
+    <article className={`${card} flex items-start gap-1 p-5 transition-transform active:scale-[0.99]`}>
+      <Link replace href={`/notice/${item.id}`} className="flex min-h-touch min-w-0 flex-1 flex-col gap-2">
+        <span className="flex flex-wrap items-center gap-1.5">
           <VerdictBadge verdict={item.verdict} />
-          {fresh && <NewBadge />}
           <DdayBadge applyStart={item.applyStart} applyEnd={item.applyEnd} today={today} />
+          {fresh && <NewBadge />}
         </span>
-        <span className="text-title font-bold text-ink">{name}</span>
-        {item.districts.length > 0 && <span className="text-body text-muted">{listWithMore(item.districts.map((d) => d.name), 2, "")}</span>}
-        {item.supplyTypes.length > 0 && <span className="text-body">{listWithMore(item.supplyTypes.map((s) => s.plain), 2)}</span>}
-        <span className="text-caption text-muted">접수 {periodLabel(item.applyStart, item.applyEnd, today)}</span>
+        <span className="text-title font-bold leading-snug tracking-tight text-ink">{name}</span>
+        {item.supplyTypes.length > 0 && <span className="text-body text-ink">{listWithMore(item.supplyTypes.map((s) => s.plain), 2)}</span>}
+        <span className="flex flex-col text-caption text-muted">
+          {item.districts.length > 0 && <span>{listWithMore(item.districts.map((d) => d.name), 2, "")}</span>}
+          <span>접수 {periodLabel(item.applyStart, item.applyEnd, today)}</span>
+        </span>
       </Link>
       <BookmarkButton id={item.id} snapshot={feedItemSnapshot(item)} />
     </article>

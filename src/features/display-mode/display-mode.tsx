@@ -7,6 +7,8 @@ import { DISPLAY_KEY, type DisplayMode, loadDisplayMode, saveDisplayMode } from 
 /** 첫 화면을 그리기 전에 저장된 모드를 적용한다 (깜빡임 없음, BR-U4-83). layout의 <head>에 넣는다 */
 export const DISPLAY_MODE_SCRIPT = `try{if(localStorage.getItem(${JSON.stringify(DISPLAY_KEY)})==="easy")document.documentElement.dataset.mode="easy"}catch(e){}`;
 
+const MODE_EVENT = "mz:display-mode";
+
 function applyMode(mode: DisplayMode) {
   document.documentElement.dataset.mode = mode;
 }
@@ -18,12 +20,17 @@ export function useDisplayMode(): { mode: DisplayMode; setMode(mode: DisplayMode
     // 외부 저장소(localStorage)와 맞추는 효과
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setModeState(loadDisplayMode(window.localStorage));
+    // 상단 막대와 설정 화면이 같은 값을 보이도록 서로 알린다
+    const onChange = (e: Event) => setModeState((e as CustomEvent<DisplayMode>).detail);
+    window.addEventListener(MODE_EVENT, onChange);
+    return () => window.removeEventListener(MODE_EVENT, onChange);
   }, []);
 
   const setMode = useCallback((next: DisplayMode) => {
     applyMode(next); // 고르는 즉시 화면 전체에 (BR-U4-82)
     saveDisplayMode(window.localStorage, next);
     setModeState(next);
+    window.dispatchEvent(new CustomEvent<DisplayMode>(MODE_EVENT, { detail: next }));
   }, []);
 
   return { mode, setMode };

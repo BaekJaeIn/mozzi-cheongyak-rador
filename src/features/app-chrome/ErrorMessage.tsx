@@ -8,13 +8,13 @@ export interface ErrorMessageProps {
 
 export function ErrorMessage({ message, action }: ErrorMessageProps) {
   return (
-    <div role="alert" className="rounded-xl border-2 border-danger bg-surface p-4">
+    <div role="alert" className="rounded-card bg-danger-soft p-5">
       <p className="text-body text-ink">{message}</p>
       {action && (
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-3 min-h-touch w-full rounded-xl bg-primary px-4 text-body font-bold text-surface"
+          className="mt-3 min-h-touch w-full rounded-2xl bg-primary px-4 text-body font-bold text-surface active:bg-primary-strong"
         >
           {action.label}
         </button>

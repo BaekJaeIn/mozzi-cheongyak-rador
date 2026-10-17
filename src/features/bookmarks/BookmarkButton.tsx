@@ -16,15 +16,18 @@ export function BookmarkButton({ id, snapshot, size = "normal" }: { id: string; 
       disabled={!loaded}
       onClick={() => toggle(id, snapshot)}
       className={[
-        "flex min-h-touch min-w-touch shrink-0 items-center justify-center gap-2 rounded-xl border-2 px-3 text-body font-bold",
-        on ? "border-primary bg-primary-soft text-primary" : "border-line bg-surface text-ink",
-        size === "large" ? "w-full" : "",
+        "flex min-h-touch min-w-touch shrink-0 items-center justify-center gap-2 rounded-2xl px-3 text-body font-bold",
+        size === "large"
+          ? ["w-full border", on ? "border-primary bg-primary-soft text-primary" : "border-line bg-surface text-ink active:bg-fill"].join(" ")
+          : on
+            ? "text-primary"
+            : "text-muted active:bg-fill",
       ].join(" ")}
     >
-      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
+      <svg width={size === "large" ? 24 : 28} height={size === "large" ? 24 : 28} viewBox="0 0 24 24" aria-hidden fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} strokeLinejoin="round">
         <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z" />
       </svg>
-      {size === "large" && <span aria-hidden>{on ? "관심 공고에 저장됨" : "관심 공고 저장"}</span>}
+      {size === "large" && <span aria-hidden>{on ? "저장됨" : "관심 저장"}</span>}
     </button>
   );
 }

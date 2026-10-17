@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* 본문 글꼴 Pretendard(OFL) — 저장소 안 파일을 함께 배포, 쓰는 글자 묶음만 내려받는다 */
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 /*
  * 디자인 토큰 (frontend-components.md §3, NFR-1, NFR-U1-26)
@@ -24,7 +26,7 @@ html[data-mode="easy"] {
 }
 
 @theme inline {
-  --font-sans: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
 
   /* 글씨: 일반 모드 본문 16px·보조 14px (2026-10-17 사용자 요청으로 18px에서 줄임) */
   --text-caption: var(--fs-caption);
@@ -36,15 +38,22 @@ html[data-mode="easy"] {
   --spacing-touch: calc(48px * var(--scale));
   --spacing-header: calc(56px * var(--scale));
 
-  /* 색 */
-  --color-ink: #1a1a1a;
-  --color-muted: #4a4a4a;
-  --color-primary: #0b5cad;
-  --color-primary-soft: #e6f0fa;
+  /* 색 — 글자색은 흰 바탕 4.5:1 이상, 입력칸 테두리는 3:1 이상 */
+  --color-ink: #191f28;
+  --color-muted: #4e5968;
+  --color-primary: #1b64da;
+  --color-primary-strong: #1957c2;
+  --color-primary-soft: #e8f3ff;
   --color-surface: #ffffff;
-  --color-canvas: #f6f7f9;
-  --color-line: #c9ced6;
-  --color-danger: #b3261e;
+  --color-canvas: #f2f4f6;
+  --color-fill: #eef0f3;
+  --color-line: #dde1e6;
+  --color-field: #8b95a1;
+  --color-danger: #d22030;
+  --color-danger-soft: #ffeef0;
+
+  --radius-card: 20px;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px rgb(0 0 0 / 0.04);
 }
 
 html {
@@ -56,6 +65,9 @@ html {
 body {
   font-size: var(--text-body);
   line-height: 1.6;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
   margin: 0;
 }
 

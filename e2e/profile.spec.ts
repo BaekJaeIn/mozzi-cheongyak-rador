@@ -230,3 +230,23 @@ test.describe("인터넷 끊김", () => {
     expect(stored.profile.residence.sigungu).toBe("하남시");
   });
 });
+
+test("첫 화면 위쪽 [큰 글씨]로 쉬운 모드를 바로 켜고 끈다, 설정과 같은 값 (2026-10-17 요청)", async ({ page }) => {
+  await page.goto("/");
+  await heading(page, "내 정보를 넣으면 맞는 공고만 골라 드려요");
+  const toggle = page.getByRole("button", { name: "큰 글씨" });
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await toggle.click();
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "easy");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "easy");
+  await axe(page);
+
+  await seedStoredProfile(page);
+  await page.goto("/settings");
+  await expect(page.getByRole("radio", { name: /쉬운 모드/ })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "큰 글씨" }).click();
+  await expect(page.getByRole("radio", { name: /일반/ })).toHaveAttribute("aria-checked", "true"); // 설정 화면도 바로 따라 바뀐다
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "normal");
+});
