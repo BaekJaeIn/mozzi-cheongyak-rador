@@ -14,7 +14,9 @@ export function evaluateSavings(req: Requirements["savings"], ctx: CriterionCont
   if (req.minPayments) parts.push(MSG.savingsPayments(req.minPayments));
   if (req.minDepositManwon) parts.push(MSG.savingsDeposit(req.minDepositManwon));
   if (req.depositRule) parts.push(MSG.savingsDepositByArea);
-  const reason = parts.join(", ");
+  // 배우자 명의 통장이면 신청 명의를 알려 준다 (변경 2 BR-U2-C8). 판정은 명의와 상관없다 (C7)
+  const owner = ctx.profile.savings.has === true ? ctx.profile.savings.owner : null;
+  const reason = owner === "spouse" ? `${parts.join(", ")}. ${MSG.savingsSpouseOwner}` : parts.join(", ");
 
   const s = ctx.profile.savings;
   const enter = (item: string) => ({ action: ACTION.enterInSettings(item) });

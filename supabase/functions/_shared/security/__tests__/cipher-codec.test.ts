@@ -66,9 +66,23 @@ describe("profile-codec", () => {
     await expect(decodeProfile(stored, ring)).resolves.toEqual(p);
   });
 
-  it("다른 스키마 버전은 오류", async () => {
+  it("모르는 스키마 버전은 오류", async () => {
     const ring = await createKeyring({ 1: testKey(1) }, 1);
-    const stored = { ...(await encodeProfile(makeProfile(), ring)), schemaVersion: 2 };
+    const stored = { ...(await encodeProfile(makeProfile(), ring)), schemaVersion: 3 };
     await expect(decodeProfile(stored, ring)).rejects.toBeInstanceOf(ProfileCodecError);
+  });
+
+  it("버전 1로 저장된 프로필은 옮겨서 읽는다 — 통장 없음 → 모름, 관심 시군구 빈 목록 (BR-U2-C2·C4·C6)", async () => {
+    const ring = await createKeyring({ 1: testKey(1) }, 1);
+    const v2 = await encodeProfile(makeProfile({ savings: { has: false, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null } }), ring);
+    const prefsV1: Record<string, unknown> = { ...(v2.data as { prefs: Record<string, unknown> }).prefs };
+    delete prefsV1.regions;
+    const savingsV1 = { has: false, kind: null, months: null, paymentCount: null, depositManwon: null };
+    const stored = { ...v2, schemaVersion: 1, data: { ...v2.data, savings: savingsV1, prefs: prefsV1 } as unknown as typeof v2.data };
+    const p = await decodeProfile(stored, ring);
+    expect(p.schemaVersion).toBe(2);
+    expect(p.savings).toEqual({ has: null, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null });
+    expect(p.prefs.regions).toEqual([]);
+    expect(p.money.monthlyIncome).toBe(makeProfile().money.monthlyIncome);
   });
 });

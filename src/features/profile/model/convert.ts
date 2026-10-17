@@ -49,12 +49,13 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
       savingsHas === true
         ? {
             has: true,
+            owner: "self", // 명의 질문은 U4 변경 2에서 — 그 전까지는 지금처럼 이 휴대폰 주인
             kind: known(a.savingsKind),
             months: lower(MONTHS_BANDS, a.savingsMonthsBand),
             paymentCount: known(a.paymentCount),
             depositManwon: known(a.depositManwon),
           }
-        : { has: savingsHas, kind: null, months: null, paymentCount: null, depositManwon: null },
+        : { has: savingsHas, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null },
     money: {
       monthlyIncome: known(a.monthlyIncome),
       totalAsset: known(a.totalAsset),
@@ -64,6 +65,7 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
     welfare: known(a.welfare),
     prefs: {
       districtIds: [...a.districtIds!],
+      regions: [], // 관심 시군구 화면은 U4 변경 2에서
       areaBands: [...(a.areaBands ?? [])],
       tenure: a.tenure ?? "both",
       lowFloor: a.lowFloor ?? false,

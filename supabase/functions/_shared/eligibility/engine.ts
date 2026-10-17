@@ -9,6 +9,7 @@ import { evaluateIncome } from "./criteria/income.ts";
 import { evaluateSavings } from "./criteria/savings.ts";
 import { evaluateAsset, evaluateCar, evaluateHomeless, evaluateHousehold, evaluateResidence } from "./criteria/simple.ts";
 import { evaluateWelfare } from "./criteria/welfare.ts";
+import { inInterestArea } from "./area.ts";
 import { score } from "./scoring.ts";
 import type { CriterionResult, NoticeForJudgement, NoticeJudgement, UnitForJudgement, UnitJudgement, Verdict } from "./types.ts";
 
@@ -81,11 +82,10 @@ export function judgeNotice(
 ): NoticeJudgement {
   const baseDate = baseDateOf(notice, asOf);
   const units = notice.units.map((u) => judgeUnit(profile, u, ref, baseDate));
-  const wanted = new Set(profile.prefs.districtIds);
   return {
     noticeId: notice.id,
     verdict: combineNotice(units.map((u) => u.verdict)),
-    inDistrict: notice.districtIds.some((id) => wanted.has(id)), // BR-U2-58
+    inDistrict: inInterestArea(notice, profile.prefs), // 관심 지역 안 (변경 2 BR-U2-C12)
     score: score(notice, profile.prefs),
     baseDate,
     units,

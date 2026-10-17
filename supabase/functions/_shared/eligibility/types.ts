@@ -1,6 +1,7 @@
 // 판정 결과·입력 타입 (U2 domain-entities §3, 계약 K4)
 import type { IsoDate } from "../domain/dates.ts";
 import type { Tenure } from "../domain/profile.ts";
+import type { CapitalSido } from "../domain/regions.ts";
 import type { Requirements } from "../domain/requirements.ts";
 
 export type Verdict = "eligible" | "ineligible" | "unknown";
@@ -40,6 +41,7 @@ export interface UnitJudgement {
 export interface NoticeJudgement {
   noticeId: string;
   verdict: Verdict;
+  /** 관심 지역 안 = 관심 지구 안 또는 관심 시군구 안 (변경 2 BR-U2-C12). 이름은 DB·API 호환을 위해 그대로 */
   inDistrict: boolean;
   score: number;
   baseDate: IsoDate;
@@ -60,5 +62,13 @@ export interface NoticeForJudgement {
   applyStart: IsoDate | null;
   applyEnd: IsoDate | null;
   districtIds: string[];
+  /** 공고 지역 (U3가 판별, 0개면 지구로만 매칭) */
+  regions: NoticeRegion[];
   units: UnitForJudgement[];
+}
+
+/** 공고 지역. sigungu null = 시도까지만 확인됨 (예: "경기도 일원") */
+export interface NoticeRegion {
+  sido: CapitalSido;
+  sigungu: string | null;
 }

@@ -54,6 +54,15 @@
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations (PLACEHOLDER)
 
+## 변경 요청 2 (2026-10-17~)
+- 내용: 청약통장 부부 기준, 3기 신도시 밖 공고 수집·지역 선택, 업데이트 안내
+- [x] Requirements Analysis — requirements.md §9 (2026-10-17 승인)
+- [x] Workflow Planning — change-2-execution-plan.md (2026-10-17 승인)
+- [x] User Stories (가볍게) — US-04·05·07·12 고침, US-21 추가 (2026-10-17 승인)
+- [x] U2 Functional Design (2026-10-17 승인)
+- [ ] U2 Code Generation — Step 1~10 완료 (단위 642, pgTAP 125, 로컬 E2E 59+3), 승인 대기
+- 계획: User Stories(가볍게) → U2(FD·Code) → U3(FD·NFR-R·NFR-D·Code) → U4(FD·Code) → U5(FD·Code) → Build and Test
+
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
 - **Current Stage**: Build and Test

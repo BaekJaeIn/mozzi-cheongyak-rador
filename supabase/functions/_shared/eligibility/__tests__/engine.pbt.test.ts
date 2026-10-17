@@ -28,7 +28,7 @@ function allUnknown(p: HouseholdProfile): HouseholdProfile {
     householdHead: null,
     residence: { sido: null, sigungu: null, years: null },
     housing: { homeless: null, homelessYears: null, ownedCount: null },
-    savings: { has: null, kind: null, months: null, paymentCount: null, depositManwon: null },
+    savings: { has: null, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null },
     money: { monthlyIncome: null, totalAsset: null, carValue: null, spouseEarns: null },
     welfare: null,
   };

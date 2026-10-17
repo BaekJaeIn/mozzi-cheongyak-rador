@@ -123,7 +123,7 @@ describe("답 → 프로필 (business-logic-model §6)", () => {
   it("어머니 기기 예시", () => {
     const p = toProfile(MOTHER_ANSWERS);
     expect(p).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       self: { birthDate: "1963-07-01" },
       spouse: { birthDate: "1960-03-02" },
       householdType: "couple",
@@ -131,10 +131,10 @@ describe("답 → 프로필 (business-logic-model §6)", () => {
       householdHead: "spouse",
       residence: { sido: "경기", sigungu: "하남시", years: 5 },
       housing: { homeless: true, homelessYears: 10, ownedCount: 0 },
-      savings: { has: true, kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1200 },
+      savings: { has: true, owner: "self", kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1200 },
       money: { monthlyIncome: 450, totalAsset: 20000, carValue: 1500, spouseEarns: true },
       welfare: "none",
-      prefs: { districtIds: ALL_DISTRICT_IDS, areaBands: ["s"], tenure: "rent", lowFloor: false },
+      prefs: { districtIds: ALL_DISTRICT_IDS, regions: [], areaBands: ["s"], tenure: "rent", lowFloor: false },
     });
     expect(validateProfile(p).ok).toBe(true);
     expect(hasBlankFields(p)).toBe(false);
@@ -159,7 +159,7 @@ describe("답 → 프로필 (business-logic-model §6)", () => {
   it("집 있음 → homeless false·ownedCount, 통장 없음 → has false·나머지 null", () => {
     const p = toProfile({ ...MINIMAL_ANSWERS, homeOwned: true, homeCount: 2, savingsHas: false });
     expect(p.housing).toEqual({ homeless: false, homelessYears: null, ownedCount: 2 });
-    expect(p.savings).toEqual({ has: false, kind: null, months: null, paymentCount: null, depositManwon: null });
+    expect(p.savings).toEqual({ has: false, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null });
   });
 
   it("다른 가족도 함께: 가족 수·배우자 유무", () => {

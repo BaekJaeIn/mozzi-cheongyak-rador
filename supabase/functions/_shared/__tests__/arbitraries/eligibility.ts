@@ -1,12 +1,13 @@
 // U2 도메인 생성기 (PBT-07, NFR-U2-24). 도메인 제약(나이 범위, 금액 범위, 가구 구성)을 지킨다.
 import fc from "fast-check";
-import type { HouseholdProfile } from "../../domain/profile.ts";
-import { AREA_BANDS, SAVINGS_KINDS, WELFARE_STATUSES } from "../../domain/profile.ts";
+import type { HouseholdProfile, RegionPick } from "../../domain/profile.ts";
+import { AREA_BANDS, normalizeRegionPicks, SAVINGS_KINDS, SAVINGS_OWNERS, WELFARE_STATUSES } from "../../domain/profile.ts";
+import { CAPITAL_SIDO, CAPITAL_SIGUNGU } from "../../domain/regions.ts";
 import type { IncomeRequirement, Requirements } from "../../domain/requirements.ts";
 import { SUPPLY_TYPE_CODES } from "../../domain/supply-types.ts";
 import type { IncomeThreshold } from "../../eligibility/income-table.ts";
 import { DISTRICTS, INCOME_THRESHOLDS } from "../../eligibility/reference-data.ts";
-import type { NoticeForJudgement, UnitForJudgement } from "../../eligibility/types.ts";
+import type { NoticeForJudgement, NoticeRegion, UnitForJudgement } from "../../eligibility/types.ts";
 import type { IsoDate } from "../../domain/dates.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -18,6 +19,15 @@ const dateBetween = (from: string, to: string): fc.Arbitrary<IsoDate> =>
 export const birthDateArb = dateBetween("1930-01-01", "1975-12-31");
 export const noticeDateArb = dateBetween("2025-01-01", "2027-12-31");
 export const DISTRICT_IDS = DISTRICTS.map((d) => d.id);
+
+/** 수도권 시도 + (시군구 또는 null) — 관심 지역(null=시도 전체)·공고 지역(null=시도까지만 확인) 공용 */
+const sidoSigunguArb = fc.constantFrom(...CAPITAL_SIDO).chain((sido) =>
+  fc.record({ sido: fc.constant(sido), sigungu: fc.option(fc.constantFrom(...CAPITAL_SIGUNGU[sido]), { nil: null, freq: 5 }) }),
+);
+export const regionPickArb: fc.Arbitrary<RegionPick> = sidoSigunguArb;
+export const noticeRegionArb: fc.Arbitrary<NoticeRegion> = sidoSigunguArb;
+/** 검사 규칙에 맞게 정리된 관심 시군구 목록 */
+export const regionPicksArb: fc.Arbitrary<RegionPick[]> = fc.array(regionPickArb, { maxLength: 6 }).map(normalizeRegionPicks);
 
 /** nullable=true면 값마다 null("모름")이 섞인다 */
 function maybe<T>(arb: fc.Arbitrary<T>, nullable: boolean): fc.Arbitrary<T | null> {
@@ -49,6 +59,7 @@ export function profileArb(options: { nullable?: boolean; couple?: boolean } = {
       }),
       savings: fc.record({
         has: maybe(fc.boolean(), n),
+        owner: fc.option(fc.constantFrom(...SAVINGS_OWNERS), { nil: null }),
         kind: maybe(fc.constantFrom(...SAVINGS_KINDS), n),
         months: maybe(fc.integer({ min: 0, max: 300 }), n),
         paymentCount: maybe(fc.integer({ min: 0, max: 300 }), n),
@@ -62,7 +73,8 @@ export function profileArb(options: { nullable?: boolean; couple?: boolean } = {
       }),
       welfare: maybe(fc.constantFrom(...WELFARE_STATUSES), n),
       prefs: fc.record({
-        districtIds: fc.subarray(DISTRICT_IDS, { minLength: 1 }),
+        districtIds: fc.subarray(DISTRICT_IDS),
+        regions: regionPicksArb,
         areaBands: fc.subarray([...AREA_BANDS]),
         tenure: fc.constantFrom("sale" as const, "rent" as const, "both" as const),
         lowFloor: fc.boolean(),
@@ -72,7 +84,7 @@ export function profileArb(options: { nullable?: boolean; couple?: boolean } = {
       const couple = r.spouse !== null;
       const householdType = couple ? "couple" : r.otherType ? "other" : "single";
       return {
-        schemaVersion: 1,
+        schemaVersion: 2,
         self: { birthDate: r.selfBirth },
         spouse: r.spouse,
         householdType,
@@ -80,10 +92,12 @@ export function profileArb(options: { nullable?: boolean; couple?: boolean } = {
         householdHead: r.householdHead,
         residence: r.residence,
         housing: r.housing,
-        savings: r.savings,
+        // 명의는 통장이 있을 때만, 배우자가 없으면 "나"만 (validateProfile 규칙)
+        savings: { ...r.savings, owner: r.savings.has !== true ? null : couple || r.savings.owner === null ? r.savings.owner : "self" },
         money: r.money,
         welfare: r.welfare,
-        prefs: r.prefs,
+        // 관심 지역은 지구 + 시군구 1곳 이상
+        prefs: r.prefs.districtIds.length + r.prefs.regions.length === 0 ? { ...r.prefs, districtIds: [DISTRICT_IDS[0]!] } : r.prefs,
       };
     });
 }
@@ -166,6 +180,7 @@ export const noticeArb: fc.Arbitrary<NoticeForJudgement> = fc.record({
   applyStart: fc.option(noticeDateArb, { nil: null }),
   applyEnd: fc.option(noticeDateArb, { nil: null }),
   districtIds: fc.subarray(DISTRICT_IDS),
+  regions: fc.array(noticeRegionArb, { maxLength: 3 }),
   units: fc.array(unitArb, { maxLength: 4 }),
 });
 

@@ -3,6 +3,8 @@
 // - 인천: 2026-07-01 중구·동구 → 제물포구·영종구, 서구 → 서해구·검단구 (U3 실제 청약홈 응답 "인천광역시 서해구"로 확인)
 // - 광주·전남: 전남광주통합특별시 (U3 실제 LH 응답 CNP_CD_NM으로 확인) — 시도 하나로 고른다
 
+import { CAPITAL_SIGUNGU } from "@shared/domain/regions.ts";
+
 export interface SidoOption {
   /** 저장 값 (U2 normalizeSido와 같은 줄임 이름) */
   value: string;
@@ -29,18 +31,8 @@ export const SIDO_OPTIONS: readonly SidoOption[] = [
   { value: "제주", label: "제주" },
 ];
 
-export const SIGUNGU_BY_SIDO: Readonly<Record<string, readonly string[]>> = {
-  서울: [
-    "강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구",
-    "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구",
-  ],
-  경기: [
-    "가평군", "고양시", "과천시", "광명시", "광주시", "구리시", "군포시", "김포시", "남양주시", "동두천시", "부천시", "성남시", "수원시",
-    "시흥시", "안산시", "안성시", "안양시", "양주시", "양평군", "여주시", "연천군", "오산시", "용인시", "의왕시", "의정부시", "이천시",
-    "파주시", "평택시", "포천시", "하남시", "화성시",
-  ],
-  인천: ["강화군", "검단구", "계양구", "남동구", "미추홀구", "부평구", "서해구", "연수구", "영종구", "옹진군", "제물포구"],
-};
+/** 수도권 시군구 — 판정·수집과 같은 목록 (공용 domain/regions.ts) */
+export const SIGUNGU_BY_SIDO: Readonly<Record<string, readonly string[]>> = CAPITAL_SIGUNGU;
 
 /** 시군구까지 고르는 시도인지 */
 export function needsSigungu(sido: string | null | undefined): boolean {

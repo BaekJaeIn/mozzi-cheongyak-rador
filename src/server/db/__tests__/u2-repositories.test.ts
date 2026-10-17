@@ -70,6 +70,7 @@ describe("NoticeRepository.listRetainedWithUnits", () => {
             { id: "u2", supply_type: "happy_senior", exclusive_area_m2: null, requirements: { age: "sixty-five" } },
           ],
           notice_districts: [{ district_id: "gyosan" }],
+          regions: [{ sido: "경기", sigungu: "하남시" }, { sido: "부산", sigungu: null }, { sido: "서울", sigungu: "없는구" }, "깨짐"],
         },
       ],
       error: null,
@@ -82,12 +83,14 @@ describe("NoticeRepository.listRetainedWithUnits", () => {
       applyStart: null,
       applyEnd: "2026-09-30",
       districtIds: ["gyosan"],
+      regions: [{ sido: "경기", sigungu: "하남시" }], // 수도권 밖·목록 밖·형식 오류는 버린다
       units: [
         { id: "u1", supplyType: "happy_senior", exclusiveAreaM2: 36.5, requirements: { homeless: { minYears: null } } },
         { id: "u2", supplyType: "happy_senior", exclusiveAreaM2: null, requirements: { unclassified: true } },
       ],
     });
     expect(String(calls[0]?.chain[0]?.args[0])).toContain("housing_units(");
+    expect(String(calls[0]?.chain[0]?.args[0])).toContain("regions");
   });
 });
 

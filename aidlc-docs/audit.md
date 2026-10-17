@@ -1197,3 +1197,101 @@
 **Context**: Build and Test 승인 질문은 계속 대기
 
 ---
+
+## 질문 — iPhone 설치 방법
+**Timestamp**: 2026-10-17T06:40:00Z
+**User Input**: "아이폰은 qr연결한다음에 어플로 다운받으려면 어떻게 해야해?"
+**AI Response**: "앱스토어 앱이 아니라 홈 화면 추가 방식임을 안내: QR → Safari에서 열기 → 공유 → 홈 화면에 추가 → 추가, 홈 화면 아이콘으로 열고 알림 켜기. iOS 16.4 이상 필요, 카카오톡 등 앱 안 브라우저에서는 안 됨, 앱 안의 [설치 방법 보기] 안내. 코드 변경 없음."
+**Context**: Build and Test 승인 질문은 계속 대기
+
+---
+
+## 변경 요청 2 — 요구사항 분석 시작
+**Timestamp**: 2026-10-17T07:00:00Z
+**User Input**: "1. 청약통장은 아빠만 있는데 그러다보니까 엄마가 등록할때는 청약통장을 없다고 입력했어. 근데 그러면 엄마랑 아빠랑 공고가 다르게 나올 것 같아. 이 문제를 해결해줘.
+2. 3기신도시 뿐만 아니라 다른 지구들 관련 공고도 포함했으면 좋겠어. 그니까 3기신도시 + 다른 지구까지 포함하되 사용자가 원하는 지역에서 나오는 공고만 표출되도록 해줘
+3. 이제 엄마랑 아빠가 어플로 다운로드 받았기 때문에 추가로 업데이트 되는 내용은 사용자가 입력을 해야해. 근데 아무런 안내가 없으면 입력을 못할수도 있으니까 업데이트 내용에 대한 안내를 하고 사용자가 입력을 할 수 있도록 유도해야해"
+**AI Response**: "U2(통장 판정 기준)·U3(수집 범위 FR-2.4)·U4(입력)·U5(피드 필터)에 걸친 변경이라 AI-DLC 요구사항 분석으로 시작. 현재 구조 확인(통장만 휴대폰 주인 기준, 지구 밖 공고는 저장 안 함) 후 질문 8개를 change-2-requirements-questions.md로 작성."
+**Context**: INCEPTION - Requirements Analysis (변경 요청 2). Build and Test 승인 질문은 답 없이 이 요청으로 넘어감
+
+---
+
+## 변경 요청 2 — 요구사항 질문 답변
+**Timestamp**: 2026-10-17T07:20:00Z
+**User Input**: "완료"
+**AI Response**: "답변 확인(Q1~Q8 모두 A, 모호한 답 없음). requirements.md §9 '변경 요청 2' 작성(결정 C2-D1~8, FR-C2-1~18, NFR-C2-1~5, 영향 Unit). 승인 요청."
+**Context**: INCEPTION - Requirements Analysis (변경 요청 2)
+
+---
+
+## 변경 요청 2 — 거주 기간 질문 확인
+**Timestamp**: 2026-10-17T07:35:00Z
+**User Input**: "추가로 이 지역에서 산지 얼마나 되었냐는 질문이 좀 애매해. 부모님 모두 서울 강서구 화곡동에서 15년 넘게 살다가 올해 6월에 강서구 염창동으로 이사했거든. 그래서 일단 10년이상으로 입력했는데 이게 맞는건지 확인해줘"
+**AI Response**: "청약 거주 기간은 특별시·광역시·시·군 단위로 계속 산 기간이라 같은 서울 안 이사는 이어서 셈 → '10년 이상'이 맞다고 안내. 현재 판정은 거주 기간을 쓰지 않음(시·도만). 질문 문구가 애매하므로 requirements §9에 FR-C2-19(문구·도움말 변경) 추가, 승인 요청 다시."
+**Context**: INCEPTION - Requirements Analysis (변경 요청 2), 승인 대기
+
+---
+
+## 변경 요청 2 — 요구사항 승인
+**Timestamp**: 2026-10-17T07:45:00Z
+**User Input**: "진행"
+**AI Response**: "요구사항 §9 승인으로 기록. Workflow Planning: change-2-execution-plan.md 작성(위험 보통, User Stories 가볍게, App Design·Units 생략, U2→U3(NFR 포함)→U4→U5→Build and Test, 인프라 설계 생략). 승인 요청."
+**Context**: INCEPTION - Workflow Planning (변경 요청 2)
+
+---
+
+## 변경 요청 2 — 실행 계획 승인, 사용자 스토리 갱신
+**Timestamp**: 2026-10-17T07:55:00Z
+**User Input**: "진행"
+**AI Response**: "실행 계획 승인으로 기록. stories.md: US-04(거주 기간 문구), US-05(통장 명의 부부 기준), US-07(관심 지역 = 지구 + 시군구), US-12(노출 조건·시군구 표시) 인수 기준 추가, US-21(업데이트 안내) 신규, 추적표 갱신. 승인 요청."
+**Context**: INCEPTION - User Stories (변경 요청 2)
+
+---
+
+## 변경 요청 2 — 사용자 스토리 승인, U2 기능 설계 시작
+**Timestamp**: 2026-10-17T08:05:00Z
+**User Input**: "진행"
+**AI Response**: "사용자 스토리 승인으로 기록. U2 기능 설계 계획(U2-eligibility-engine-change-2-functional-design-plan.md) 작성: 프로필 v3(통장 명의·관심 시군구), 통장 사유, 공고 지역, K5 관심 지역 확장, 공용 시군구 목록. 질문 3개(시·도 전체 선택, 시·도까지만 확인된 공고, 인천 옛 구 이름)."
+**Context**: CONSTRUCTION - U2 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U2 기능 설계 답변·문서 작성
+**Timestamp**: 2026-10-17T08:20:00Z
+**User Input**: "완료"
+**AI Response**: "Q1~Q3 모두 A. U2 문서 갱신: domain-entities(프로필 v2: savings.owner·prefs.regions, 공고 regions, inDistrict 뜻 확장, domain/regions.ts), business-rules §10(BR-U2-C1~C15: 옮기기·통장 명의·관심 지역·K5), business-logic-model §6(모듈·흐름·PBT P-C2-1~7). 승인 요청."
+**Context**: CONSTRUCTION - U2 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U2 기능 설계 승인, 코드 생성 계획
+**Timestamp**: 2026-10-17T08:30:00Z
+**User Input**: "진행"
+**AI Response**: "U2 기능 설계 승인으로 기록. U2 코드 생성 계획(10단계) 작성: 공용 지역 데이터, 프로필 v2·옮기기, codec v1 읽기, inInterestArea·통장 사유, 0009 notices.regions, 공고 읽기, 기기·API 호환 최소 수정, 예시·PBT 테스트, 검증·요약. 승인 요청."
+**Context**: CONSTRUCTION - U2 Code Generation Part 1 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U2 코드 생성 계획 승인
+**Timestamp**: 2026-10-17T08:35:00Z
+**User Input**: "승인"
+**AI Response**: "U2 코드 생성 시작 (Step 1부터)."
+**Context**: CONSTRUCTION - U2 Code Generation Part 2 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U2 코드 생성 Step 1~9
+**Timestamp**: 2026-10-17T09:30:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "Step 1~9 완료: 공용 regions.ts, 프로필 v2·migrate/parse, codec v1 읽기, area.ts·engine·통장 사유, 0009_regions.sql·pgTAP, 공고 regions 읽기(Deno·Node), 기기·API 호환, 예시 18·PBT 7. typecheck·lint·deno check 통과, 단위 642×3. Step 10의 pgTAP·E2E는 Docker Desktop 엔진이 멈춰(WSL docker-desktop Stopped) 실행 못 함 — 사용자에게 재시작 요청."
+**Context**: CONSTRUCTION - U2 Code Generation (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U2 코드 생성 검증 완료
+**Timestamp**: 2026-10-17T09:50:00Z
+**User Input**: "재시작했어"
+**AI Response**: "Docker 정상화 확인, 로컬 Supabase에 0009 적용. pgTAP 125/125, 로컬 E2E 59 통과+3 건너뜀(E2E 시드 프로필이 버전 1 '통장 없음'이라 옮겨 읽기 실제 확인). Step 10 완료, 로컬 커밋, 승인 요청."
+**Context**: CONSTRUCTION - U2 Code Generation (변경 요청 2)
+
+---

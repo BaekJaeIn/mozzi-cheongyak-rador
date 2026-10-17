@@ -1,6 +1,7 @@
 // 평문 프로필 ↔ 서버 저장 형식 (BR-U2-73, U2 domain-entities §6)
 import type { JsonObject } from "../db/types.ts";
-import { type HouseholdProfile, PROFILE_SCHEMA_VERSION, validateProfile } from "../domain/profile.ts";
+import { type HouseholdProfile, PROFILE_SCHEMA_VERSION } from "../domain/profile.ts";
+import { parseProfile } from "../domain/profile-migrate.ts";
 import { decryptAmount, encryptAmount, type Keyring } from "./amount-cipher.ts";
 
 /** device_profiles 행 중 프로필 내용 부분 */
@@ -37,7 +38,8 @@ export async function encodeProfile(profile: HouseholdProfile, keyring: Keyring)
 }
 
 export async function decodeProfile(stored: ProfileStorageFields, keyring: Keyring): Promise<HouseholdProfile> {
-  if (stored.schemaVersion !== PROFILE_SCHEMA_VERSION) {
+  // 버전 1(변경 2 전)도 읽어 옮긴다 (BR-U2-C6)
+  if (stored.schemaVersion !== PROFILE_SCHEMA_VERSION && stored.schemaVersion !== 1) {
     throw new ProfileCodecError(`지원하지 않는 프로필 형식 v${stored.schemaVersion}`);
   }
   const [monthlyIncome, totalAsset, carValue] = await Promise.all([
@@ -52,7 +54,7 @@ export async function decodeProfile(stored: ProfileStorageFields, keyring: Keyri
     schemaVersion: stored.schemaVersion,
     money: { monthlyIncome, totalAsset, carValue, spouseEarns: dataMoney.spouseEarns ?? null },
   };
-  const checked = validateProfile(candidate);
+  const checked = parseProfile(candidate);
   if (!checked.ok) throw new ProfileCodecError(`저장된 프로필 형식 오류: ${checked.errors.join(", ")}`);
   return checked.value;
 }

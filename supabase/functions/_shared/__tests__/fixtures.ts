@@ -13,7 +13,7 @@ type DeepPartial<T> = { [K in keyof T]?: T[K] extends object | null ? DeepPartia
 /** business-logic-model §4의 예시 가구 */
 export function makeProfile(overrides: DeepPartial<HouseholdProfile> = {}): HouseholdProfile {
   const base: HouseholdProfile = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     self: { birthDate: "1960-03-02" },
     spouse: { birthDate: "1963-07-01" },
     householdType: "couple",
@@ -21,10 +21,10 @@ export function makeProfile(overrides: DeepPartial<HouseholdProfile> = {}): Hous
     householdHead: "self",
     residence: { sido: "경기", sigungu: "하남시", years: 10 },
     housing: { homeless: true, homelessYears: 10, ownedCount: 0 },
-    savings: { has: true, kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1000 },
+    savings: { has: true, owner: "self", kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1000 },
     money: { monthlyIncome: 450, totalAsset: 20_000, carValue: 1_500, spouseEarns: false },
     welfare: "none",
-    prefs: { districtIds: ["gyosan"], areaBands: [], tenure: "both", lowFloor: false },
+    prefs: { districtIds: ["gyosan"], regions: [], areaBands: [], tenure: "both", lowFloor: false },
   };
   const merge = (a: unknown, b: unknown): unknown => {
     if (b === undefined) return a;
@@ -50,6 +50,7 @@ export function makeNotice(units: UnitForJudgement[], overrides: Partial<NoticeF
     applyStart: "2026-09-25",
     applyEnd: "2026-09-30",
     districtIds: ["gyosan"],
+    regions: [],
     units,
     ...overrides,
   };

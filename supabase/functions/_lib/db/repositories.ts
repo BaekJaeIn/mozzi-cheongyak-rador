@@ -10,6 +10,7 @@ import type { DistrictRow, StoredProfileRow, SupplyTypeLabel, Tenure } from "../
 import type { IncomeBasis } from "../../_shared/domain/requirements.ts";
 import { validateRequirements } from "../../_shared/domain/requirements.ts";
 import type { IncomeThreshold } from "../../_shared/eligibility/income-table.ts";
+import { parseNoticeRegions } from "../../_shared/eligibility/area.ts";
 import type { NoticeForJudgement } from "../../_shared/eligibility/types.ts";
 import { type DbClient, DbError } from "./client.ts";
 
@@ -49,6 +50,7 @@ interface NoticeBundleRow {
   apply_end: string | null;
   housing_units: { id: string; supply_type: string; exclusive_area_m2: number | string | null; requirements: unknown }[] | null;
   notice_districts: { district_id: string }[] | null;
+  regions: unknown;
 }
 
 function toNoticeForJudgement(row: NoticeBundleRow): NoticeForJudgement {
@@ -59,6 +61,7 @@ function toNoticeForJudgement(row: NoticeBundleRow): NoticeForJudgement {
     applyStart: row.apply_start,
     applyEnd: row.apply_end,
     districtIds: (row.notice_districts ?? []).map((d) => d.district_id),
+    regions: parseNoticeRegions(row.regions),
     units: (row.housing_units ?? []).map((u) => ({
       id: u.id,
       supplyType: u.supply_type,
@@ -76,7 +79,7 @@ export function createNoticeRepository(db: DbClient): Pick<NoticeRepository, "li
         const { data, error } = await db
           .from("notices")
           .select(
-            "id, tenure, announced_at, apply_start, apply_end, housing_units(id, supply_type, exclusive_area_m2, requirements), notice_districts(district_id)",
+            "id, tenure, announced_at, apply_start, apply_end, regions, housing_units(id, supply_type, exclusive_area_m2, requirements), notice_districts(district_id)",
           )
           .order("id")
           .range(from, from + PAGE - 1);

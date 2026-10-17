@@ -1,7 +1,9 @@
-// 가구 프로필 v1 (U2 domain-entities §1) — 만 나이, 면적 구간, 시도 이름 정규화, 형식 검증
+// 가구 프로필 v2 (U2 domain-entities §1 + 변경 2) — 만 나이, 면적 구간, 형식 검증
+// v2: 청약통장 명의(savings.owner), 관심 시군구(prefs.regions). v1은 profile-migrate.ts로 옮겨 읽는다
 import { type IsoDate, isIsoDate } from "./dates.ts";
+import { type CapitalSido, CAPITAL_SIGUNGU, isCapitalSido, isCapitalSigungu } from "./regions.ts";
 
-export const PROFILE_SCHEMA_VERSION = 1 as const;
+export const PROFILE_SCHEMA_VERSION = 2 as const;
 /** 금액 상한(만원) — 100억원 (BR-U2-72) */
 export const MAX_AMOUNT_MANWON = 1_000_000;
 export const MAX_HOUSEHOLD_SIZE = 8;
@@ -12,6 +14,15 @@ export type WelfareStatus = "livelihood_or_medical" | "near_poverty" | "other_pr
 export const WELFARE_STATUSES: readonly WelfareStatus[] = ["livelihood_or_medical", "near_poverty", "other_priority", "none"];
 export type SavingsKind = "comprehensive" | "savings" | "deposit" | "installment";
 export const SAVINGS_KINDS: readonly SavingsKind[] = ["comprehensive", "savings", "deposit", "installment"];
+/** 청약통장 명의 — 부부 가구 기준 판정이라 판정에는 쓰지 않고 사유 문구에만 쓴다 (BR-U2-C7·C8) */
+export type SavingsOwner = "self" | "spouse" | "both";
+export const SAVINGS_OWNERS: readonly SavingsOwner[] = ["self", "spouse", "both"];
+/** 관심 시군구. sigungu null = 그 시도 전체 (U2 변경 2 Q1=A) */
+export interface RegionPick {
+  sido: CapitalSido;
+  sigungu: string | null;
+}
+export const MAX_REGION_PICKS = 60;
 export type HouseholdType = "couple" | "single" | "other";
 export type HouseholdHead = "self" | "spouse" | "other";
 export type Tenure = "sale" | "rent";
@@ -28,6 +39,8 @@ export interface HouseholdProfile {
   housing: { homeless: boolean | null; homelessYears: number | null; ownedCount: number | null };
   savings: {
     has: boolean | null;
+    /** has가 true일 때만 값이 있다. 혼자 사는 가구는 "self" */
+    owner: SavingsOwner | null;
     kind: SavingsKind | null;
     months: number | null;
     paymentCount: number | null;
@@ -41,7 +54,10 @@ export interface HouseholdProfile {
   };
   welfare: WelfareStatus | null;
   prefs: {
+    /** 3기 신도시 지구 */
     districtIds: string[];
+    /** 관심 시군구 (지구와 합쳐 1곳 이상) */
+    regions: RegionPick[];
     areaBands: AreaBand[];
     tenure: TenurePref;
     lowFloor: boolean;
@@ -80,51 +96,8 @@ export function areaBandOf(areaM2: number): AreaBand {
   return "l";
 }
 
-const SIDO_ALIASES: [string, string[]][] = [
-  ["서울", ["서울특별시", "서울시", "서울"]],
-  ["부산", ["부산광역시", "부산시", "부산"]],
-  ["대구", ["대구광역시", "대구시", "대구"]],
-  ["인천", ["인천광역시", "인천시", "인천"]],
-  ["광주", ["광주광역시", "광주시", "광주"]],
-  ["대전", ["대전광역시", "대전시", "대전"]],
-  ["울산", ["울산광역시", "울산시", "울산"]],
-  ["세종", ["세종특별자치시", "세종시", "세종"]],
-  ["경기", ["경기도", "경기"]],
-  ["강원", ["강원특별자치도", "강원도", "강원"]],
-  ["충북", ["충청북도", "충북"]],
-  ["충남", ["충청남도", "충남"]],
-  ["전북", ["전북특별자치도", "전라북도", "전북"]],
-  ["전남", ["전라남도", "전남"]],
-  ["경북", ["경상북도", "경북"]],
-  ["경남", ["경상남도", "경남"]],
-  ["제주", ["제주특별자치도", "제주도", "제주"]],
-];
-
-/** "서울특별시" → "서울" 처럼 줄임 이름으로 맞춘다. 모르는 이름은 공백만 지워 돌려준다. */
-export function normalizeSido(name: string): string {
-  const compact = name.normalize("NFC").replace(/\s+/g, "");
-  for (const [canonical, aliases] of SIDO_ALIASES) {
-    if (aliases.some((alias) => compact === alias)) return canonical;
-  }
-  return compact;
-}
-
-/** 주소·제목 같은 문장에서 처음 나오는 시도 이름을 줄임 이름으로 찾는다 (U3 정규화). 없으면 null. */
-export function findSido(text: string): string | null {
-  const compact = text.normalize("NFC");
-  let best: { index: number; canonical: string; length: number } | null = null;
-  for (const [canonical, aliases] of SIDO_ALIASES) {
-    for (const alias of aliases) {
-      const index = compact.indexOf(alias);
-      if (index === -1) continue;
-      // 같은 위치면 더 긴 이름(예: "광주광역시")을, 아니면 더 앞에 나온 이름을 쓴다
-      if (!best || index < best.index || (index === best.index && alias.length > best.length)) {
-        best = { index, canonical, length: alias.length };
-      }
-    }
-  }
-  return best?.canonical ?? null;
-}
+// 시도 이름 정규화는 공용 지역 데이터로 옮김 (변경 2, FR-C2-9) — 사용처를 위해 다시 내보낸다
+export { findSido, normalizeSido } from "./regions.ts";
 
 // ---------- 형식 검증 (서버 저장 전, BR-U2-72) ----------
 
@@ -137,6 +110,36 @@ const isNullableInt = (v: unknown, min: number, max: number) =>
 const isNullableDate = (v: unknown) => v === null || isIsoDate(v);
 const isNullableString = (v: unknown, maxLength = 40) =>
   v === null || (typeof v === "string" && v.length > 0 && v.length <= maxLength);
+
+/** 관심 시군구 검사: 수도권·목록 안·중복 없음·시도 전체를 고른 시도에는 시군구를 두지 않음 */
+export function isValidRegionPicks(value: unknown): value is RegionPick[] {
+  if (!Array.isArray(value) || value.length > MAX_REGION_PICKS) return false;
+  const keys = new Set<string>();
+  const wholeSido = new Set<string>();
+  for (const v of value) {
+    if (!isObject(v) || !isCapitalSido(v.sido)) return false;
+    if (v.sigungu !== null && (typeof v.sigungu !== "string" || !isCapitalSigungu(v.sido, v.sigungu))) return false;
+    const key = `${v.sido}|${v.sigungu ?? "*"}`;
+    if (keys.has(key)) return false;
+    keys.add(key);
+    if (v.sigungu === null) wholeSido.add(v.sido);
+  }
+  return value.every((v) => v.sigungu === null || !wholeSido.has(v.sido));
+}
+
+/** 관심 시군구를 검사 규칙에 맞게 정리: 중복 제거, 시도 전체가 있으면 그 시도의 시군구는 뺀다, 목록 순서로 */
+export function normalizeRegionPicks(picks: readonly RegionPick[]): RegionPick[] {
+  const whole = new Set(picks.filter((p) => p.sigungu === null).map((p) => p.sido));
+  const out: RegionPick[] = [];
+  for (const sido of Object.keys(CAPITAL_SIGUNGU) as CapitalSido[]) {
+    if (whole.has(sido)) {
+      out.push({ sido, sigungu: null });
+      continue;
+    }
+    for (const name of CAPITAL_SIGUNGU[sido]) if (picks.some((p) => p.sido === sido && p.sigungu === name)) out.push({ sido, sigungu: name });
+  }
+  return out;
+}
 
 export function validateProfile(input: unknown): ValidationResult<HouseholdProfile> {
   const errors: string[] = [];
@@ -164,9 +167,13 @@ export function validateProfile(input: unknown): ValidationResult<HouseholdProfi
     "housing",
   );
   const s = p.savings;
+  const spousePresent = p.spouse !== null && p.spouse !== undefined;
   check(
     isObject(s) &&
       isNullableBool(s.has) &&
+      (s.owner === null || SAVINGS_OWNERS.includes(s.owner as SavingsOwner)) &&
+      (s.has === true || s.owner === null) &&
+      (spousePresent || s.owner === null || s.owner === "self") &&
       (s.kind === null || SAVINGS_KINDS.includes(s.kind as SavingsKind)) &&
       isNullableInt(s.months, 0, 1200) &&
       isNullableInt(s.paymentCount, 0, 1200) &&
@@ -187,8 +194,9 @@ export function validateProfile(input: unknown): ValidationResult<HouseholdProfi
   check(
     isObject(pr) &&
       Array.isArray(pr.districtIds) &&
-      pr.districtIds.length >= 1 &&
       pr.districtIds.length <= 20 &&
+      isValidRegionPicks(pr.regions) &&
+      pr.districtIds.length + (pr.regions as unknown[]).length >= 1 &&
       pr.districtIds.every((id) => typeof id === "string" && /^[a-z_]{2,40}$/.test(id)) &&
       Array.isArray(pr.areaBands) &&
       pr.areaBands.every((b) => AREA_BANDS.includes(b as AreaBand)) &&

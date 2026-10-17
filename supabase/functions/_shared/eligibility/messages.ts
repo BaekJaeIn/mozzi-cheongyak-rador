@@ -59,6 +59,7 @@ export const MSG = {
   savingsPayments: (count: number) => `납입 ${count}회 이상`,
   savingsDeposit: (manwon: number) => `예치금 ${formatManwon(manwon)} 이상`,
   savingsDepositByArea: "예치금은 사는 지역과 주택 면적에 따라 달라요",
+  savingsSpouseOwner: "신청은 통장을 가진 배우자분 명의로 하셔야 해요",
 
   residence: (sidoIn: string[]) => `${sidoIn.join("·")}에 사는 분만 신청할 수 있어요`,
 

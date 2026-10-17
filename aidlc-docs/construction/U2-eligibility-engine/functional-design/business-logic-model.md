@@ -109,3 +109,44 @@ services/judgement-service.ts recomputeForDevice, recomputeAll (S2, BR-U2-80~84)
 | 재계산 서비스 (상태 기반, PBT-06) | 프로필 저장·공고 추가·삭제 명령을 무작위 순서로 실행해도, 저장된 판정 = 단순 모델(전체 다시 계산)의 결과 | Stateful |
 
 **예시 기반 테스트로 반드시 고정할 핵심 시나리오** (PBT-10): §4 예시, 만 64세/65세 경계, 2인 가구 소득 경계(6,452,897원 이하/초과), 세대주=다른 가족, 수급자 + 소득 초과(복지 경로), 공공분양 60㎡ 초과 주택형의 소득 미적용, 민영 예치금 지역·면적 구간, 기준표 없는 연도, 분류 실패(other).
+
+---
+
+## 6. 변경 요청 2 (2026-10-17)
+
+### 6.1 바뀌는 모듈
+
+| 모듈 | 바뀌는 것 |
+|---|---|
+| `domain/regions.ts` (새) | 수도권 시·도·시군구 목록, `normalizeSido`, 인천 옛 구 변환표 — 입력(U4)·판별(U3)·판정이 공유 |
+| `domain/profile.ts` | 스키마 버전 2, `savings.owner`, `prefs.regions`, `parseProfile`이 버전 1을 받으면 `migrateProfile` 후 검사 |
+| `domain/profile-migrate.ts` (새) | `migrateProfile(v1 \| v2) → v2` (BR-U2-C1~5) |
+| `eligibility/criteria/savings.ts` | 사유에 명의 문구 (BR-U2-C8) |
+| `eligibility/area.ts` (새) | `inInterestArea(notice, prefs)` (BR-U2-C10~12) |
+| `eligibility/engine.ts` | `judgeNotice`의 `inDistrict` 계산을 `inInterestArea`로 |
+| `eligibility/visibility.ts` | 그대로 (`inDistrict` 입력 이름 유지, 뜻만 넓어짐) |
+| `services/judgement-service.ts` · 저장소 | 공고 읽을 때 `regions`도 읽어 판정에 넘김 (DB 칸은 U3 마이그레이션) |
+
+### 6.2 판정 흐름 변화
+
+```text
+프로필(버전 1 또는 2) ──migrateProfile──▶ 프로필 v2
+공고(districtIds, regions) ─┐
+                            ├─ judgeNotice ─▶ verdict(주택형 합성, 그대로)
+프로필 v2 ──────────────────┘              └▶ inDistrict = 지구 일치 OR 시·군·구 일치
+노출 K5 = verdict≠ineligible AND inDistrict AND 상태≠closed
+```
+
+### 6.3 테스트 가능한 속성 (PBT-01, 변경 2)
+
+| ID | 대상 | 속성 | 종류 |
+|---|---|---|---|
+| P-C2-1 | `migrateProfile` | 두 번 옮겨도 한 번 옮긴 것과 같다. 버전 2 입력은 그대로 | Idempotence |
+| P-C2-2 | `migrateProfile` + `judgeNotice` | 옮기기 전에 보이던 공고는 옮긴 뒤에도 보인다 (숨김이 늘지 않음 — "없음"→"모름") | Invariant |
+| P-C2-3 | 통장 판정 | 통장 값이 같으면 `owner`만 달라도 모든 조건 판정이 같다 (사유 문구만 다를 수 있음) | Invariant |
+| P-C2-4 | `inInterestArea` | 관심 지역(지구·시군구)을 더 고르면 관심 지역 안이던 공고는 계속 안이다 | Monotonicity |
+| P-C2-5 | `inInterestArea` | 시·도 전체를 고르면 그 시·도의 모든 공고 지역이 안이다 | Invariant |
+| P-C2-6 | `inInterestArea` | `regions`가 빈 프로필은 옛 규칙(지구 교집합)과 결과가 같다 | Model-based |
+| P-C2-7 | 프로필 코덱 | 버전 2 프로필 직렬화 → 읽기 = 원래 값 (기존 왕복 속성에 새 칸 포함) | Round-trip |
+
+**예시 테스트로 고정할 시나리오** (PBT-10): 엄마 휴대폰(배우자 명의) vs 아빠 휴대폰(본인 명의) 같은 공고·판정, 버전 1 "통장 없음" → 확인 필요, "경기 전체" 선택 시 수원시 공고 노출, "경기도 일원" 공고 + 성남시만 고름 → 노출, 서울 강서구만 고름 + 부천 대장 공고(지구 미선택) → 숨김.

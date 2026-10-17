@@ -1,5 +1,6 @@
 // 기기 저장 (domain-entities §3, Q7=A 암호화 없음). localStorage를 KeyValueStorage로 주입받는다.
-import { type HouseholdProfile, validateProfile } from "@shared/domain/profile.ts";
+import type { HouseholdProfile } from "@shared/domain/profile.ts";
+import { parseProfile } from "@shared/domain/profile-migrate.ts";
 import { DEVICE_STORAGE_KEY, type KeyValueStorage } from "@/features/device/identity-store";
 import { DEFAULT_NOTIFY_HOUR, isValidHour } from "./hour";
 import { isStepId, type StepId } from "./steps";
@@ -86,7 +87,7 @@ function isSyncState(v: unknown): v is SyncState {
 export function loadStoredProfile(storage: KeyValueStorage): StoredProfile | null {
   const v = readJson(storage, PROFILE_KEY);
   if (!isObject(v) || v.version !== 1 || typeof v.savedAt !== "string" || !isSyncState(v.sync)) return null;
-  const checked = validateProfile(v.profile);
+  const checked = parseProfile(v.profile); // 변경 2 전에 저장한 버전 1도 옮겨 읽는다 (BR-U2-C6)
   return checked.ok ? { version: 1, profile: checked.value, savedAt: v.savedAt, sync: v.sync } : null;
 }
 

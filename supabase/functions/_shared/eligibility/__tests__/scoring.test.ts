@@ -20,7 +20,7 @@ describe("금액 표기", () => {
 });
 
 describe("score (BR-U2-61~64)", () => {
-  const prefs = { districtIds: ["gyosan"], areaBands: ["s" as const], tenure: "rent" as const, lowFloor: true };
+  const prefs = { districtIds: ["gyosan"], regions: [], areaBands: ["s" as const], tenure: "rent" as const, lowFloor: true };
   it("면적·분양/임대 모두 맞으면 2", () => {
     expect(score({ tenure: "rent", units: [makeUnit("happy_senior", 55)] }, prefs)).toBe(2);
   });

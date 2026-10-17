@@ -4,7 +4,7 @@
 import "server-only";
 import type { DeviceRepository, ProfileRepository } from "@shared/db/repositories.ts";
 import { type IsoDate, toKstDate } from "@shared/domain/dates.ts";
-import { validateProfile } from "@shared/domain/profile.ts";
+import { parseProfile } from "@shared/domain/profile-migrate.ts";
 import type { Keyring } from "@shared/security/amount-cipher.ts";
 import { encodeProfile } from "@shared/security/profile-codec.ts";
 import type { DeviceContext } from "../auth/route-guard";
@@ -26,7 +26,7 @@ export interface SaveProfileDeps {
 /** PUT /api/profile (BR-U4-100·104) */
 export function createSaveProfileHandler(deps: SaveProfileDeps) {
   return async ({ deviceId, requestId, log, body }: DeviceContext): Promise<Response> => {
-    const checked = validateProfile(body);
+    const checked = parseProfile(body); // 열려 있던 옛 화면이 버전 1을 보내도 옮겨 받는다
     if (!checked.ok) {
       log.warn("profile.invalid", { fields: checked.errors }); // 틀린 항목 이름만
       return errorResponse("BAD_REQUEST", 400, requestId);

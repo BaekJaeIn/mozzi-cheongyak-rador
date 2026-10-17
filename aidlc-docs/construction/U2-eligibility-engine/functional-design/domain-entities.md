@@ -197,3 +197,81 @@ U1 계약 K1 변경이므로 U1 `domain-entities.md` E7에 변경 메모를 남�
 | `money.spouseEarns` | "배우자분도 일하거나 사업 소득이 있나요?" | 예 / 아니오 / 잘 모르겠어요 |
 | `welfare` | "아래 중 해당하는 것이 있나요?" | 생계·의료급여 수급 / 차상위 계층 / 국가유공자·장애인 등 / 해당 없음 / 잘 모르겠어요 |
 | `savings.kind`, `depositManwon` | 통장 종류, 통장에 들어 있는 금액 | 4종 + 모름 / 만원 입력 |
+
+---
+
+## 변경 요청 2 (2026-10-17) — 프로필 v2 · 공고 지역 · 관심 지역
+
+> 근거: requirements.md §9, U2 변경 2 계획 Q1~Q3 = A. 아래가 앞 절과 다르면 이 절을 따른다.
+
+### 프로필 스키마 버전 1 → 2
+
+```ts
+type SavingsOwner = "self" | "spouse" | "both";
+
+interface HouseholdProfile {          // schemaVersion: 2
+  // …(나머지 그대로)
+  savings: {
+    has: boolean | null;
+    owner: SavingsOwner | null;        // 새 칸. has가 true일 때만 의미. 혼자 사는 가구는 "self"
+    kind: SavingsKind | null;
+    months: number | null;
+    paymentCount: number | null;
+    depositManwon: number | null;      // 두 분 다 있으면 신청에 쓸(가입이 더 오래된) 통장 하나의 값
+  };
+  prefs: {
+    districtIds: string[];             // 3기 신도시 지구 (그대로)
+    regions: RegionPick[];             // 새 칸. 관심 시·군·구
+    areaBands: AreaBand[];
+    tenure: …; lowFloor: …;            // 그대로
+  };
+}
+
+type CapitalSido = "서울" | "경기" | "인천";
+interface RegionPick {
+  sido: CapitalSido;
+  sigungu: string | null;              // null = 그 시·도 전체 (Q1=A)
+}
+```
+
+| 칸 | 검사 |
+|---|---|
+| `savings.owner` | `has`가 true가 아니면 null. `spouse`·`both`는 배우자가 있는 가구만 |
+| `prefs.regions` | 시·도는 수도권 3개, 시·군·구는 공용 목록(`domain/regions.ts`) 안. 같은 항목 중복 없음. 시·도 전체를 고르면 그 시·도의 시·군·구 항목은 두지 않는다(정리해서 저장) |
+| 관심 지역 개수 | `districtIds.length + regions.length ≥ 1` |
+
+### 판정 입력 공고에 지역 추가
+
+```ts
+interface NoticeForJudgement {
+  // …(그대로)
+  districtIds: string[];
+  regions: NoticeRegion[];             // 새 칸. U3가 판별해 저장 (0개면 지역 매칭 없음 — 지구만)
+}
+interface NoticeRegion {
+  sido: CapitalSido;
+  sigungu: string | null;              // null = 시·도까지만 확인됨 (예: "경기도 일원")
+}
+```
+
+### 판정 결과의 `inDistrict` — 이름 그대로, 뜻 확장
+
+`NoticeJudgement.inDistrict`(DB `judgements.in_district`)는 이제 **"관심 지역 안"** 을 뜻한다 = 관심 지구 안 **또는** 관심 시·군·구 안. 이름을 바꾸지 않는 이유: DB 칸·발송 SQL·피드 API 등 22개 파일이 쓰고 있어 바꾸는 위험이 크다.
+
+### 공용 지역 데이터 `domain/regions.ts` (FR-C2-9)
+
+| 항목 | 내용 |
+|---|---|
+| `CAPITAL_SIDO` | 서울·경기·인천 |
+| `SIGUNGU_BY_SIDO` | 지금 `src/features/profile/model/regions.ts`의 수도권 목록을 옮김 (서울 25구, 경기 31시·군, 인천 11개 — 2026-07 개편 반영). 입력 화면·U3 판별·판정이 이 목록 하나를 쓴다 |
+| `normalizeSido` | "서울특별시·서울시·서울" → 서울, "경기도" → 경기, "인천광역시" → 인천 (BR-U2-51과 같은 함수로 합침) |
+| `INCHEON_LEGACY` | 인천 옛 구 → 새 구 (Q3=A): 동구 → 제물포구, 중구 → 동으로 가름(영종·용유·무의 쪽 동 → 영종구, 나머지 → 제물포구), 서구 → 동으로 가름(검단 쪽 동 → 검단구, 나머지 → 서해구). 동 목록은 U3 기능 설계에서 확정 |
+| 경기 구 | "수원시 영통구"처럼 시 아래 구는 **시**로 본다 (목록이 시 단위) |
+
+### 입력 화면에서 바뀌는 질문 (U4가 구현)
+
+| 칸 | 질문 | 보기 |
+|---|---|---|
+| `savings.has` + `owner` (부부) | "부부 중 청약통장이 있는 분이 있나요?" | 나 / 배우자 / 두 분 다 / 없음 / 잘 모르겠어요 |
+| `savings.has` (혼자) | "청약통장이 있으신가요?" | 예 / 아니오 / 잘 모르겠어요 |
+| `prefs.regions` | 지구 카드 아래 "다른 지역" | 시·도 → (시·도 전체 / 시·군·구 여러 개) |
