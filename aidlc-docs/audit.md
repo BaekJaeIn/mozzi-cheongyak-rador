@@ -1088,3 +1088,19 @@
 **Context**: CONSTRUCTION - Build and Test 완료, 승인 대기
 
 ---
+
+## 운영 반영 지원 — Vercel 환경 변수 위치 질문
+**Timestamp**: 2026-10-17T02:15:00Z
+**User Input**: "여기서 환경변수 어떻게 추가해?" (Vercel Settings → Environments 화면 캡처 첨부)
+**AI Response**: "새 Vercel 화면에서는 Environments → Production 행을 눌러 들어가 환경 변수를 추가한다고 안내. 이름 3개(VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT), Production만, 값은 채팅에 붙이지 않도록 안내. Build and Test 승인 질문은 아직 답변 대기."
+**Context**: Build and Test 승인 대기 중, setup-guide-u6 ② 진행
+
+---
+
+## 운영 반영 지원 — push 요청
+**Timestamp**: 2026-10-17T02:25:00Z
+**User Input**: "푸시해줘"
+**AI Response**: "setup-guide-u6 Vercel 경로 수정·audit을 커밋하고 2be776f와 함께 origin/main에 push."
+**Context**: Build and Test 승인 질문은 계속 답변 대기
+
+---

@@ -46,7 +46,7 @@ npx supabase secrets set "VAPID_PUBLIC_KEY=$pub" "VAPID_PRIVATE_KEY=$privPlain" 
 Remove-Variable priv, privPlain
 ```
 
-**Vercel** — 대시보드 → 프로젝트 → Settings → Environment Variables → **Production만** 체크하고 같은 이름 3개를 추가합니다.
+**Vercel** — 대시보드 → 프로젝트 → Settings → Environments → **Production** 행을 눌러 들어가서(옛 화면은 Settings → Environment Variables) 같은 이름 3개를 추가합니다. Preview·Development에는 넣지 않습니다.
 
 **확인**
 
