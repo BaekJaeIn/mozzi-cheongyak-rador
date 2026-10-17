@@ -1164,3 +1164,11 @@
 **Context**: Build and Test 승인 질문은 계속 대기
 
 ---
+
+## CI 실패 수정 (95a05ae db-and-e2e)
+**Timestamp**: 2026-10-17T05:10:00Z
+**User Input**: "(없음 — CI 결과 확인)"
+**AI Response**: "iPhone 설정 테스트의 axe color-contrast 실패: 새로고침 뒤 저장된 쉬운 모드를 적용할 때 [큰 글씨] 버튼의 색 전환 애니메이션 중간(#4e86e0 바탕)을 잡음. 상태에 따라 색이 바뀌는 요소의 transition 제거(큰 글씨 버튼, 화면 모드 선택, 알림 스위치, 선택 보기). 로컬 profile E2E 2회 반복 32/32 통과. 커밋만 하고 push는 사용자 확인 대기."
+**Context**: Build and Test 승인 질문은 계속 대기
+
+---

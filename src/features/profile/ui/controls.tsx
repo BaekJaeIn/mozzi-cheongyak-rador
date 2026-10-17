@@ -11,7 +11,7 @@ import { daysInMonth, toBirthDate } from "../model/steps";
 
 const optionClass = (selected: boolean) =>
   [
-    "flex min-h-touch w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-body transition-colors",
+    "flex min-h-touch w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-body",
     selected ? "border-primary bg-primary-soft font-bold text-ink" : "border-transparent bg-surface text-ink shadow-card",
   ].join(" ");
 

@@ -159,8 +159,8 @@ function NotifySettings() {
         <span>새 공고 알림 받기</span>
         <span aria-hidden className="flex items-center gap-2">
           <span className={notify.enabled ? "text-primary" : "text-muted"}>{notify.enabled ? "켜짐" : "꺼짐"}</span>
-          <span className={["relative h-8 w-14 rounded-full transition-colors", notify.enabled ? "bg-primary" : "bg-field"].join(" ")}>
-            <span className={["absolute top-1 h-6 w-6 rounded-full bg-surface shadow-card transition-all", notify.enabled ? "left-7" : "left-1"].join(" ")} />
+          <span className={["relative h-8 w-14 rounded-full", notify.enabled ? "bg-primary" : "bg-field"].join(" ")}>
+            <span className={["absolute top-1 h-6 w-6 rounded-full bg-surface shadow-card", notify.enabled ? "left-7" : "left-1"].join(" ")} />
           </span>
         </span>
       </button>
@@ -211,7 +211,7 @@ function DisplayModeSelector() {
             aria-checked={mode === value}
             onClick={() => setMode(value)}
             className={[
-              "min-h-touch rounded-xl px-4 text-body transition-colors",
+              "min-h-touch rounded-xl px-4 text-body",
               mode === value ? "bg-surface font-bold text-primary shadow-card" : "text-muted",
             ].join(" ")}
           >

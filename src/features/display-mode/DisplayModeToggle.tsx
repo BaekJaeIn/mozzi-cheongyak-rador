@@ -12,7 +12,7 @@ export function DisplayModeToggle() {
       aria-pressed={easy}
       onClick={() => setMode(easy ? "normal" : "easy")}
       className={[
-        "flex min-h-touch shrink-0 items-center gap-1 rounded-full px-3 text-caption font-bold transition-colors",
+        "flex min-h-touch shrink-0 items-center gap-1 rounded-full px-3 text-caption font-bold",
         easy ? "bg-primary text-surface" : "bg-fill text-ink active:bg-line",
       ].join(" ")}
     >
