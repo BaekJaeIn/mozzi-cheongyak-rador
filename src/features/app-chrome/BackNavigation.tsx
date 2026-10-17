@@ -1,15 +1,24 @@
 "use client";
 
 // 휴대폰 뒤로 버튼 처리 (back-target.ts 규칙)
-// 방문 기록은 항상 [처음 연 화면, 지킴이] 두 칸이다. 뒤로 버튼을 누르면 지킴이가 빠지면서 popstate가 오고,
-// 여기서 갈 곳으로 replace한 뒤 지킴이를 다시 넣는다.
-// 종료: 첫 화면에서 누르면 안내를 띄우고 2초 동안 지킴이를 넣지 않는다 → 그 사이 한 번 더 누르면 기록 맨 앞이라 앱이 닫힌다.
+// 1) CloseWatcher가 있는 브라우저(Android Chrome 120 이상): 뒤로 버튼을 방문 기록 대신 앱이 받는다.
+//    갈 곳이 있으면 replace하고 다시 받을 준비, 첫 화면이면 안내만 띄우고 2초 동안 받지 않는다 → 그 사이 한 번 더 누르면 앱이 닫힌다.
+// 2) 없는 브라우저: 방문 기록에 지킴이 한 칸을 넣어 popstate로 받는다. Chrome은 사용자 조작 없이 넣은 칸을 뒤로 버튼에서 건너뛰므로
+//    지킴이가 빠져 있으면 다음 터치 때 다시 넣는다.
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useProfile } from "@/features/profile/ProfileProvider";
 import { backTarget, EXIT_WINDOW_MS, isListPath, type ListPath } from "./back-target";
 
 let initialGuard = false; // 개발 모드에서 효과가 두 번 돌아도 지킴이는 한 칸만
+
+interface CloseWatcherLike {
+  onclose: (() => void) | null;
+  destroy(): void;
+}
+type CloseWatcherCtor = new () => CloseWatcherLike;
+const closeWatcherCtor = (): CloseWatcherCtor | null =>
+  typeof window !== "undefined" && "CloseWatcher" in window ? (window as unknown as { CloseWatcher: CloseWatcherCtor }).CloseWatcher : null;
 
 const LastListContext = createContext<() => ListPath>(() => "/");
 
@@ -36,20 +45,59 @@ export function BackNavigation({ children }: { children: ReactNode }) {
   }, [stored]);
 
   useEffect(() => {
-    const pushGuard = () => window.history.pushState(window.history.state, "", window.location.href);
+    let exitTimer: ReturnType<typeof setTimeout> | null = null;
+    const showExitHint = (rearm: () => void) => {
+      setToast(Date.now());
+      if (exitTimer) clearTimeout(exitTimer);
+      exitTimer = setTimeout(() => {
+        exitTimer = null;
+        rearm(); // 2초 안에 다시 누르지 않았으면 다음 번을 위해 다시 받을 준비
+      }, EXIT_WINDOW_MS);
+    };
+    const targetFrom = (from: string) => backTarget(from, { lastList: lastList.current, hasProfile: hasProfile.current });
+
+    const Watcher = closeWatcherCtor();
+    if (Watcher) {
+      let watcher: CloseWatcherLike | null = null;
+      const arm = () => {
+        watcher?.destroy();
+        const w = new Watcher();
+        w.onclose = () => {
+          watcher = null;
+          const target = targetFrom(current.current);
+          if (target.kind === "go") {
+            router.replace(target.href);
+            arm();
+          } else {
+            showExitHint(arm);
+          }
+        };
+        watcher = w;
+      };
+      arm();
+      return () => {
+        watcher?.destroy();
+        if (exitTimer) clearTimeout(exitTimer);
+      };
+    }
+
+    let guardOn = false;
+    const pushGuard = () => {
+      window.history.pushState(window.history.state, "", window.location.href);
+      guardOn = true;
+    };
     if (!initialGuard) {
       initialGuard = true;
       pushGuard();
     }
-    let exitTimer: ReturnType<typeof setTimeout> | null = null;
-
     // Next 라우터도 popstate로 처음 연 화면을 되살린다. 그 처리가 끝난 뒤에 움직여야 덮어쓰이지 않는다
     const onPop = () => {
+      guardOn = false;
       const from = current.current;
       setTimeout(() => handle(from), 0);
     };
     const handle = (from: string) => {
-      const target = backTarget(from, { lastList: lastList.current, hasProfile: hasProfile.current });
+      const target = targetFrom(from);
       if (target.kind === "go") {
         pushGuard();
         router.replace(target.href);
@@ -57,16 +105,16 @@ export function BackNavigation({ children }: { children: ReactNode }) {
       }
       // 처음 연 화면이 지금 화면과 다르면(알림으로 상세를 열었던 경우 등) 그 칸을 지금 화면으로 바꾼다
       if (window.location.pathname !== from) router.replace(from);
-      setToast(Date.now());
-      if (exitTimer) clearTimeout(exitTimer);
-      exitTimer = setTimeout(() => {
-        exitTimer = null;
-        pushGuard(); // 2초 안에 다시 누르지 않았으면 다음 번을 위해 지킴이를 다시 넣는다
-      }, EXIT_WINDOW_MS);
+      showExitHint(pushGuard);
+    };
+    const onTouch = () => {
+      if (!guardOn && !exitTimer) pushGuard();
     };
     window.addEventListener("popstate", onPop);
+    window.addEventListener("pointerdown", onTouch, true);
     return () => {
       window.removeEventListener("popstate", onPop);
+      window.removeEventListener("pointerdown", onTouch, true);
       if (exitTimer) clearTimeout(exitTimer);
     };
   }, [router]);

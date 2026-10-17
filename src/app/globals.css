@@ -71,6 +71,11 @@ body {
   margin: 0;
 }
 
+/* 큰 글씨에서는 상단 막대의 앱 이름을 숨기고 아이콘만 (글씨 크기 토글 자리) */
+html[data-mode="easy"] .app-name {
+  display: none;
+}
+
 /* 키보드로 이동할 때 초점이 잘 보이게 */
 :focus-visible {
   outline: 3px solid var(--color-primary);

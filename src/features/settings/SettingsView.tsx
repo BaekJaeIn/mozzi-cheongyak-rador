@@ -1,11 +1,10 @@
 "use client";
 
-// 설정 (C29, US-09·18·19·20, business-rules §5·§7)
+// 설정 (C29, US-09·18·20, business-rules §5·§7). 글씨 크기(US-19)는 상단 막대 토글로 옮김 (2026-10-17)
 import { toKstDate } from "@shared/domain/dates.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useDisplayMode } from "@/features/display-mode/display-mode";
 import { HOURS, hourLabel } from "@/features/profile/model/hour";
 import { GROUP_LABELS, GROUP_ORDER } from "@/features/profile/model/steps";
 import { groupSummary } from "@/features/profile/model/summary";
@@ -79,7 +78,6 @@ export function SettingsView({ saved }: { saved?: string }) {
 
       <NotifySettings />
       <InstallSection />
-      <DisplayModeSelector />
       <DeleteAllSection />
     </div>
   );
@@ -185,42 +183,6 @@ function NotifySettings() {
       {pushResult === "denied" && <DeniedHelp />}
       {pushResult === "needs_install" && <InstallGuideButton />}
       {notify.enabled && <TestPushButton />}
-    </section>
-  );
-}
-
-/** 일반 / 쉬운 모드 (US-19) */
-function DisplayModeSelector() {
-  const { mode, setMode } = useDisplayMode();
-  return (
-    <section aria-labelledby="display" className="flex flex-col gap-3">
-      <h2 id="display" className="px-1 text-title font-bold">
-        화면
-      </h2>
-      <div role="radiogroup" aria-label="화면 모드" className="grid grid-cols-2 gap-1 rounded-2xl bg-fill p-1">
-        {(
-          [
-            ["normal", "일반"],
-            ["easy", "쉬운 모드"],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={mode === value}
-            onClick={() => setMode(value)}
-            className={[
-              "min-h-touch rounded-xl px-4 text-body",
-              mode === value ? "bg-surface font-bold text-primary shadow-card" : "text-muted",
-            ].join(" ")}
-          >
-            {mode === value ? "✓ " : ""}
-            {label}
-          </button>
-        ))}
-      </div>
-      <p className="px-1 text-caption text-muted">쉬운 모드는 글씨와 버튼을 더 크게 보여 드려요. 화면 위쪽 [큰 글씨] 버튼으로도 바꿀 수 있어요.</p>
     </section>
   );
 }

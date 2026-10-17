@@ -17,6 +17,12 @@ test.beforeEach(releaseRegistrationLimit);
 
 const card = (page: Page, name: string) => page.getByRole("article").filter({ hasText: name });
 
+/** 휴대폰 뒤로 버튼: CloseWatcher가 있으면 앱이 받는다(Esc와 같은 신호), 없으면 방문 기록 */
+async function pressBack(page: Page) {
+  if (await page.evaluate(() => "CloseWatcher" in window)) await page.keyboard.press("Escape");
+  else await page.goBack();
+}
+
 async function axe(page: Page) {
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(results.violations).toEqual([]);
@@ -26,7 +32,8 @@ async function axe(page: Page) {
 async function openFeed(page: Page) {
   await seedStoredProfile(page);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "맞춤 공고" })).toBeVisible();
+  // 첫 판정 계산(프로필 다시 보내기 + 재계산)은 병렬 실행 부하에서 5초를 넘길 수 있다
+  await expect(page.getByRole("heading", { level: 1, name: "맞춤 공고" })).toBeVisible({ timeout: 15_000 });
   await expect(card(page, fx.open.name)).toBeVisible();
 }
 
@@ -101,7 +108,8 @@ test("뒤로 버튼: 상세 → 목록, 목록에서는 한 번 더 누르면 �
   await openFeed(page);
   await card(page, fx.open.name).getByRole("link").click();
   await expect(page).toHaveURL(new RegExp(`/notice/${fx.open.id}$`));
-  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: `${fx.open.name} 입주자 모집공고` })).toBeVisible();
+  await pressBack(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(card(page, fx.open.name)).toBeVisible();
 
@@ -110,10 +118,13 @@ test("뒤로 버튼: 상세 → 목록, 목록에서는 한 번 더 누르면 �
   await nav.getByRole("link", { name: "관심 공고" }).click();
   await nav.getByRole("link", { name: "설정" }).click();
   await expect(page).toHaveURL(/\/settings$/);
-  await page.goBack();
+  await expect(page.getByRole("heading", { level: 1, name: "설정" })).toBeVisible();
+  await pressBack(page);
   await expect(page).toHaveURL(/\/$/);
+  await expect(card(page, fx.open.name)).toBeVisible();
 
-  await page.goBack();
+  // 첫 화면: 처음 누르면 종료하지 않고 안내만
+  await pressBack(page);
   await expect(page.getByText("뒤로 버튼을 한 번 더 누르면 종료돼요")).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
   await expect(card(page, fx.open.name)).toBeVisible();
@@ -123,7 +134,7 @@ test("뒤로 버튼: 알림으로 상세를 바로 열었어도 맞춤 공고로
   await openFeed(page);
   await page.goto(`/notice/${fx.open.id}`);
   await expect(page.getByRole("heading", { level: 1, name: `${fx.open.name} 입주자 모집공고` })).toBeVisible();
-  await page.goBack();
+  await pressBack(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(card(page, fx.open.name)).toBeVisible();
 });

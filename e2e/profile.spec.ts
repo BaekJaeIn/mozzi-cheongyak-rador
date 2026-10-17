@@ -136,7 +136,7 @@ test("금액이 흔한 범위를 크게 넘으면 한 번 더 묻는다 (US-06, 
   await heading(page, "세대 전체의 총자산은 얼마인가요?");
 });
 
-test("설정: 그룹 고치기, 알림 시각 즉시 저장, 쉬운 모드 유지 (US-09·18·19)", async ({ page }) => {
+test("설정: 그룹 고치기, 알림 시각 즉시 저장, 큰 글씨 유지 (US-09·18·19)", async ({ page }) => {
   await page.goto("/profile/setup");
   await fillToReview(page);
   await page.getByRole("button", { name: "저장" }).click();
@@ -167,8 +167,8 @@ test("설정: 그룹 고치기, 알림 시각 즉시 저장, 쉬운 모드 유�
   expect((await notify).status()).toBe(200);
   await expect(page.getByText("바꿨어요.")).toBeVisible();
 
-  // 쉬운 모드: 즉시 적용, 새로고침 후 유지, 가로 스크롤 없음
-  await page.getByRole("radio", { name: "쉬운 모드" }).click();
+  // 큰 글씨(쉬운 모드): 상단 토글로 즉시 적용, 새로고침 후 유지, 가로 스크롤 없음
+  await page.getByRole("radiogroup", { name: "글씨 크기" }).getByRole("radio", { name: "큰 글씨" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-mode", "easy");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-mode", "easy");
@@ -231,22 +231,25 @@ test.describe("인터넷 끊김", () => {
   });
 });
 
-test("첫 화면 위쪽 [큰 글씨]로 쉬운 모드를 바로 켜고 끈다, 설정과 같은 값 (2026-10-17 요청)", async ({ page }) => {
+test("첫 화면 위쪽 [작은 글씨 | 큰 글씨] 토글로 쉬운 모드를 바로 켜고 끈다 (2026-10-17 요청)", async ({ page }) => {
   await page.goto("/");
   await heading(page, "내 정보를 넣으면 맞는 공고만 골라 드려요");
-  const toggle = page.getByRole("button", { name: "큰 글씨" });
-  await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  await toggle.click();
+  const size = page.getByRole("radiogroup", { name: "글씨 크기" });
+  await expect(size.getByRole("radio", { name: "작은 글씨" })).toHaveAttribute("aria-checked", "true");
+  await size.getByRole("radio", { name: "큰 글씨" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-mode", "easy");
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(size.getByRole("radio", { name: "큰 글씨" })).toHaveAttribute("aria-checked", "true");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-mode", "easy");
+  await expect(size.getByRole("radio", { name: "큰 글씨" })).toHaveAttribute("aria-checked", "true");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
   await axe(page);
 
   await seedStoredProfile(page);
   await page.goto("/settings");
-  await expect(page.getByRole("radio", { name: /쉬운 모드/ })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("button", { name: "큰 글씨" }).click();
-  await expect(page.getByRole("radio", { name: /일반/ })).toHaveAttribute("aria-checked", "true"); // 설정 화면도 바로 따라 바뀐다
+  await expect(page.getByRole("radio", { name: "쉬운 모드" })).toHaveCount(0); // 설정 화면에서는 뺐다
+  await expect(size.getByRole("radio", { name: "큰 글씨" })).toHaveAttribute("aria-checked", "true");
+  await size.getByRole("radio", { name: "작은 글씨" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-mode", "normal");
 });
