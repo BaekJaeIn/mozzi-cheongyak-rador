@@ -64,7 +64,9 @@
 - [x] U3 Functional Design (2026-10-18 승인)
 - [x] U3 NFR Requirements (2026-10-18 승인)
 - [x] U3 NFR Design (2026-10-18 승인)
-- [ ] U3 Code Generation — Step 1~10 완료 (단위 683, pgTAP 150, E2E 59+3, 스모크 13/13, SH 실제 1회), 승인 대기
+- [x] U3 Code Generation (2026-10-19 승인, 커밋 7d6538b)
+- [x] U4 Functional Design (2026-10-19 승인)
+- [ ] U4 Code Generation — Step 1~11 완료 (단위 713, pgTAP 150, E2E 67+3), 승인 대기
 - 계획: User Stories(가볍게) → U2(FD·Code) → U3(FD·NFR-R·NFR-D·Code) → U4(FD·Code) → U5(FD·Code) → Build and Test
 
 ## Current Status

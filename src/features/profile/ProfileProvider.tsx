@@ -17,11 +17,15 @@ import {
   loadDraft,
   loadStoredNotify,
   loadStoredProfile,
+  loadUpdates,
   type NotifySettings,
+  saveUpdates,
+  storedProfileSchemaVersion,
   type StoredNotify,
   type StoredProfile,
 } from "./model/storage";
 import { createProfileSync, type FlushResult, type ProfileSync } from "./model/sync";
+import { initialUpdates, markNoticeSeen, resolveItems, type StoredUpdates, type UpdateItem } from "./model/updates";
 
 export interface ProfileState {
   /** localStorage를 읽었는지 (읽기 전에는 화면을 정하지 않는다) */
@@ -30,11 +34,15 @@ export interface ProfileState {
   notify: NotifySettings;
   notifyStored: StoredNotify | null;
   hasDraft: boolean;
+  /** 업데이트 안내 기록 (변경 2). 읽은 뒤에는 항상 있다 */
+  updates: StoredUpdates | null;
 }
 
 export interface ProfileActions {
   /** 기기에 저장하고 서버로 보낸다. 서버 결과를 돌려준다 (BR-U4-62~66) */
-  saveProfile(profile: HouseholdProfile): Promise<FlushResult>;
+  saveProfile(profile: HouseholdProfile, resolves?: readonly UpdateItem[]): Promise<FlushResult>;
+  /** "새로 바뀐 점" 창을 띄웠다 (BR-U4-C22) */
+  markNoticeSeen(): void;
   saveNotify(settings: NotifySettings): Promise<FlushResult>;
   /** 대기 중인 것을 지금 보낸다 */
   flushNow(): Promise<void>;
@@ -46,19 +54,32 @@ export interface ProfileActions {
 
 const ProfileContext = createContext<(ProfileState & ProfileActions) | null>(null);
 
+/**
+ * 업데이트 기록 (business-logic-model §8.1): 없으면 처음 기록을 계산한다. 저장은 창을 띄우거나 항목을 입력할 때만 —
+ * 계산 결과는 저장된 프로필의 원래 버전으로만 정해지므로 다시 계산해도 같다(P-U4-C4), 모두 지운 뒤에는 처음 설치와 같다
+ */
+function readUpdates(storage: Storage): StoredUpdates {
+  const existing = loadUpdates(storage);
+  if (existing) return existing;
+  const stored = loadStoredProfile(storage);
+  return initialUpdates(stored ? { profile: stored.profile, storedSchemaVersion: storedProfileSchemaVersion(storage) ?? 1 } : null);
+}
+
 function readState(): ProfileState {
   const storage = window.localStorage;
   const notifyStored = loadStoredNotify(storage);
+  const stored = loadStoredProfile(storage);
   return {
     loaded: true,
-    stored: loadStoredProfile(storage),
+    stored,
+    updates: readUpdates(storage),
     notify: notifyStored ? { hour: notifyStored.hour, enabled: notifyStored.enabled } : DEFAULT_NOTIFY,
     notifyStored,
     hasDraft: loadDraft(storage) !== null,
   };
 }
 
-const INITIAL: ProfileState = { loaded: false, stored: null, notify: DEFAULT_NOTIFY, notifyStored: null, hasDraft: false };
+const INITIAL: ProfileState = { loaded: false, stored: null, notify: DEFAULT_NOTIFY, notifyStored: null, hasDraft: false, updates: null };
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ProfileState>(INITIAL);
@@ -97,8 +118,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ProfileState & ProfileActions>(
     () => ({
       ...state,
-      async saveProfile(profile) {
+      async saveProfile(profile, resolves = []) {
+        // 저장 전 기록을 먼저 남긴다: v1 프로필을 v2로 덮어쓰면 아직 입력 안 한 새 항목을 다시 계산할 수 없다 (BR-U4-C21·C34·C36)
+        const before = readUpdates(window.localStorage);
         commitProfile(window.localStorage, profile, new Date());
+        saveUpdates(window.localStorage, resolveItems(before, resolves));
         clearDraft(window.localStorage);
         clearFeedCache(window.localStorage); // 바뀐 정보로 계산한 피드만 보이게 (U5 BR-U5-54)
         refresh();
@@ -112,6 +136,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         const result = (await sync().flush()).notify;
         refresh();
         return result;
+      },
+      markNoticeSeen() {
+        saveUpdates(window.localStorage, markNoticeSeen(readUpdates(window.localStorage)));
+        refresh();
       },
       flushNow,
       async resendAll() {

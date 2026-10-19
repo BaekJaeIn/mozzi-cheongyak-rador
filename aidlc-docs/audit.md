@@ -1367,3 +1367,43 @@
 **Context**: CONSTRUCTION - U3 Code Generation (변경 요청 2)
 
 ---
+
+## 변경 요청 2 — U3 코드 생성 승인
+**Timestamp**: 2026-10-19T11:00:00Z
+**User Input**: "진행해줘"
+**AI Response**: "U3 코드 생성 승인으로 기록 (커밋 7d6538b, push 안 함). U4 입력·설정 기능 설계 시작: 기존 U4 설계·코드 확인, 계획·질문 파일 작성(Q1 관심 지역 화면 나누기, Q2 사는 시군구 미리 고르기, Q3 짧은 입력 화면의 통장 범위, Q4 새로 바뀐 점 카드 모양)."
+**Context**: CONSTRUCTION - U4 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U4 기능 설계 답
+**Timestamp**: 2026-10-19T11:20:00Z
+**User Input**: "완료"
+**AI Response**: "답 확인 (Q1~Q4 모두 A, 모호한 답 없음). U4 기능 설계 변경 2 절 작성: domain-entities §7(savingsOwner·regions 답, 초안 v2 옮기기, mz.updates, 짧은 입력 화면 정의, P-U4-C1~C7), business-rules §9(BR-U4-C1~C37: 거주 기간 문구, 통장 명의 질문, 관심 지역 두 화면·사는 시군구 미리 고르기·전체 규칙, 새로 바뀐 점 창·띠, 짧은 입력 화면), business-logic-model §8, frontend-components §7. 승인 요청."
+**Context**: CONSTRUCTION - U4 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U4 기능 설계 승인
+**Timestamp**: 2026-10-19T11:35:00Z
+**User Input**: "진행"
+**AI Response**: "U4 기능 설계 승인으로 기록. U4 코드 생성 계획(11단계) 작성, 승인 요청."
+**Context**: CONSTRUCTION - U4 Code Generation Part 1 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U4 코드 생성 계획 승인
+**Timestamp**: 2026-10-19T11:45:00Z
+**User Input**: "승인"
+**AI Response**: "U4 코드 생성 시작 (Step 1부터)."
+**Context**: CONSTRUCTION - U4 Code Generation Part 2 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U4 코드 생성 완료
+**Timestamp**: 2026-10-19T13:30:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U4 Step 1~11 완료: 마법사 답(savingsOwner·regions)·화면(통장 명의, 3기 신도시 → 다른 지역 두 화면, 거주 기간 문구), RegionMultiPicker, 초안 v2 옮기기, mz.updates(창·띠·짧은 입력 화면 /profile/update), 뒤로 버튼으로 창 닫기, 설정 요약. 구현 중 결정: 기록은 창을 띄울 때·저장할 때만 쓰고 저장 전에 읽음(v1 사용자가 다른 그룹을 먼저 고쳐도 안내 유지). PBT가 찾은 경우(지구 0곳 + 다른 지역 모두 빼기)는 화면이 저장을 막는 것으로 확인. U3 pgTAP 관심 기기 테스트가 E2E가 남긴 로컬 기기 때문에 2건 실패 → 트랜잭션 안에서 다른 기기 프로필을 지우게 고침. 검증: typecheck·lint, 단위 713(seed 3개), pgTAP 150, E2E 67+3. 로컬 커밋, 승인 요청."
+**Context**: CONSTRUCTION - U4 Code Generation (변경 요청 2)
+
+---

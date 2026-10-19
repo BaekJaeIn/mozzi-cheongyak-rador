@@ -203,3 +203,111 @@ type PutNotifyResponse = NotifySettings;
 | P-U4-8 | 그룹 고치기는 다른 그룹의 (계속 보이는) 값을 바꾸지 않는다 (BR-U4-71) | 고치기 병합 | 불변식 |
 | P-U4-9 | 동기화: 임의의 저장·성공·실패 순서 뒤에 서버에 마지막으로 반영된 값 = 기기의 마지막 저장 값(마지막 응답이 성공일 때), 보내는 횟수 ≤ 저장 횟수 + 실패 횟수 | `ProfileSync` (가짜 서버) | 상태 기반 |
 | P-U4-10 | 알림 시각 표기: 0~23이 서로 다른 24개 문구, 문구 → 시각 왕복 | `hourLabel` | 왕복 |
+
+---
+
+## 7. 변경 요청 2 (2026-10-19)
+
+> 계획: `plans/U4-profile-settings-change-2-functional-design-plan.md` (Q1~Q4 모두 A). 프로필 v2 본체(`savings.owner`, `prefs.regions`)와 v1 → v2 옮기기(`parseProfile`)는 U2 domain-entities 변경 2 절 그대로. 아래 내용이 앞 절과 다르면 이 절을 따른다.
+
+### 7.1 마법사 화면 ID·그룹
+
+```ts
+type StepId =
+  | "selfBirth" | "household" | "householdMore" | "spouseBirth" | "head"
+  | "residence" | "residenceYears"
+  | "homeOwned" | "homeCount" | "homelessYears"
+  | "savingsOwner" | "savingsKind" | "savingsPeriod" | "savingsAmount"   // savingsHas → savingsOwner
+  | "income" | "spouseEarns" | "asset" | "car" | "welfare"
+  | "districts" | "regions" | "area" | "tenurePrefs"                     // regions 추가 (Q1=A 두 화면)
+  | "review";
+```
+
+- 그룹 ID `districts`는 그대로 두고 이름만 **"관심 지역"**으로 바꾼다 (화면 `districts`·`regions` 두 개가 속함). 경로 `/profile/edit/districts`도 그대로
+- 마법사 모드에 **`update`(짧은 입력 화면)** 추가: `mode: "setup" | "edit" | "update"`
+
+### 7.2 답 `WizardAnswers` 바뀐 키
+
+```ts
+type SavingsOwnerAnswer = "self" | "spouse" | "both" | "none";
+
+interface WizardAnswers {
+  // savingsHas 삭제
+  savingsOwner?: Maybe<SavingsOwnerAnswer>;  // 혼자 사는 가구는 "self"(있음) | "none"(없음) | UNKNOWN
+  regions?: RegionPick[];                    // 다른 지역 (U2 RegionPick, 시도 전체 = sigungu null)
+  // 나머지 키 그대로
+}
+```
+
+| 답 `savingsOwner` | 프로필 `savings` |
+|---|---|
+| `self` · `spouse` · `both` | `has: true`, `owner: 그 값`, 자세한 정보는 화면 12~14 답 |
+| `none` | `has: false`, `owner: null`, 나머지 `null` |
+| `UNKNOWN` · 없음 | `has: null`, `owner: null`, 나머지 `null` |
+
+`fromProfile`: `has: true` → `owner ?? "self"`, `has: false` → `none`, `has: null` → `UNKNOWN`. `regions` → 그대로 복사.
+
+### 7.3 초안 버전 2
+
+```ts
+interface WizardDraft { version: 2; answers: WizardAnswers; stepId: StepId; updatedAt: string }
+```
+
+| 읽은 초안 | 처리 |
+|---|---|
+| 버전 2 | 그대로 |
+| 버전 1 | 옮긴다: `savingsHas: true` → `savingsOwner: "self"`, 그 밖(`false`·`UNKNOWN`)은 키를 지워 그 화면을 다시 묻는다. 화면 ID `savingsHas` → `savingsOwner`. `regions`는 없음(화면에 처음 갈 때 기본값, BR-U4-C11) |
+| 그 밖 | 지금처럼 버린다 |
+
+`StoredProfile`은 바깥 형식 `version: 1` 그대로 두고 안의 `profile`을 `parseProfile`로 읽는다(U2에서 이미 바꿈). 저장할 때는 항상 v2로 쓴다.
+
+### 7.4 업데이트 안내 기록 `mz.updates` (기기에만)
+
+```ts
+type UpdateItem = "savings" | "regions";
+
+interface StoredUpdates {
+  version: 1;
+  /** 이 기기가 본 마지막 안내 번호 (0 = 아직 안 봄) */
+  noticeSeen: number;
+  /** 아직 입력하지 않은 새 항목 — 비면 띠가 사라진다 */
+  pending: UpdateItem[];
+}
+
+interface WhatsNew {
+  notice: number;              // 안내 번호. 변경 2 = 1. 다음 변경에서 올린다
+  lines: string[];             // 카드 본문 2~3줄
+  items: UpdateItem[];         // 이 안내가 묻는 새 항목
+}
+```
+
+| 규칙 | |
+|---|---|
+| 없을 때 | `mz.updates`가 없거나 깨졌으면 아래 "처음 기록"으로 만든다 |
+| 처음 기록 | 프로필이 **없으면** `{ noticeSeen: 지금 번호, pending: [] }` (처음 설치, FR-C2-18). 프로필이 **버전 1에서 옮겨졌으면** `{ noticeSeen: 0, pending: 옮긴 프로필로 정한 항목 }`(BR-U4-C21). 프로필이 이미 버전 2면 `{ noticeSeen: 지금 번호, pending: [] }` |
+| 모두 지우기 | 함께 지운다 (BR-U4-94 목록에 추가). 지운 뒤에는 처음 설치와 같다 |
+
+### 7.5 짧은 입력 화면 정의
+
+```ts
+/** update 모드에서 보일 화면: pending 항목과 예전 값으로 정한다 (BR-U4-C30·C31) */
+function updateSteps(pending: UpdateItem[], before: HouseholdProfile, answers: WizardAnswers): StepId[];
+```
+
+| 항목 | 화면 |
+|---|---|
+| `savings` | `savingsOwner` → (`before.savings.has !== true`이고 답이 있음(`self`·`spouse`·`both`)이면) `savingsKind`·`savingsPeriod`·`savingsAmount` |
+| `regions` | `regions` |
+| 끝 | 마지막 화면의 [다음] 자리에 **[저장]** (확인 화면 없음) |
+
+### 7.6 속성 기반 테스트 대상 추가 (PBT-01)
+
+| # | 속성 | 대상 | 종류 |
+|---|---|---|---|
+| P-U4-C1 | 필수가 채워진 모든 답(새 `savingsOwner`·`regions` 포함)에서 `toProfile` 결과가 U2 `validateProfile`(v2)을 통과한다 | `toProfile` | 불변식 |
+| P-U4-C2 | `toProfile(fromProfile(toProfile(a))) = toProfile(a)` — 통장 명의·다른 지역 포함 | 변환 | 왕복 |
+| P-U4-C3 | 버전 1 초안 옮기기는 멱등: 옮긴 결과를 다시 읽어도 같다. 옮긴 초안은 버전 2 화면 정의로 읽힌다 | 초안 옮기기 | 멱등 (NFR-C2-4) |
+| P-U4-C4 | 업데이트 기록: 처음 기록을 두 번 만들어도 같다. `pending`은 항목을 입력하면 줄기만 하고 늘지 않는다(같은 안내 번호에서) | `mz.updates` | 멱등·단조 |
+| P-U4-C5 | 짧은 입력 화면 저장은 `pending` 항목 밖의 프로필 값을 바꾸지 않는다 (통장 그룹·다른 지역 밖 값 그대로, 3기 신도시 지구 그대로) | update 병합 | 불변식 |
+| P-U4-C6 | 다른 지역 고르기: 어떤 누름 순서 뒤에도 결과는 `isValidRegionPicks`를 통과하고 `normalizeRegionPicks`의 고정점이다 | `toggleRegion` | 불변식 |
+| P-U4-C7 | 배우자가 없는 답에서는 `savingsOwner`가 `spouse`·`both`로 남지 않는다 (BR-U4-12 확장) | `pruneHidden` | 불변식 |

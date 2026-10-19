@@ -1,9 +1,10 @@
-// 답 ↔ 프로필 (domain-entities §2.2, BR-U4-12·13·55·71)
-import { type HouseholdProfile, PROFILE_SCHEMA_VERSION } from "@shared/domain/profile.ts";
+// 답 ↔ 프로필 (domain-entities §2.2·§7.2, BR-U4-12·13·55·71, 변경 2 BR-U4-C34)
+import { type HouseholdProfile, normalizeRegionPicks, PROFILE_SCHEMA_VERSION } from "@shared/domain/profile.ts";
 import { type BandDef, bandOf, HOMELESS_BANDS, lowerOf, MONTHS_BANDS, RESIDENCE_BANDS } from "./bands";
 import { needsSigungu } from "./regions";
 import { type GroupId, hasSpouse, isComplete, pruneHidden, STEPS } from "./steps";
 import { known, type Maybe, UNKNOWN, type WizardAnswers } from "./types";
+import type { UpdateItem } from "./updates";
 
 export class IncompleteAnswersError extends Error {
   constructor() {
@@ -25,7 +26,7 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
   const spouse = hasSpouse(a);
   const householdSize = a.householdType === "couple" ? 2 : a.householdType === "single" ? 1 : a.householdSize!;
   const homeOwned = known(a.homeOwned);
-  const savingsHas = known(a.savingsHas);
+  const owner = known(a.savingsOwner);
 
   return {
     schemaVersion: PROFILE_SCHEMA_VERSION,
@@ -46,16 +47,16 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
           ? { homeless: true, homelessYears: lower(HOMELESS_BANDS, a.homelessYearsBand), ownedCount: 0 }
           : { homeless: null, homelessYears: null, ownedCount: null },
     savings:
-      savingsHas === true
+      owner !== null && owner !== "none"
         ? {
             has: true,
-            owner: "self", // 명의 질문은 U4 변경 2에서 — 그 전까지는 지금처럼 이 휴대폰 주인
+            owner,
             kind: known(a.savingsKind),
             months: lower(MONTHS_BANDS, a.savingsMonthsBand),
             paymentCount: known(a.paymentCount),
             depositManwon: known(a.depositManwon),
           }
-        : { has: savingsHas, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null },
+        : { has: owner === "none" ? false : null, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null },
     money: {
       monthlyIncome: known(a.monthlyIncome),
       totalAsset: known(a.totalAsset),
@@ -65,7 +66,7 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
     welfare: known(a.welfare),
     prefs: {
       districtIds: [...a.districtIds!],
-      regions: [], // 관심 시군구 화면은 U4 변경 2에서
+      regions: normalizeRegionPicks(a.regions ?? []),
       areaBands: [...(a.areaBands ?? [])],
       tenure: a.tenure ?? "both",
       lowFloor: a.lowFloor ?? false,
@@ -82,12 +83,13 @@ export function fromProfile(p: HouseholdProfile): WizardAnswers {
     head: orUnknown(p.householdHead),
     residenceYearsBand: p.residence.years === null ? UNKNOWN : bandOf(RESIDENCE_BANDS, p.residence.years),
     homeOwned: p.housing.homeless === null ? UNKNOWN : !p.housing.homeless,
-    savingsHas: orUnknown(p.savings.has),
+    savingsOwner: p.savings.has === true ? (p.savings.owner ?? "self") : p.savings.has === false ? "none" : UNKNOWN,
     monthlyIncome: orUnknown(p.money.monthlyIncome),
     totalAsset: orUnknown(p.money.totalAsset),
     carValue: orUnknown(p.money.carValue),
     welfare: orUnknown(p.welfare),
     districtIds: [...p.prefs.districtIds],
+    regions: p.prefs.regions.map((r) => ({ ...r })),
     areaBands: [...p.prefs.areaBands],
     tenure: p.prefs.tenure,
     lowFloor: p.prefs.lowFloor,
@@ -128,6 +130,16 @@ export function mergeGroupEdit(current: WizardAnswers, edited: WizardAnswers, gr
     }
   }
   return pruneHidden(out as WizardAnswers);
+}
+
+/**
+ * 짧은 입력 화면 결과 합치기 (BR-U4-C34, P-U4-C5): 새 항목(통장 그룹 답·다른 지역)만 바꾸고 나머지는 그대로.
+ * 3기 신도시 지구는 건드리지 않는다 (C2-D6)
+ */
+export function mergeUpdate(current: WizardAnswers, edited: WizardAnswers, pending: readonly UpdateItem[]): WizardAnswers {
+  let out = pending.includes("savings") ? mergeGroupEdit(current, edited, "savings") : { ...current };
+  if (pending.includes("regions")) out = pruneHidden({ ...out, regions: [...(edited.regions ?? [])] });
+  return out;
 }
 
 /** 비워 둔(null) 항목이 있는지 — 확인 화면 안내 (BR-U4-54) */

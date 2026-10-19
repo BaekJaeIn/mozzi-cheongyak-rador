@@ -91,6 +91,8 @@ test.prop([answersArb, answersArb, fc.constantFrom(...GROUP_ORDER)])(
       for (const f of step.fields) {
         // 세대주 "배우자"는 배우자가 없어지면 지워진다 (BR-U4-12)
         if (f === "head" && current.head === "spouse" && prunedMerged.head === undefined) continue;
+        // 통장 명의 "배우자"·"두 분 다"도 배우자가 없어지면 지워진다 (변경 2 BR-U4-C6)
+        if (f === "savingsOwner" && (current.savingsOwner === "spouse" || current.savingsOwner === "both") && prunedMerged.savingsOwner === undefined) continue;
         expect(prunedMerged[f]).toEqual(current[f]);
       }
     }

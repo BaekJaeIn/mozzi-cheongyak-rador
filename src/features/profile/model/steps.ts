@@ -1,8 +1,10 @@
-// 마법사 화면 정의 (BR-U4-10~16, 50~53). 화면 순서는 표 순서 그대로이고, 보이는 조건은 지금까지의 답으로만 정한다.
+// 마법사 화면 정의 (BR-U4-10~16, 50~53, 변경 2 BR-U4-C6·C10·C16·C17·C31·C32).
+// 화면 순서는 표 순서 그대로이고, 보이는 조건은 지금까지의 답으로만 정한다.
 import type { IsoDate } from "@shared/domain/dates.ts";
 import { needsSigungu } from "./regions";
-import type { AnswerKey, WizardAnswers } from "./types";
+import type { AnswerKey, SavingsOwnerAnswer, WizardAnswers } from "./types";
 import { UNKNOWN } from "./types";
+import type { UpdateItem } from "./updates";
 
 export type GroupId = "basic" | "residence" | "housing" | "savings" | "money" | "districts" | "prefs";
 
@@ -10,10 +12,22 @@ export type StepId =
   | "selfBirth" | "household" | "householdMore" | "spouseBirth" | "head"
   | "residence" | "residenceYears"
   | "homeOwned" | "homeCount" | "homelessYears"
-  | "savingsHas" | "savingsKind" | "savingsPeriod" | "savingsAmount"
+  | "savingsOwner" | "savingsKind" | "savingsPeriod" | "savingsAmount"
   | "income" | "spouseEarns" | "asset" | "car" | "welfare"
-  | "districts" | "area" | "tenurePrefs"
+  | "districts" | "regions" | "area" | "tenurePrefs"
   | "review";
+
+/**
+ * 짧은 입력 화면(update)의 범위 (BR-U4-C31·C32): 아직 입력 안 한 새 항목, 예전 프로필의 통장 있음 여부.
+ * 예전에 통장이 "있음"이었으면 자세한 화면은 묻지 않는다 (Q3=A)
+ */
+export interface UpdateScope {
+  pending: readonly UpdateItem[];
+  beforeSavingsHas: boolean | null;
+}
+
+/** 화면 범위: 없음 = 처음 입력 전체, 그룹 = 그룹 고치기, UpdateScope = 짧은 입력 화면 */
+export type StepScope = GroupId | UpdateScope | undefined;
 
 export interface WizardStep {
   id: StepId;
@@ -33,7 +47,7 @@ export const GROUP_LABELS: Readonly<Record<GroupId, string>> = {
   housing: "집",
   savings: "청약통장",
   money: "소득·자산",
-  districts: "관심 지구",
+  districts: "관심 지역",
   prefs: "원하는 집",
 };
 
@@ -46,6 +60,13 @@ export function hasSpouse(a: WizardAnswers): boolean {
 
 const always = () => true;
 
+const OWNERS_WITH_ACCOUNT: readonly SavingsOwnerAnswer[] = ["self", "spouse", "both"];
+
+/** 통장이 있다는 답인지 (나·배우자·두 분 다, 혼자 사는 가구의 "있음" = self) */
+export function savingsAnswered(a: WizardAnswers): boolean {
+  return OWNERS_WITH_ACCOUNT.includes(a.savingsOwner as SavingsOwnerAnswer);
+}
+
 export const STEPS: readonly WizardStep[] = [
   { id: "selfBirth", group: "basic", visible: always, required: true, allowUnknown: false, fields: ["selfBirth"] },
   { id: "household", group: "basic", visible: always, required: true, allowUnknown: false, fields: ["householdType"] },
@@ -57,16 +78,18 @@ export const STEPS: readonly WizardStep[] = [
   { id: "homeOwned", group: "housing", visible: always, required: false, allowUnknown: true, fields: ["homeOwned"] },
   { id: "homeCount", group: "housing", visible: (a) => a.homeOwned === true, required: false, allowUnknown: true, fields: ["homeCount"] },
   { id: "homelessYears", group: "housing", visible: (a) => a.homeOwned === false, required: false, allowUnknown: true, fields: ["homelessYearsBand"] },
-  { id: "savingsHas", group: "savings", visible: always, required: false, allowUnknown: true, fields: ["savingsHas"] },
-  { id: "savingsKind", group: "savings", visible: (a) => a.savingsHas === true, required: false, allowUnknown: true, fields: ["savingsKind"] },
-  { id: "savingsPeriod", group: "savings", visible: (a) => a.savingsHas === true, required: false, allowUnknown: true, fields: ["savingsMonthsBand", "paymentCount"] },
-  { id: "savingsAmount", group: "savings", visible: (a) => a.savingsHas === true, required: false, allowUnknown: true, fields: ["depositManwon"] },
+  { id: "savingsOwner", group: "savings", visible: always, required: false, allowUnknown: true, fields: ["savingsOwner"] },
+  { id: "savingsKind", group: "savings", visible: savingsAnswered, required: false, allowUnknown: true, fields: ["savingsKind"] },
+  { id: "savingsPeriod", group: "savings", visible: savingsAnswered, required: false, allowUnknown: true, fields: ["savingsMonthsBand", "paymentCount"] },
+  { id: "savingsAmount", group: "savings", visible: savingsAnswered, required: false, allowUnknown: true, fields: ["depositManwon"] },
   { id: "income", group: "money", visible: always, required: false, allowUnknown: true, fields: ["monthlyIncome"] },
   { id: "spouseEarns", group: "money", visible: hasSpouse, required: false, allowUnknown: true, fields: ["spouseEarns"] },
   { id: "asset", group: "money", visible: always, required: false, allowUnknown: true, fields: ["totalAsset"] },
   { id: "car", group: "money", visible: always, required: false, allowUnknown: true, fields: ["carValue"] },
   { id: "welfare", group: "money", visible: always, required: false, allowUnknown: true, fields: ["welfare"] },
-  { id: "districts", group: "districts", visible: always, required: true, allowUnknown: false, fields: ["districtIds"] },
+  // 관심 지역 두 화면 (Q1=A): 3기 신도시는 0개여도 넘어가고, 다른 지역 화면에서 둘을 합쳐 1곳 이상인지 본다 (BR-U4-C10·C16·C17)
+  { id: "districts", group: "districts", visible: always, required: false, allowUnknown: false, fields: ["districtIds"] },
+  { id: "regions", group: "districts", visible: always, required: true, allowUnknown: false, fields: ["regions"] },
   { id: "area", group: "prefs", visible: always, required: false, allowUnknown: false, fields: ["areaBands"] },
   { id: "tenurePrefs", group: "prefs", visible: always, required: false, allowUnknown: false, fields: ["tenure", "lowFloor"] },
   { id: "review", group: "review", visible: always, required: false, allowUnknown: false, fields: [] },
@@ -90,31 +113,51 @@ export function pruneHidden(answers: WizardAnswers): WizardAnswers {
     delete out.hasSpouse;
   }
   if (out.head === "spouse" && !hasSpouse(out)) delete out.head;
+  // 배우자가 없어지면 배우자·두 분 다 통장 답은 지운다 (BR-U4-C6). 그 바람에 안 보이게 된 자세한 답도 지운다
+  if ((out.savingsOwner === "spouse" || out.savingsOwner === "both") && !hasSpouse(out)) {
+    delete out.savingsOwner;
+    for (const step of STEPS) if (step.group === "savings" && !step.visible(out)) for (const f of step.fields) delete out[f];
+  }
   if (out.sido !== undefined && !needsSigungu(out.sido)) out.sigungu = null;
   return out;
 }
 
-/** 보이는 화면 목록 (review 포함). group을 주면 그 그룹 화면만 + review (고치기) */
-export function visibleSteps(answers: WizardAnswers, group?: GroupId): WizardStep[] {
-  const pruned = pruneHidden(answers);
-  return STEPS.filter((s) => s.visible(pruned) && (group === undefined || s.group === group || s.group === "review"));
+const isUpdateScope = (scope: StepScope): scope is UpdateScope => typeof scope === "object";
+
+/** 짧은 입력 화면의 화면 ID (확인 화면 없음, BR-U4-C31·C32) */
+export function updateSteps(scope: UpdateScope, answers: WizardAnswers): StepId[] {
+  const a = pruneHidden(answers);
+  const out: StepId[] = [];
+  if (scope.pending.includes("savings")) {
+    out.push("savingsOwner");
+    if (scope.beforeSavingsHas !== true && savingsAnswered(a)) out.push("savingsKind", "savingsPeriod", "savingsAmount");
+  }
+  if (scope.pending.includes("regions")) out.push("regions");
+  return out;
 }
 
-export function nextStep(answers: WizardAnswers, current: StepId, group?: GroupId): StepId | null {
-  const list = visibleSteps(answers, group);
+/** 보이는 화면 목록. 그룹이면 그 그룹 화면만 + review (고치기), UpdateScope면 짧은 입력 화면 */
+export function visibleSteps(answers: WizardAnswers, scope?: StepScope): WizardStep[] {
+  if (isUpdateScope(scope)) return updateSteps(scope, answers).map(stepById);
+  const pruned = pruneHidden(answers);
+  return STEPS.filter((s) => s.visible(pruned) && (scope === undefined || s.group === scope || s.group === "review"));
+}
+
+export function nextStep(answers: WizardAnswers, current: StepId, scope?: StepScope): StepId | null {
+  const list = visibleSteps(answers, scope);
   const i = list.findIndex((s) => s.id === current);
   return i >= 0 && i + 1 < list.length ? list[i + 1]!.id : null;
 }
 
-export function prevStep(answers: WizardAnswers, current: StepId, group?: GroupId): StepId | null {
-  const list = visibleSteps(answers, group);
+export function prevStep(answers: WizardAnswers, current: StepId, scope?: StepScope): StepId | null {
+  const list = visibleSteps(answers, scope);
   const i = list.findIndex((s) => s.id === current);
   return i > 0 ? list[i - 1]!.id : null;
 }
 
 /** 진행 표시 (BR-U4-10): 1부터, 분모는 지금 답으로 보일 화면 수(확인 화면 포함) */
-export function progress(answers: WizardAnswers, current: StepId, group?: GroupId): { index: number; total: number } {
-  const list = visibleSteps(answers, group);
+export function progress(answers: WizardAnswers, current: StepId, scope?: StepScope): { index: number; total: number } {
+  const list = visibleSteps(answers, scope);
   return { index: Math.max(0, list.findIndex((s) => s.id === current)) + 1, total: list.length };
 }
 
@@ -130,7 +173,9 @@ export function canProceed(step: StepId, a: WizardAnswers): boolean {
     case "residence":
       return a.sido !== undefined && (!needsSigungu(a.sido) || (typeof a.sigungu === "string" && a.sigungu.length > 0));
     case "districts":
-      return (a.districtIds?.length ?? 0) > 0;
+      return true; // 0개여도 다른 지역 화면으로 (BR-U4-C10)
+    case "regions":
+      return (a.districtIds?.length ?? 0) + (a.regions?.length ?? 0) > 0; // 둘 합쳐 1곳 이상 (BR-U4-C16)
     case "savingsPeriod":
       return a.savingsMonthsBand !== undefined && a.paymentCount !== undefined;
     case "area":
@@ -187,7 +232,7 @@ export function isStepId(value: unknown): value is StepId {
   return typeof value === "string" && STEPS.some((s) => s.id === value);
 }
 
-/** 새로 입력을 시작할 때의 답: 관심 지구는 모두 선택(US-07), 선호는 둘 다·상관없음 */
+/** 새로 입력을 시작할 때의 답: 관심 지구는 모두 선택(US-07), 선호는 둘 다·상관없음. 다른 지역은 화면에 처음 갈 때 정한다(BR-U4-C11) */
 export function initialAnswers(allDistrictIds: readonly string[]): WizardAnswers {
   return { districtIds: [...allDistrictIds], tenure: "both", lowFloor: false };
 }

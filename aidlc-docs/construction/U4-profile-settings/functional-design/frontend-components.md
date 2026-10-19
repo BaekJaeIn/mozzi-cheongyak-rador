@@ -111,3 +111,56 @@ RootLayout
 - 오류·안내 문구는 `role="alert"` 또는 `aria-live`로 읽힌다. 빨간색만으로 오류를 표시하지 않는다(아이콘 + 문구).
 - 가로 스크롤 없음: 목록·카드는 한 줄 1개, 긴 이름은 줄바꿈 (쉬운 모드 포함, 폭 320px 기준 확인).
 - 시군구 등 목록 선택은 **큰 목록 버튼**으로 만든다. 생년월일만 드롭다운(휴대폰 기본 선택 휠) (2026-10-17 사용자 요청으로 변경).
+
+---
+
+## 7. 변경 요청 2 (2026-10-19)
+
+> 규칙 business-rules §9, 형식 domain-entities §7.
+
+### 7.1 경로 추가
+
+| 경로 | 화면 | 하단 메뉴 | 스토리 |
+|---|---|---|---|
+| `/profile/update` | `ProfileWizard mode="update"` (새 항목만, 확인 화면 없음) | 숨김 | US-21 |
+
+### 7.2 컴포넌트 추가·변경
+
+```text
+HomeGate (/)
+└─ Feed (U5)
+    ├─ UpdateBanner        (pending 있을 때 피드 맨 위 띠 + [입력하기])        BR-U4-C26
+    └─ WhatsNewDialog      (noticeSeen < 지금 번호일 때 한 번)                 BR-U4-C22~C25
+ProfileWizard
+├─ StepScreen
+│   ├─ ChoiceList          (savingsOwner: 배우자 유무에 따라 보기 5개 / 3개)   BR-U4-C3~C5
+│   ├─ DistrictCards       (0개여도 [다음] 가능 + "다른 지역은 다음 화면에서")  BR-U4-C10
+│   └─ RegionMultiPicker   (새)                                                BR-U4-C11~C16
+└─ WizardNav               (update 모드: 마지막 화면 [저장], 위에 [나중에 할게요])  BR-U4-C33·C34
+```
+
+| 컴포넌트 | 속성 | 동작·검증 |
+|---|---|---|
+| `RegionMultiPicker` | `value: RegionPick[]`, `openSido`, `onChange` | 요약 한 줄(`aria-live="polite"`) → 시도 버튼 3개(`role="tablist"`, 고른 수 배지) → 목록(`role="group"`, 항목은 체크 버튼 `aria-pressed`). "○○ 전체"가 켜지면 아래 항목 `aria-disabled` + 체크 표시. 상태 바꾸기는 순수 함수 `toggleRegion(value, sido, sigungu \| null)`(model) |
+| `WhatsNewDialog` | `whatsNew`, `pending`, `onStart`, `onLater` | `role="dialog"` `aria-modal`, 열 때 `noticeSeen` 기록(부모가), 초점은 제목, 뒤로 버튼은 앱 `BackNavigation`이 창 닫기를 먼저 처리(닫기 대상 등록), `pending` 비면 [확인] 하나 |
+| `UpdateBanner` | `onStart` | 띠 전체가 아닌 [입력하기] 버튼만 누르는 곳(터치 크기 ≥ 토큰). 배경 `bg-fill` 계열, 아이콘 + 문구(색만으로 구분 안 함) |
+| `ProfileWizard` | `mode`에 `"update"` 추가 | 화면 목록 = `updateSteps`, 진행 "새 항목 1/2", 초안 저장 안 함, 저장 뒤 `/`로 `replace` |
+
+### 7.3 상태·순수 로직 추가
+
+| 상태 | 위치 | 누가 바꾸나 |
+|---|---|---|
+| 업데이트 기록 | `mz.updates` ↔ `ProfileProvider` (`updates`, `markNoticeSeen()`, `resolveItems(items)`) | 앱 시작(처음 기록), 창 열림, 짧은 입력 저장, 설정 고치기 저장, 모두 지우기 |
+
+| 모듈 | 함수 |
+|---|---|
+| `model/updates.ts` (새) | `WHATS_NEW`, `initialUpdates(rawStoredProfile)`, `pendingFromV1(profile)`, `resolve(updates, items)`, `shouldShowDialog(updates, hasProfile)`, `parseUpdates`/`loadUpdates`/`saveUpdates` |
+| `model/regions.ts` | `toggleRegion`, `defaultRegions(residence)`, `regionsSummary(picks)` 추가 (목록은 U2 `CAPITAL_SIGUNGU` 하나만 씀, FR-C2-9) |
+| `model/steps.ts` | `savingsOwner`·`regions` 화면, `updateSteps`, `canProceed("regions")`(지구 + 지역 ≥ 1) |
+| `model/convert.ts` | 통장 명의·`regions` 변환, `mergeUpdate(current, edited, pending)` |
+| `model/storage.ts` | 초안 v2 + v1 옮기기, 프로필 원래 버전 읽기(`storedSchemaVersion`), `clearAllPersonal`에 `mz.updates` |
+| `model/summary.ts` | 통장 요약에 명의("배우자 명의 · 종합저축 · 10년 이상"), "관심 지역" 요약 |
+
+### 7.4 사용하는 API
+
+새 API 없음. 짧은 입력 화면 저장도 `PUT /api/profile`(ProfileSync 경유). DB 바꿈 없음 — `prefs.regions`는 프로필 `data`(평문 jsonb)에 들어 있어 U3 0010 `notice_in_any_interest`가 그대로 읽는다.

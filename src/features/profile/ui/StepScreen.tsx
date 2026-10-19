@@ -1,16 +1,17 @@
 "use client";
 
-// 마법사 화면별 질문·입력 (business-rules §2 표, §3 입력 방식)
+// 마법사 화면별 질문·입력 (business-rules §2 표, §3 입력 방식, 변경 2 §9)
 import type { IsoDate } from "@shared/domain/dates.ts";
 import { AREA_BANDS, type SavingsKind, SAVINGS_KINDS, type WelfareStatus, WELFARE_STATUSES } from "@shared/domain/profile.ts";
 import type { ReactNode } from "react";
 import { HOMELESS_BANDS, MONTHS_BANDS, RESIDENCE_BANDS } from "../model/bands";
 import { DISTRICT_OPTIONS } from "../model/districts";
-import { SIDO_OPTIONS, SIGUNGU_BY_SIDO } from "../model/regions";
+import { defaultRegions, SIDO_OPTIONS, SIGUNGU_BY_SIDO } from "../model/regions";
 import { hasSpouse, SELF_BIRTH_YEARS, spouseBirthYears, type StepId } from "../model/steps";
+import { isCapitalSido } from "@shared/domain/regions.ts";
 import { AREA_LABELS, SAVINGS_KIND_LABELS, WELFARE_LABELS } from "../model/summary";
-import { type Maybe, UNKNOWN, type WizardAnswers } from "../model/types";
-import { AmountInput, BirthDatePicker, ChoiceList, CountInput, MultiChoice } from "./controls";
+import { type Maybe, type SavingsOwnerAnswer, UNKNOWN, type WizardAnswers } from "../model/types";
+import { AmountInput, BirthDatePicker, ChoiceList, CountInput, MultiChoice, RegionMultiPicker } from "./controls";
 
 /** 화면 제목(질문). 본인·배우자는 이 휴대폰 사용자 기준 (BR-U4-14) */
 export const STEP_TITLES: Readonly<Record<StepId, string>> = {
@@ -20,11 +21,11 @@ export const STEP_TITLES: Readonly<Record<StepId, string>> = {
   spouseBirth: "배우자분의 생년월일을 골라 주세요",
   head: "주민등록상 세대주는 누구인가요?",
   residence: "지금 사시는 곳을 골라 주세요",
-  residenceYears: "그곳에 사신 지 얼마나 되셨나요?",
+  residenceYears: "지금 사시는 시(서울은 서울 전체)에 계속 사신 지 얼마나 되셨나요?",
   homeOwned: "지금 집을 가지고 계신가요?",
   homeCount: "가지고 계신 집은 몇 채인가요?",
   homelessYears: "집 없이 지내신 지 얼마나 되셨나요?",
-  savingsHas: "청약통장이 있으신가요?",
+  savingsOwner: "청약통장이 있으신가요?",
   savingsKind: "어떤 통장인가요?",
   savingsPeriod: "통장에 가입하신 지 얼마나 되셨나요?",
   savingsAmount: "통장에 들어 있는 돈은 얼마인가요?",
@@ -34,6 +35,7 @@ export const STEP_TITLES: Readonly<Record<StepId, string>> = {
   car: "가지고 계신 자동차 값은 얼마인가요?",
   welfare: "아래 중 해당하는 것이 있나요?",
   districts: "관심 있는 3기 신도시를 골라 주세요",
+  regions: "다른 지역도 볼까요?",
   area: "원하시는 집 넓이를 골라 주세요",
   tenurePrefs: "원하시는 집 조건을 골라 주세요",
   review: "입력하신 내용을 확인해 주세요",
@@ -46,12 +48,38 @@ const STEP_HINTS: Partial<Record<StepId, string>> = {
   savingsAmount: "통장 앱이나 은행에서 보이는 '납입 인정 금액'을 넣어 주세요.",
   area: "여러 개 고를 수 있어요. 고르지 않으면 '상관없음'이에요. 순서를 정할 때만 쓰고 공고를 숨기지는 않아요.",
   tenurePrefs: "순서를 정할 때만 쓰고 공고를 숨기지는 않아요.",
-  districts: "고른 지구의 공고만 보여 드리고 알려 드려요.",
+  residenceYears: "같은 시·군 안에서 이사한 것은 이어서 세요. 주민등록 기준이에요. 예) 강서구 화곡동 15년 → 올해 염창동으로 이사: 10년 이상",
+  districts: "다른 지역은 다음 화면에서 고를 수 있어요. 여기서는 하나도 안 골라도 돼요.",
+  regions: "서울·경기·인천에서 공고를 보고 싶은 곳을 여러 개 고를 수 있어요. 고른 곳과 3기 신도시의 공고만 보여 드리고 알려 드려요.",
 };
 
 export function stepHint(id: StepId): string | undefined {
   return STEP_HINTS[id];
 }
+
+/** 통장 자세한 화면의 "누구 통장" (BR-U4-C3). 혼자 사는 가구는 그냥 "통장" */
+function savingsWho(a: WizardAnswers): string {
+  if (!hasSpouse(a)) return "통장";
+  return ({ self: "내 통장", spouse: "배우자분 통장", both: "가입이 더 오래된 통장" } as Partial<Record<string, string>>)[String(a.savingsOwner)] ?? "통장";
+}
+
+/** 답에 따라 바뀌는 질문 (BR-U4-C3, FR-C2-1) */
+export function stepTitle(id: StepId, a: WizardAnswers): string {
+  switch (id) {
+    case "savingsOwner":
+      return hasSpouse(a) ? "부부 중 청약통장이 있는 분이 있나요?" : STEP_TITLES.savingsOwner;
+    case "savingsKind":
+      return `${savingsWho(a)}은 어떤 통장인가요?`;
+    case "savingsPeriod":
+      return `${savingsWho(a)}에 가입하신 지 얼마나 되셨나요?`;
+    case "savingsAmount":
+      return `${savingsWho(a)}에 들어 있는 돈은 얼마인가요?`;
+    default:
+      return STEP_TITLES[id];
+  }
+}
+
+const SPOUSE_ACCOUNT_HELP = "배우자분 통장이어도 우리 집 공고를 함께 볼 수 있어요";
 
 const yesNo: { value: boolean; label: string }[] = [
   { value: true, label: "예" },
@@ -187,8 +215,29 @@ export function StepScreen({
           options={HOMELESS_BANDS.map((b) => ({ value: b.band, label: b.label }))}
         />
       );
-    case "savingsHas":
-      return <ChoiceList label="청약통장" value={shown(a.savingsHas)} onChange={(v) => set({ savingsHas: v })} options={yesNo} />;
+    case "savingsOwner": {
+      const options: { value: SavingsOwnerAnswer; label: string; help?: string }[] = hasSpouse(a)
+        ? [
+            { value: "self", label: "나" },
+            { value: "spouse", label: "배우자", help: SPOUSE_ACCOUNT_HELP },
+            { value: "both", label: "두 분 다", help: SPOUSE_ACCOUNT_HELP },
+            { value: "none", label: "없음" },
+          ]
+        : [
+            { value: "self", label: "있음" },
+            { value: "none", label: "없음" },
+          ];
+      return (
+        <div className="flex flex-col gap-4">
+          <ChoiceList label="청약통장" value={shown(a.savingsOwner)} onChange={(v) => set({ savingsOwner: v })} options={options} />
+          {a.savingsOwner === "both" && (
+            <p role="status" className="rounded-2xl bg-primary-soft px-4 py-3 text-body">
+              신청할 때는 가입이 더 오래된 통장 하나로 해요. 다음 화면부터 그 통장 정보를 넣어 주세요.
+            </p>
+          )}
+        </div>
+      );
+    }
     case "savingsKind":
       return (
         <ChoiceList
@@ -264,12 +313,22 @@ export function StepScreen({
     case "districts":
       return (
         <MultiChoice
-          label="관심 지구"
+          label="3기 신도시"
           value={a.districtIds ?? []}
           onChange={(v) => set({ districtIds: v })}
           options={DISTRICT_OPTIONS.map((d) => ({ value: d.id, label: d.name }))}
         />
       );
+    case "regions": {
+      const home = defaultRegions(a.sido, a.sigungu)[0];
+      const homePicked = home !== undefined && (a.regions ?? []).some((r) => r.sido === home.sido && r.sigungu === home.sigungu);
+      return (
+        <div className="flex flex-col gap-4">
+          {homePicked && <p className="text-body text-muted">사시는 곳({home.sido} {home.sigungu})을 골라 두었어요. 빼려면 한 번 더 누르세요.</p>}
+          <RegionMultiPicker value={a.regions ?? []} onChange={(v) => set({ regions: v })} initialSido={isCapitalSido(a.sido) ? a.sido : "서울"} />
+        </div>
+      );
+    }
     case "area":
       return (
         <MultiChoice

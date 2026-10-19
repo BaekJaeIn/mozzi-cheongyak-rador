@@ -1,12 +1,13 @@
 "use client";
 
-// 홈(/) 화면 결정 (US-02, BR-U4-01·02): 프로필 있음 → 피드, 초안 있음 → 마법사 이어서, 없음 → 처음 실행 안내
+// 홈(/) 화면 결정 (US-02, BR-U4-01·02): 프로필 있음 → 피드(+ 업데이트 안내, US-21), 초안 있음 → 마법사 이어서, 없음 → 처음 실행 안내
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { useProfile } from "../ProfileProvider";
 import { primaryButton } from "./controls";
+import { UpdateNotice } from "./UpdateNotice";
 
 export function HomeGate({ feed }: { feed: ReactNode }) {
   const { loaded, stored, hasDraft } = useProfile();
@@ -24,11 +25,17 @@ export function HomeGate({ feed }: { feed: ReactNode }) {
       </p>
     );
   }
-  if (stored) return <>{feed}</>;
+  if (stored)
+    return (
+      <div className="flex flex-col gap-4">
+        <UpdateNotice />
+        {feed}
+      </div>
+    );
   return <Welcome />;
 }
 
-const WELCOME_STEPS = ["3기 신도시 공고를 매일 모아요", "우리 집 조건에 맞는지 확인해요", "새 공고가 있으면 하루 1번 알려 드려요"] as const;
+const WELCOME_STEPS = ["3기 신도시와 원하는 지역의 공고를 매일 모아요", "우리 집 조건에 맞는지 확인해요", "새 공고가 있으면 하루 1번 알려 드려요"] as const;
 
 export function Welcome() {
   return (

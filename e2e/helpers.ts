@@ -2,8 +2,9 @@
 import type { Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
+/** 변경 2 이후 저장 형식(v2) — 업데이트 안내가 뜨지 않는다 */
 export const SAMPLE_PROFILE = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   self: { birthDate: "1960-03-02" },
   spouse: { birthDate: "1963-07-01" },
   householdType: "couple",
@@ -11,14 +12,28 @@ export const SAMPLE_PROFILE = {
   householdHead: "self",
   residence: { sido: "경기", sigungu: "하남시", years: 5 },
   housing: { homeless: true, homelessYears: 10, ownedCount: 0 },
-  savings: { has: false, kind: null, months: null, paymentCount: null, depositManwon: null },
+  savings: { has: false, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null },
   money: { monthlyIncome: 450, totalAsset: 20000, carValue: 1500, spouseEarns: true },
   welfare: "none",
-  prefs: { districtIds: ["wangsuk", "gyosan", "changneung", "daejang", "gyeyang", "gwangmyeong_siheung"], areaBands: ["s"], tenure: "rent", lowFloor: false },
+  prefs: { districtIds: ["wangsuk", "gyosan", "changneung", "daejang", "gyeyang", "gwangmyeong_siheung"], regions: [], areaBands: ["s"], tenure: "rent", lowFloor: false },
 };
 
+/** 변경 2 전에 저장한 형식(v1, 통장 "없음") — 엄마 휴대폰처럼 업데이트 안내가 뜬다 (US-21) */
+export const SAMPLE_PROFILE_V1 = {
+  ...SAMPLE_PROFILE,
+  schemaVersion: 1,
+  savings: { has: false, kind: null, months: null, paymentCount: null, depositManwon: null },
+  prefs: { districtIds: SAMPLE_PROFILE.prefs.districtIds, areaBands: ["s"], tenure: "rent", lowFloor: false },
+};
+
+/** 휴대폰 뒤로 버튼: CloseWatcher가 있으면 앱이 받는다(Esc와 같은 신호), 없으면 방문 기록 */
+export async function pressBack(page: Page) {
+  if (await page.evaluate(() => "CloseWatcher" in window)) await page.keyboard.press("Escape");
+  else await page.goBack();
+}
+
 /** 다음 페이지 열기부터 기기에 프로필이 저장된 상태로 만든다 */
-export async function seedStoredProfile(page: Page) {
+export async function seedStoredProfile(page: Page, sample: object = SAMPLE_PROFILE) {
   await page.addInitScript((profile) => {
     if (window.localStorage.getItem("mz.profile") === null) {
       window.localStorage.setItem(
@@ -26,7 +41,7 @@ export async function seedStoredProfile(page: Page) {
         JSON.stringify({ version: 1, profile, savedAt: "2026-10-15T00:00:00.000Z", sync: { state: "synced", at: "2026-10-15T00:00:00.000Z" } }),
       );
     }
-  }, SAMPLE_PROFILE);
+  }, sample);
 }
 
 // ---------- 기기 등록 한도 (U1 register_device: 최근 1시간 신규 20대) ----------

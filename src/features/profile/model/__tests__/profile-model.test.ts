@@ -39,30 +39,30 @@ import { memoryStorage, MINIMAL_ANSWERS, MOTHER_ANSWERS } from "./helpers";
 describe("화면 순서 (business-logic-model §2.1)", () => {
   const ids = (a: WizardAnswers) => visibleSteps(a).map((s) => s.id);
 
-  it("부부, 집 없음, 통장 있음 → 21화면", () => {
-    const list = ids({ householdType: "couple", sido: "경기", homeOwned: false, savingsHas: true });
+  it("부부, 집 없음, 통장 있음 → 22화면", () => {
+    const list = ids({ householdType: "couple", sido: "경기", homeOwned: false, savingsOwner: "self" });
     expect(list).toEqual([
       "selfBirth", "household", "spouseBirth", "head", "residence", "residenceYears", "homeOwned", "homelessYears",
-      "savingsHas", "savingsKind", "savingsPeriod", "savingsAmount", "income", "spouseEarns", "asset", "car", "welfare",
-      "districts", "area", "tenurePrefs", "review",
+      "savingsOwner", "savingsKind", "savingsPeriod", "savingsAmount", "income", "spouseEarns", "asset", "car", "welfare",
+      "districts", "regions", "area", "tenurePrefs", "review",
     ]);
   });
 
-  it("혼자, 집 있음, 통장 없음 → 16화면", () => {
-    expect(ids({ householdType: "single", sido: "부산", homeOwned: true, savingsHas: false })).toHaveLength(16);
+  it("혼자, 집 있음, 통장 없음 → 17화면", () => {
+    expect(ids({ householdType: "single", sido: "부산", homeOwned: true, savingsOwner: "none" })).toHaveLength(17);
   });
 
-  it("다른 가족도 함께(배우자 있음), 집·통장 모름 → 18화면", () => {
-    const list = ids({ householdType: "other", householdSize: 4, hasSpouse: true, sido: "서울", homeOwned: UNKNOWN, savingsHas: UNKNOWN });
-    expect(list).toHaveLength(18);
+  it("다른 가족도 함께(배우자 있음), 집·통장 모름 → 19화면", () => {
+    const list = ids({ householdType: "other", householdSize: 4, hasSpouse: true, sido: "서울", homeOwned: UNKNOWN, savingsOwner: UNKNOWN });
+    expect(list).toHaveLength(19);
     expect(list).toContain("householdMore");
     expect(list).not.toContain("homeCount");
     expect(list).not.toContain("savingsKind");
   });
 
   it("진행 표시는 지금 답으로 보일 화면 수로 센다", () => {
-    expect(progress({ householdType: "single" }, "household")).toEqual({ index: 2, total: 14 });
-    expect(progress({ householdType: "couple", sido: "경기" }, "head")).toEqual({ index: 4, total: 17 });
+    expect(progress({ householdType: "single" }, "household")).toEqual({ index: 2, total: 15 });
+    expect(progress({ householdType: "couple", sido: "경기" }, "head")).toEqual({ index: 4, total: 18 });
   });
 
   it("다음·이전은 보이는 화면만 지난다", () => {
@@ -101,7 +101,9 @@ describe("필수·[잘 모르겠어요] (BR-U4-50~53)", () => {
     expect(canProceed("residence", { sido: "경기" })).toBe(false);
     expect(canProceed("residence", { sido: "경기", sigungu: "하남시" })).toBe(true);
     expect(canProceed("residence", { sido: "부산", sigungu: null })).toBe(true);
-    expect(canProceed("districts", { districtIds: [] })).toBe(false);
+    expect(canProceed("districts", { districtIds: [] })).toBe(true); // 변경 2: 다른 지역 화면에서 함께 확인 (BR-U4-C10)
+    expect(canProceed("regions", { districtIds: [], regions: [] })).toBe(false);
+    expect(canProceed("regions", { districtIds: [], regions: [{ sido: "서울", sigungu: "강서구" }] })).toBe(true);
     expect(canProceed("householdMore", { householdSize: 3 })).toBe(false);
   });
 
@@ -157,7 +159,7 @@ describe("답 → 프로필 (business-logic-model §6)", () => {
   });
 
   it("집 있음 → homeless false·ownedCount, 통장 없음 → has false·나머지 null", () => {
-    const p = toProfile({ ...MINIMAL_ANSWERS, homeOwned: true, homeCount: 2, savingsHas: false });
+    const p = toProfile({ ...MINIMAL_ANSWERS, homeOwned: true, homeCount: 2, savingsOwner: "none" });
     expect(p.housing).toEqual({ homeless: false, homelessYears: null, ownedCount: 2 });
     expect(p.savings).toEqual({ has: false, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null });
   });
@@ -268,9 +270,9 @@ describe("설정 요약 (business-logic-model §3)", () => {
     expect(groupSummary(p, "basic", today)).toBe("본인 만 63세 · 배우자 만 66세 · 세대주 배우자");
     expect(groupSummary(p, "residence", today)).toBe("경기 하남시 · 5~10년");
     expect(groupSummary(p, "housing", today)).toBe("집 없음 · 10~15년");
-    expect(groupSummary(p, "savings", today)).toBe("주택청약종합저축 · 10년 이상");
+    expect(groupSummary(p, "savings", today)).toBe("내 명의 · 주택청약종합저축 · 10년 이상");
     expect(groupSummary(p, "money", today)).toBe("월 450만원 · 자산 2억원 · 자동차 1,500만원");
-    expect(groupSummary(p, "districts", today)).toBe("6곳 모두");
+    expect(groupSummary(p, "districts", today)).toBe("3기 신도시 6곳 모두");
     expect(groupSummary(p, "prefs", today)).toBe("40~60㎡ · 임대");
   });
   it("비어 있으면 '확인 필요'", () => {
@@ -308,6 +310,7 @@ describe("기기 저장 (domain-entities §3)", () => {
       "mz.profile": "{}",
       "mz.profile.draft": "{}",
       "mz.notify": "{}",
+      "mz.updates": "{}",
       "mz.bookmarks": "[]",
       "mz.seen": "{}",
       "mz.feed": "{}",

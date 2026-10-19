@@ -5,9 +5,12 @@ import { DEVICE_STORAGE_KEY, type KeyValueStorage } from "@/features/device/iden
 import { DEFAULT_NOTIFY_HOUR, isValidHour } from "./hour";
 import { isStepId, type StepId } from "./steps";
 import type { WizardAnswers } from "./types";
+import { parseUpdates, type StoredUpdates } from "./updates";
 
 export const PROFILE_KEY = "mz.profile";
 export const DRAFT_KEY = "mz.profile.draft";
+/** 업데이트 안내 기록 (변경 2, domain-entities §7.4) */
+export const UPDATES_KEY = "mz.updates";
 export const NOTIFY_KEY = "mz.notify";
 export const DISPLAY_KEY = "mz.display";
 /** U5 관심 공고 — 모두 지우기에서 함께 지운다 (BR-U4-94) */
@@ -29,7 +32,7 @@ export interface StoredProfile {
 }
 
 export interface WizardDraft {
-  version: 1;
+  version: 2;
   answers: WizardAnswers;
   stepId: StepId;
   updatedAt: string;
@@ -91,6 +94,13 @@ export function loadStoredProfile(storage: KeyValueStorage): StoredProfile | nul
   return checked.ok ? { version: 1, profile: checked.value, savedAt: v.savedAt, sync: v.sync } : null;
 }
 
+/** 기기에 저장된 원래 프로필 JSON의 schemaVersion (업데이트 안내 처음 기록용, BR-U4-C21). 없으면 null */
+export function storedProfileSchemaVersion(storage: KeyValueStorage): number | null {
+  const v = readJson(storage, PROFILE_KEY);
+  if (!isObject(v) || !isObject(v.profile)) return null;
+  return typeof v.profile.schemaVersion === "number" ? v.profile.schemaVersion : null;
+}
+
 export function saveStoredProfile(storage: KeyValueStorage, value: StoredProfile): void {
   writeJson(storage, PROFILE_KEY, value);
 }
@@ -105,17 +115,44 @@ export function commitProfile(storage: KeyValueStorage, profile: HouseholdProfil
 
 // ---------- 초안 ----------
 
+/**
+ * 초안 읽기 형식 맞추기 (domain-entities §7.3, P-U4-C3). 버전 2는 그대로, 버전 1은 옮기고, 그 밖은 null.
+ * 버전 1: 통장 "있음" → 명의 "나", 그 밖(없음·모름)은 지워 다시 묻는다. 화면 savingsHas → savingsOwner
+ */
+export function migrateDraft(v: unknown): WizardDraft | null {
+  if (!isObject(v) || !isObject(v.answers) || typeof v.updatedAt !== "string") return null;
+  if (v.version === 2) return isStepId(v.stepId) ? { version: 2, answers: v.answers as WizardAnswers, stepId: v.stepId, updatedAt: v.updatedAt } : null;
+  if (v.version !== 1) return null;
+  const { savingsHas, ...rest } = v.answers as Record<string, unknown>;
+  const answers = (savingsHas === true ? { ...rest, savingsOwner: "self" } : rest) as WizardAnswers;
+  const stepId = v.stepId === "savingsHas" ? "savingsOwner" : v.stepId;
+  return isStepId(stepId) ? { version: 2, answers, stepId, updatedAt: v.updatedAt } : null;
+}
+
 export function loadDraft(storage: KeyValueStorage): WizardDraft | null {
-  const v = readJson(storage, DRAFT_KEY);
-  if (!isObject(v) || v.version !== 1 || !isObject(v.answers) || !isStepId(v.stepId) || typeof v.updatedAt !== "string") {
-    if (storage.getItem(DRAFT_KEY) !== null) storage.removeItem(DRAFT_KEY); // 깨진 초안은 지우고 처음부터
-    return null;
-  }
-  return { version: 1, answers: v.answers as WizardAnswers, stepId: v.stepId, updatedAt: v.updatedAt };
+  const draft = migrateDraft(readJson(storage, DRAFT_KEY));
+  if (!draft && storage.getItem(DRAFT_KEY) !== null) storage.removeItem(DRAFT_KEY); // 깨진 초안은 지우고 처음부터
+  return draft;
 }
 
 export function saveDraft(storage: KeyValueStorage, answers: WizardAnswers, stepId: StepId, now: Date): void {
-  writeJson(storage, DRAFT_KEY, { version: 1, answers, stepId, updatedAt: now.toISOString() } satisfies WizardDraft);
+  writeJson(storage, DRAFT_KEY, { version: 2, answers, stepId, updatedAt: now.toISOString() } satisfies WizardDraft);
+}
+
+// ---------- 업데이트 안내 (변경 2) ----------
+
+/** 없거나 깨졌으면 null → 부르는 쪽이 처음 기록을 만든다 */
+export function loadUpdates(storage: KeyValueStorage): StoredUpdates | null {
+  return parseUpdates(readJson(storage, UPDATES_KEY));
+}
+
+/** 저장 실패는 무시 — 안내가 한 번 더 뜰 뿐이다 */
+export function saveUpdates(storage: KeyValueStorage, value: StoredUpdates): void {
+  try {
+    writeJson(storage, UPDATES_KEY, value);
+  } catch {
+    // LocalSaveError: 입력을 막지 않는다
+  }
 }
 
 export function clearDraft(storage: KeyValueStorage): void {
@@ -165,9 +202,9 @@ export function saveDisplayMode(storage: KeyValueStorage, mode: DisplayMode): vo
 
 // ---------- 모두 지우기 (BR-U4-94) ----------
 
-/** 프로필·초안·알림 설정·관심 공고·열어 본 공고·피드 저장본·기기 ID를 지운다. 화면 모드는 남긴다 */
+/** 프로필·초안·알림 설정·업데이트 기록·관심 공고·열어 본 공고·피드 저장본·기기 ID를 지운다. 화면 모드는 남긴다 */
 export function clearAllPersonal(storage: KeyValueStorage): void {
-  for (const key of [PROFILE_KEY, DRAFT_KEY, NOTIFY_KEY, BOOKMARKS_KEY, SEEN_KEY, FEED_CACHE_KEY, DEVICE_STORAGE_KEY]) {
+  for (const key of [PROFILE_KEY, DRAFT_KEY, NOTIFY_KEY, UPDATES_KEY, BOOKMARKS_KEY, SEEN_KEY, FEED_CACHE_KEY, DEVICE_STORAGE_KEY]) {
     storage.removeItem(key);
   }
 }

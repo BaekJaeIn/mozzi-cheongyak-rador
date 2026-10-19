@@ -66,6 +66,8 @@ select public.upsert_notice_bundle(pg_temp.bundle('r-mapo', 'g2', '[{"sido":"서
 select public.upsert_notice_bundle(pg_temp.bundle('r-ai', 'g3', '[{"sido":"서울","sigungu":null}]', '[]',
   '{"regions_ai":[{"sido":"서울","sigungu":"강서구"}],"summary_status":"pending"}'));
 
+-- 로컬 DB에 남은 다른 기기(E2E가 만든 "서울 전체" 관심 등)가 판정에 섞이지 않게 이 트랜잭션 안에서만 지운다 (끝에 rollback)
+delete from public.device_profiles;
 insert into public.devices (id, token_hash, last_seen_at) values
   ('eeeeeeee-0000-4000-8000-000000000001', repeat('e', 64), now() - interval '10 days'),
   ('eeeeeeee-0000-4000-8000-000000000002', repeat('f', 64), now() - interval '200 days');

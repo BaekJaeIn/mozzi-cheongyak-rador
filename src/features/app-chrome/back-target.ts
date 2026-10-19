@@ -11,6 +11,8 @@ export function backTarget(pathname: string, opts: { lastList: ListPath; hasProf
   if (pathname.startsWith("/notice/")) return { kind: "go", href: opts.lastList };
   if (pathname.startsWith("/bookmarks") || pathname.startsWith("/settings")) return { kind: "go", href: "/" };
   if (pathname.startsWith("/profile/edit")) return { kind: "go", href: "/settings" };
+  // 새 항목만 묻는 짧은 입력 화면은 피드에서 들어온다 (변경 2 BR-U4-C33)
+  if (pathname.startsWith("/profile/update")) return { kind: "go", href: "/" };
   // 처음 입력 중(내 정보 없음)이면 마법사가 첫 화면이다. 다시 입력하기는 설정에서 들어온다
   if (pathname.startsWith("/profile")) return opts.hasProfile ? { kind: "go", href: "/settings" } : { kind: "exit" };
   return { kind: "exit" };

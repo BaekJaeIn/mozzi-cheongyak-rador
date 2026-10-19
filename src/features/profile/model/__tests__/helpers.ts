@@ -24,7 +24,7 @@ export const MOTHER_ANSWERS: WizardAnswers = {
   residenceYearsBand: "5to10",
   homeOwned: false,
   homelessYearsBand: "10to15",
-  savingsHas: true,
+  savingsOwner: "self",
   savingsKind: "comprehensive",
   savingsMonthsBand: "ge120",
   paymentCount: 120,

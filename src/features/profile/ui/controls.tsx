@@ -5,8 +5,10 @@
 // - 선택 표시는 색 + 체크 아이콘 + 굵기 (색만으로 구분하지 않음)
 // - 보기는 큰 목록 버튼, 생년월일만 드롭다운(휴대폰 기본 선택 휠)
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { ageAt } from "@shared/domain/profile.ts";
+import { ageAt, type RegionPick } from "@shared/domain/profile.ts";
+import { CAPITAL_SIGUNGU, type CapitalSido } from "@shared/domain/regions.ts";
 import { exceedsMax, formatManwon, parseAmountInput } from "../model/amount";
+import { pickedCount, REGION_SIDO, regionsSummary, toggleRegion } from "../model/regions";
 import { daysInMonth, toBirthDate } from "../model/steps";
 
 const optionClass = (selected: boolean) =>
@@ -95,6 +97,69 @@ export function MultiChoice<T>({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/**
+ * 다른 지역 고르기 (변경 2, BR-U4-C12~C15, frontend-components §7.2)
+ * 위: 고른 곳 요약 → 시도 버튼 3개(고른 수) → 그 시도의 "○○ 전체" + 시군구 목록. 전체가 켜지면 목록은 체크된 채 누를 수 없음
+ */
+export function RegionMultiPicker({
+  value,
+  onChange,
+  initialSido,
+}: {
+  value: readonly RegionPick[];
+  onChange: (value: RegionPick[]) => void;
+  initialSido: CapitalSido;
+}) {
+  const [sido, setSido] = useState<CapitalSido>(initialSido);
+  const whole = value.some((r) => r.sido === sido && r.sigungu === null);
+  const items: { sigungu: string | null; label: string }[] = [
+    { sigungu: null, label: `${sido} 전체` },
+    ...CAPITAL_SIGUNGU[sido].map((name) => ({ sigungu: name, label: name })),
+  ];
+  return (
+    <div className="flex flex-col gap-4">
+      <p aria-live="polite" className="rounded-2xl bg-fill px-4 py-3 text-body">
+        <span className="font-bold">고른 곳: </span>
+        {regionsSummary(value)}
+      </p>
+      <div role="radiogroup" aria-label="시·도" className="grid grid-cols-3 gap-2">
+        {REGION_SIDO.map((s) => {
+          const selected = s === sido;
+          const count = pickedCount(value, s);
+          return (
+            <button key={s} type="button" role="radio" aria-checked={selected} onClick={() => setSido(s)} className={`${optionClass(selected)} justify-center`}>
+              <span className="flex flex-col items-center">
+                <span>{s}</span>
+                <span className="text-caption font-normal text-muted">{count === "전체" ? "전체" : count > 0 ? `${count}곳` : " "}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div role="group" aria-label={`${sido} 시·군·구`} className="grid gap-2">
+        {items.map((item) => {
+          const on = item.sigungu === null ? whole : whole || value.some((r) => r.sido === sido && r.sigungu === item.sigungu);
+          const locked = item.sigungu !== null && whole;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              role="checkbox"
+              aria-checked={on}
+              aria-disabled={locked || undefined}
+              onClick={() => !locked && onChange(toggleRegion(value, sido, item.sigungu))}
+              className={`${optionClass(on)} ${locked ? "opacity-60" : ""}`}
+            >
+              <Check on={on} />
+              <span className={item.sigungu === null ? "font-bold" : undefined}>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,10 +1,10 @@
 // 설정 화면의 그룹 요약 한 줄 (business-logic-model §3). 비어 있으면 "확인 필요".
 import type { IsoDate } from "@shared/domain/dates.ts";
-import { ageAt, type AreaBand, type HouseholdProfile, type SavingsKind, type WelfareStatus } from "@shared/domain/profile.ts";
+import { ageAt, type AreaBand, type HouseholdProfile, type RegionPick, type SavingsKind, type SavingsOwner, type WelfareStatus } from "@shared/domain/profile.ts";
 import { formatManwon } from "./amount";
 import { bandLabel, bandOf, HOMELESS_BANDS, MONTHS_BANDS, RESIDENCE_BANDS } from "./bands";
 import { ALL_DISTRICT_IDS, districtName } from "./districts";
-import { sidoLabel } from "./regions";
+import { regionsSummary, sidoLabel } from "./regions";
 import type { GroupId } from "./steps";
 
 export const UNKNOWN_LABEL = "확인 필요";
@@ -35,6 +35,16 @@ const AREA_SHORT: Readonly<Record<AreaBand, string>> = { xs: "~40㎡", s: "40~60
 const age = (birth: string | null, today: IsoDate) => (birth ? `만 ${ageAt(birth, today)}세` : UNKNOWN_LABEL);
 const money = (v: number | null) => (v === null ? UNKNOWN_LABEL : formatManwon(v));
 
+export const OWNER_LABELS: Readonly<Record<SavingsOwner, string>> = { self: "내 명의", spouse: "배우자 명의", both: "두 분 다" };
+
+/** 관심 지역 요약 (BR-U4-C18): "3기 신도시 3곳 · 서울 강서구", "3기 신도시 6곳 모두", "서울 강서구 외 2곳" */
+export function districtsSummary(ids: readonly string[], regions: readonly RegionPick[]): string {
+  const all = ids.length === ALL_DISTRICT_IDS.length && ALL_DISTRICT_IDS.every((id) => ids.includes(id));
+  const districts = ids.length === 0 ? null : all ? `3기 신도시 ${ids.length}곳 모두` : ids.length === 1 ? districtName(ids[0]!) : `3기 신도시 ${ids.length}곳`;
+  const others = regions.length === 0 ? null : regionsSummary(regions);
+  return [districts, others].filter(Boolean).join(" · ") || UNKNOWN_LABEL;
+}
+
 export function groupSummary(p: HouseholdProfile, group: GroupId, today: IsoDate): string {
   switch (group) {
     case "basic": {
@@ -61,21 +71,20 @@ export function groupSummary(p: HouseholdProfile, group: GroupId, today: IsoDate
       if (p.savings.has === null) return UNKNOWN_LABEL;
       if (!p.savings.has) return "통장 없음";
       return [
+        p.spouse ? OWNER_LABELS[p.savings.owner ?? "self"] : null, // 혼자 사는 가구는 명의를 붙이지 않음
         p.savings.kind ? SAVINGS_KIND_LABELS[p.savings.kind].name : UNKNOWN_LABEL,
         p.savings.months === null ? UNKNOWN_LABEL : bandLabel(MONTHS_BANDS, bandOf(MONTHS_BANDS, p.savings.months)),
-      ].join(" · ");
+      ]
+        .filter(Boolean)
+        .join(" · ");
     case "money":
       return [
         `월 ${money(p.money.monthlyIncome)}`,
         `자산 ${money(p.money.totalAsset)}`,
         `자동차 ${money(p.money.carValue)}`,
       ].join(" · ");
-    case "districts": {
-      const ids = p.prefs.districtIds;
-      if (ids.length === ALL_DISTRICT_IDS.length && ALL_DISTRICT_IDS.every((id) => ids.includes(id))) return `${ids.length}곳 모두`;
-      const first = districtName(ids[0] ?? "");
-      return ids.length > 1 ? `${first} 외 ${ids.length - 1}곳` : first;
-    }
+    case "districts":
+      return districtsSummary(p.prefs.districtIds, p.prefs.regions);
     case "prefs": {
       const area = p.prefs.areaBands.length === 0 ? "면적 상관없음" : p.prefs.areaBands.map((b) => AREA_SHORT[b]).join(", ");
       const tenure = { sale: "분양", rent: "임대", both: "분양·임대" }[p.prefs.tenure];

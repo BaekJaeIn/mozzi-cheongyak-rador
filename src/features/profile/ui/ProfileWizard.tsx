@@ -2,13 +2,16 @@
 
 // 입력 마법사 (C25, business-logic-model §2, frontend-components §4)
 // mode: setup(처음 입력, 초안 저장) / redo(처음부터 다시 입력, 지금 값으로 채움) / edit(그룹 고치기)
+//       / update(새 항목만 묻는 짧은 입력 화면, 변경 2 BR-U4-C30~C35)
 import { type IsoDate, toKstDate } from "@shared/domain/dates.ts";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ErrorMessage } from "@/features/app-chrome/ErrorMessage";
 import { type AmountField, exceedsMax, formatManwon, needsConfirm } from "../model/amount";
-import { fromProfile, hasBlankFields, mergeGroupEdit, toProfile } from "../model/convert";
-import { GROUP_LABELS, GROUP_ORDER, type GroupId, canProceed, initialAnswers, isComplete, markUnknown, nextStep, prevStep, progress, pruneHidden, stepById, type StepId, visibleSteps } from "../model/steps";
+import { fromProfile, hasBlankFields, mergeGroupEdit, mergeUpdate, toProfile } from "../model/convert";
+import { applyRegionDefault } from "../model/regions";
+import { GROUP_LABELS, GROUP_ORDER, type GroupId, canProceed, initialAnswers, isComplete, markUnknown, nextStep, prevStep, progress, pruneHidden, stepById, type StepId, type StepScope, visibleSteps } from "../model/steps";
+import type { UpdateItem } from "../model/updates";
 import { clearDraft, loadDraft, LocalSaveError, saveDraft } from "../model/storage";
 import { ALL_DISTRICT_IDS } from "../model/districts";
 import { groupSummary } from "../model/summary";
@@ -18,9 +21,17 @@ import { useProfile } from "../ProfileProvider";
 import { ConfirmDialog, linkButton, primaryButton, secondaryButton } from "./controls";
 import { getPushPort } from "./push-port";
 import { NotifyStep } from "./NotifyStep";
-import { STEP_TITLES, StepScreen, stepHint } from "./StepScreen";
+import { StepScreen, stepHint, stepTitle } from "./StepScreen";
 
-export type WizardMode = { kind: "setup" } | { kind: "redo" } | { kind: "edit"; group: GroupId };
+export type WizardMode = { kind: "setup" } | { kind: "redo" } | { kind: "edit"; group: GroupId } | { kind: "update" };
+
+/** 저장하면 입력한 것으로 볼 새 항목 (BR-U4-C34·C36) */
+function resolvedBy(mode: WizardMode, scope: StepScope): readonly UpdateItem[] {
+  if (mode.kind === "update" && typeof scope === "object") return scope.pending;
+  if (mode.kind === "redo") return ["savings", "regions"];
+  if (mode.kind === "edit") return mode.group === "savings" ? ["savings"] : mode.group === "districts" ? ["regions"] : [];
+  return [];
+}
 
 const AMOUNT_STEPS: Partial<Record<StepId, AmountField>> = {
   income: "monthlyIncome",
@@ -41,6 +52,9 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   const profile = useProfile();
   const today: IsoDate = useMemo(() => toKstDate(new Date()), []);
   const group = mode.kind === "edit" ? mode.group : undefined;
+  // 짧은 입력 화면 범위는 열 때 한 번 정한다 (저장 전까지 바뀌지 않게)
+  const [updateScope, setUpdateScope] = useState<StepScope>(undefined);
+  const scope: StepScope = mode.kind === "update" ? updateScope : group;
 
   const [answers, setAnswers] = useState<WizardAnswers | null>(null);
   const [stepId, setStepId] = useState<StepId>("selfBirth");
@@ -67,9 +81,22 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
       return;
     }
     const current = fromProfile(profile.stored.profile);
+    if (mode.kind === "update") {
+      const pending = profile.updates?.pending ?? [];
+      if (pending.length === 0) {
+        router.replace("/"); // 입력할 새 항목이 없으면 홈으로 (BR-U4-C30)
+        return;
+      }
+      const s = { pending, beforeSavingsHas: profile.stored.profile.savings.has };
+      const first = visibleSteps(current, s)[0]!.id;
+      setUpdateScope(s);
+      setAnswers(first === "regions" ? applyRegionDefault(current, true) : current);
+      setStepId(first);
+      return;
+    }
     setAnswers(current);
     setStepId(visibleSteps(current, group)[0]!.id);
-  }, [profile.loaded, profile.stored, answers, mode.kind, group, router]);
+  }, [profile.loaded, profile.stored, profile.updates, answers, mode.kind, group, router]);
 
   // 화면이 바뀌면 질문(제목)에 초점 — 화면 낭독기가 새 질문을 읽는다
   useEffect(() => {
@@ -83,6 +110,9 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
       </p>
     );
   }
+
+  /** 짧은 입력 화면의 마지막 화면이면 [다음] 대신 [저장] (BR-U4-C34) */
+  const isLastUpdateStep = mode.kind === "update" && nextStep(answers, stepId, scope) === null;
 
   const persistDraft = (next: WizardAnswers, step: StepId) => {
     if (mode.kind !== "setup") return; // 초안은 처음 입력에만 (BR-U4-72)
@@ -101,6 +131,8 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   const go = (target: StepId | null) => {
     if (!target) return;
     persistDraft(answers, target);
+    // 다른 지역 화면에 처음 올 때 사는 시군구를 미리 고른다 (BR-U4-C11)
+    if (target === "regions") setAnswers((prev) => applyRegionDefault(prev!, mode.kind === "update"));
     setStepId(target);
   };
 
@@ -114,33 +146,40 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
         return;
       }
     }
-    if (stepId === "districts" && !canProceed("districts", answers)) {
-      setError("한 곳 이상 골라 주세요."); // BR-U4-53
+    if (stepId === "regions" && !canProceed("regions", answers)) {
+      setError("3기 신도시나 다른 지역을 한 곳 이상 골라 주세요."); // BR-U4-C16
       return;
     }
-    go(returnToReview && canProceed(stepId, answers) && nextIsOutsideGroup() ? "review" : nextStep(answers, stepId, group));
+    if (isLastUpdateStep) {
+      void onSave();
+      return;
+    }
+    go(returnToReview && canProceed(stepId, answers) && nextIsOutsideGroup() ? "review" : nextStep(answers, stepId, scope));
   };
 
   /** [고치기]로 온 그룹의 마지막 화면이면 확인 화면으로 바로 */
   const nextIsOutsideGroup = () => {
-    const next = nextStep(answers, stepId, group);
+    const next = nextStep(answers, stepId, scope);
     return next !== null && stepById(next).group !== stepById(stepId).group;
   };
 
   const onUnknown = () => {
     const next = markUnknown(stepId, answers);
     setAnswers(pruneHidden(next));
-    const target = nextStep(next, stepId, group);
+    const target = nextStep(next, stepId, scope);
     if (target) {
       persistDraft(next, target);
+      if (target === "regions") setAnswers(applyRegionDefault(pruneHidden(next), mode.kind === "update"));
       setStepId(target);
+    } else if (mode.kind === "update") {
+      void onSave(pruneHidden(next)); // 짧은 입력 화면의 마지막 화면에서 [잘 모르겠어요]
     }
   };
 
   const onBack = () => {
-    const prev = prevStep(answers, stepId, group);
+    const prev = prevStep(answers, stepId, scope);
     if (prev) go(prev);
-    else if (mode.kind === "setup") router.replace("/");
+    else if (mode.kind === "setup" || mode.kind === "update") router.replace("/");
     else router.replace("/settings");
   };
 
@@ -150,18 +189,24 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
     setStepId("selfBirth");
   };
 
-  const onSave = async () => {
+  const onSave = async (input: WizardAnswers = answers) => {
     setPhase("saving");
     setError(null);
     try {
-      const final = mode.kind === "edit" && profile.stored ? mergeGroupEdit(fromProfile(profile.stored.profile), answers, mode.group) : answers;
-      const result = await profile.saveProfile(toProfile(final));
+      const current = profile.stored ? fromProfile(profile.stored.profile) : null;
+      const final =
+        mode.kind === "edit" && current
+          ? mergeGroupEdit(current, input, mode.group)
+          : mode.kind === "update" && current && typeof scope === "object"
+            ? mergeUpdate(current, input, scope.pending)
+            : input;
+      const result = await profile.saveProfile(toProfile(final), resolvedBy(mode, scope));
       setMessage(SAVE_MESSAGES[result]);
       if (mode.kind === "setup" && getPushPort() !== null) {
         setPhase("notify"); // 알림 단계 (US-03, U6 연결 시)
         return;
       }
-      if (mode.kind !== "edit" && (result === "offline" || result === "rejected")) {
+      if (mode.kind === "update" || (mode.kind !== "edit" && (result === "offline" || result === "rejected"))) {
         setPhase("saved"); // 서버에 못 보냈다는 안내를 보여 준 뒤 이동 (BR-U4-63)
         return;
       }
@@ -192,8 +237,8 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   }
 
   const step = stepById(stepId);
-  const { index, total } = progress(answers, stepId, group);
-  const groupLabel = step.group === "review" ? "확인" : GROUP_LABELS[step.group];
+  const { index, total } = progress(answers, stepId, scope);
+  const groupLabel = mode.kind === "update" ? "새 항목" : step.group === "review" ? "확인" : GROUP_LABELS[step.group];
   const isReview = stepId === "review";
   const hint = stepHint(stepId);
 
@@ -208,13 +253,18 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
             처음부터 다시
           </button>
         )}
+        {mode.kind === "update" && (
+          <button type="button" onClick={() => router.replace("/")} className={linkButton}>
+            나중에 할게요
+          </button>
+        )}
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-line" aria-hidden>
         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${(index / total) * 100}%` }} />
       </div>
 
       <h1 ref={titleRef} tabIndex={-1} className="text-heading font-bold leading-snug tracking-tight outline-none">
-        {STEP_TITLES[stepId]}
+        {stepTitle(stepId, answers)}
       </h1>
       {hint && <p className="-mt-3 text-body text-muted">{hint}</p>}
 
@@ -235,8 +285,8 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
             {phase === "saving" ? "저장하는 중이에요…" : "저장"}
           </button>
         ) : (
-          <button type="button" className={primaryButton} disabled={!canProceed(stepId, answers) && stepId !== "districts"} onClick={onNext}>
-            다음
+          <button type="button" className={primaryButton} disabled={(!canProceed(stepId, answers) && stepId !== "regions") || phase === "saving"} onClick={onNext}>
+            {isLastUpdateStep ? (phase === "saving" ? "저장하는 중이에요…" : "저장") : "다음"}
           </button>
         )}
         {step.allowUnknown && (
@@ -245,7 +295,7 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
           </button>
         )}
         <button type="button" className={secondaryButton} onClick={onBack}>
-          {mode.kind === "edit" && prevStep(answers, stepId, group) === null ? "취소" : "이전"}
+          {mode.kind === "edit" && prevStep(answers, stepId, scope) === null ? "취소" : "이전"}
         </button>
       </div>
 
@@ -267,7 +317,8 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
           onConfirm={() => {
             setConfirmed({ ...confirmed, [confirm.field]: confirm.value });
             setConfirm(null);
-            go(nextStep(answers, stepId, group));
+            if (isLastUpdateStep) void onSave();
+            else go(nextStep(answers, stepId, scope));
           }}
           onCancel={() => setConfirm(null)}
         />
