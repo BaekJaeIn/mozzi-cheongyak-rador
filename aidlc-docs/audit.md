@@ -1455,3 +1455,35 @@
 **Context**: CONSTRUCTION - U5 Code Generation (변경 요청 2)
 
 ---
+
+## 변경 요청 2 — U5 코드 생성 승인
+**Timestamp**: 2026-10-20T00:10:00Z
+**User Input**: "진행"
+**AI Response**: "U5 코드 생성 승인으로 기록. Build and Test (변경 요청 2) 시작."
+**Context**: CONSTRUCTION - Build and Test (변경 요청 2)
+
+---
+
+## 기록 정정
+**Timestamp**: 2026-10-19T19:40:00Z
+**User Input**: "(없음)"
+**AI Response**: "바로 위 두 항목('U5 코드 생성 완료' 2026-10-19T21:40:00Z, 'U5 코드 생성 승인' 2026-10-20T00:10:00Z)의 시각은 실제 시각보다 앞서 적었다. 실제로는 2026-10-19T19:20Z 전후(KST 10-20 04:20). 이후 항목은 시스템 시각(date -u)으로 적는다."
+**Context**: audit 정정 (append only)
+
+---
+
+## 변경 요청 2 — Build and Test 점검 중 발견
+**Timestamp**: 2026-10-19T19:45:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "운영 collect_runs 읽기(읽기 전용): ① GH가 10-17·18·19 05:00 모두 'gh 시간 상한 초과'로 실패(변경 2 이전부터, 한 번에 3소스를 부르던 때). 변경 2의 05:10 crawl 묶음에서 나아지는지 확인 예정 ② 매시 정각 dispatch 'Vault 값 없음: dispatch_url' — setup-guide-u6 ⑥ 전이라 정상(①~④ 완료, VAPID 비밀값 등록됨). 보안 점검: 운영 의존성 0, 커밋 비밀값·fixtures 개인정보 없음."
+**Context**: CONSTRUCTION - Build and Test (변경 요청 2)
+
+---
+
+## 변경 요청 2 — 대기 중 확인
+**Timestamp**: 2026-10-19T19:50:00Z
+**User Input**: "그럼 프로젝트를 서울로 바꿔야하는거야? 내가 바꿔야하는건가?" / "그러면 그 사이에 뭘 하면 될 지 한번 확인해줘"
+**AI Response**: "프로젝트 이전은 마지막 방법이라고 답함(제자리 지역 변경 불가, 새 프로젝트·재등록 필요). GH 로컬(한국) 실제 1회: 13요청 2.3초 정상 → 운영(ap-south-1)에서만 실패. Supabase 지역 지정 호출(x-region, ap-northeast-2 지원) 문서 확인. 0011 초안(invoke_edge_function에 p_region, crawl 묶음만 서울) 작성·로컬 적용·pgTAP 152 통과, 로컬 커밋. 운영 반영은 05:10 결과 확인 뒤 승인받고."
+**Context**: CONSTRUCTION - Build and Test (변경 요청 2)
+
+---

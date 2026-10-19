@@ -4,7 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(25);
+select plan(27);
 
 create temp table t_today as select (now() at time zone 'Asia/Seoul')::date as d;
 
@@ -105,6 +105,8 @@ reset role;
 select is((select schedule from cron.job where jobname = 'collect-daily'), '0 20 * * *', 'api 묶음 KST 05:00');
 select ok((select command from cron.job where jobname = 'collect-daily') like '%"group":"api"%', 'api 묶음 본문');
 select ok((select command from cron.job where jobname = 'collect-crawl') like '%"group":"crawl"%', 'crawl 묶음 KST 05:10 본문');
+select ok((select command from cron.job where jobname = 'collect-crawl') like '%ap-northeast-2%', 'crawl 묶음은 서울 리전에서 (0011)');
+select ok((select command from cron.job where jobname = 'collect-daily') not like '%x-region%' and (select command from cron.job where jobname = 'collect-daily') not like '%ap-northeast%', 'api 묶음은 지역 지정 없음');
 select hasnt_function('public', 'invoke_edge_function', array['text'], '인수 하나짜리 호출 함수는 없다(기본값 있는 두 인수로)');
 
 select * from finish();

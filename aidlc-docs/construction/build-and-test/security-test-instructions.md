@@ -21,3 +21,14 @@
 
 - 매 배포 전: `npm audit --omit=dev`
 - 비밀값이 새어 나갔다고 의심되면: VAPID(setup-guide-u6 "키 교체"), CRON_SECRET(U3 setup-guide), 금액 암호화 키(README "암호화 키 교체")
+
+## 변경 요청 2 점검 (2026-10-20)
+
+| 항목 | 결과 |
+|---|---|
+| 운영 의존성 취약점 (`npm audit --omit=dev`) | ✅ 0건 |
+| 커밋 비밀값 (50d407c..HEAD, 키·토큰 형식 검색) | ✅ 없음 |
+| SH 화면 사본(fixtures) 개인정보 | ✅ 전화번호·이메일 형식 없음(가림) |
+| AI에 보내는 것 | 공고 정보만(공급 위치 `supplySigungu` 추가). 프로필·관심 지역은 보내지 않음 |
+| 새 DB 함수 권한 | `interest_area_match`·`notice_in_any_interest`·`analysis_backlog`: anon 불가, `invoke_edge_function`: service_role 불가(cron 전용) — pgTAP |
+| 업데이트 기록 `mz.updates` | 기기에만, 개인 정보 없음(안내 번호·항목 이름), 모두 지우기에서 삭제 |

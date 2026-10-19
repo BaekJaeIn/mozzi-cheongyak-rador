@@ -43,3 +43,13 @@ APP_URL=http://localhost:3123 CRON_SECRET=<함수 env와 같은 값> node script
 13/13 통과. 피드 4건(왕숙 행복주택·교산 A2·계양 A10·창릉 S-3), 기준선 4건, dispatch 결과 `{"devices":1,"failed":1,"removedSubscriptions":1}`(가짜 구독 만료 → 정상 처리).
 
 한계: 이번 목업 판정에 "미충족"이 없어 #5의 "미충족 없음"은 실제로 걸러 낸 것이 없다. 미충족 숨김은 U5 E2E(`feed.spec.ts`)와 PBT(P-U5-1)가 확인한다.
+
+## 변경 요청 2 결과 (2026-10-20)
+
+| 층 | 결과 |
+|---|---|
+| DB 계약 (pgTAP) | ✅ **150/150** (7개 파일: + `regions.test.sql` 0009, `collect-regions.test.sql` 0010 — 관심 지역 SQL·TS 공유 표 12쌍, 90일 관심 기기, 분석 대상, cron 두 묶음) |
+| 스모크 | ✅ **13/13** (목업에 SH 강서구 공고 포함). 첫 실행은 함수 서버가 막 뜬 직후 collect 응답이 비어 중간에 멈춤 → 다시 실행해 통과 |
+| SH 실제 1회 (로컬, U3) | 요청 17번·33.1초(예산 35초), 모집공고 14건, 고덕강일 분양 포함 |
+
+- `collect-regions.test.sql`은 관심 기기 판정 앞에서 다른 기기 프로필을 트랜잭션 안에서만 지운다(로컬 DB에 E2E가 남긴 기기가 섞이지 않게, rollback으로 되돌림).
