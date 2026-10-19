@@ -204,3 +204,61 @@ export async function subscriptionCount(deviceId: string): Promise<number> {
   const rows = (await rest(`push_subscriptions?select=endpoint&device_id=eq.${deviceId}`, { method: "GET", prefer: "return=representation" })) as unknown[];
   return rows.length;
 }
+
+// ---------- 변경 2: 지구가 없는 지역 공고 (로컬 Supabase 전용) ----------
+export interface RegionFixture {
+  gangseo: SeededNotice; // 서울 강서구, 요약 있음 — 강서구를 고른 프로필에 보인다
+  mapo: SeededNotice; // 서울 마포구, 요약 없음 — 관심 지역 밖
+}
+
+/** dedup_key는 e2e:{tag}:… 라서 cleanupFeedNotices(tag)가 함께 지운다 */
+export async function seedRegionNotices(tag: string): Promise<RegionFixture> {
+  const spec = [
+    { key: "region-gangseo", name: `E2E 강서 행복주택 ${tag}`, sigungu: "강서구", summary: true },
+    { key: "region-mapo", name: `E2E 마포 행복주택 ${tag}`, sigungu: "마포구", summary: false },
+  ] as const;
+  const notices = (await rest("notices", {
+    method: "POST",
+    prefer: "return=representation",
+    body: JSON.stringify(
+      spec.map((s) => ({
+        dedup_key: `e2e:${tag}:${s.key}`,
+        title: `${s.name} 입주자 모집공고`,
+        complex_name: s.name,
+        location: `서울특별시 ${s.sigungu}`,
+        sido: "서울",
+        sigungu: s.sigungu,
+        regions: [{ sido: "서울", sigungu: s.sigungu }],
+        provider: "SH",
+        primary_source: "sh",
+        tenure: "rent",
+        announced_at: kstDate(-9),
+        apply_start: kstDate(-2),
+        apply_end: kstDate(4),
+        summary: s.summary ? { eligibilityPlain: "서울에 사는 무주택 세대가 신청할 수 있어요.", forSeniorCouple: "만 65세 이상이면 먼저 뽑아요." } : null,
+        summary_status: s.summary ? "done" : "pending",
+      })),
+    ),
+  })) as { id: string; dedup_key: string }[];
+  const idOf = (key: string) => notices.find((n) => n.dedup_key === `e2e:${tag}:${key}`)!.id;
+  await rest("housing_units", {
+    method: "POST",
+    body: JSON.stringify(
+      spec.map((s) => ({ notice_id: idOf(s.key), label: "36A", supply_type: "national_rental_senior", exclusive_area_m2: 36, supply_count: 30, requirements: OK_REQ })),
+    ),
+  });
+  await rest("source_notices", {
+    method: "POST",
+    body: JSON.stringify(
+      spec.map((s) => ({ source: "sh", source_notice_no: `e2e-${tag}-${s.key}`, notice_id: idOf(s.key), original_url: `https://www.i-sh.co.kr/e2e/${tag}/${s.key}`, content_hash: "e2e" })),
+    ),
+  });
+  const pick = (key: (typeof spec)[number]["key"]): SeededNotice => {
+    const s = spec.find((x) => x.key === key)!;
+    return { id: idOf(key), name: s.name, url: `https://www.i-sh.co.kr/e2e/${tag}/${key}` };
+  };
+  return { gangseo: pick("region-gangseo"), mapo: pick("region-mapo") };
+}
+
+/** 관심 지역에 서울 강서구를 고른 프로필 (v2) */
+export const SAMPLE_PROFILE_GANGSEO = { ...SAMPLE_PROFILE, prefs: { ...SAMPLE_PROFILE.prefs, regions: [{ sido: "서울", sigungu: "강서구" }] } };

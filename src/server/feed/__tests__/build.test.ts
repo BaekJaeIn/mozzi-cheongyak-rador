@@ -148,6 +148,7 @@ describe("상세·요약 응답 (BR-U5-95·131·134)", () => {
       contractEnd: null,
       summary: { eligibilityPlain: " 쉬운 말 ", forSeniorCouple: "노부부", generatedAt: "x" },
       summaryStatus: "done",
+      regions: [{ sido: "경기", sigungu: "하남시" }],
       firstSeenAt: "2026-10-18T00:00:00Z",
     },
     units: [
@@ -182,6 +183,11 @@ describe("상세·요약 응답 (BR-U5-95·131·134)", () => {
 
   it("요약: 공급유형 쉬운 말 중복 없이, 지구 이름", () => {
     expect(toNoticeSummary(bundle, TODAY, LABELS)).toMatchObject({ supplyTypes: ["고령자", "신혼부부"], districts: ["하남 교산"], status: "open" });
+  });
+
+  it("상세·요약에 공고 지역을 싣는다 (변경 2 domain-entities §8.1)", () => {
+    expect(toNoticeDetail(bundle, TODAY, LABELS, []).regions).toEqual([{ sido: "경기", sigungu: "하남시" }]);
+    expect(toNoticeSummary(bundle, TODAY, LABELS).regions).toEqual([{ sido: "경기", sigungu: "하남시" }]);
   });
 
   it("공고 ID는 UUID만", () => {

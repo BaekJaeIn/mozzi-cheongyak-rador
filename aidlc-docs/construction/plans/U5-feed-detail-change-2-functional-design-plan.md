@@ -14,11 +14,11 @@
 ## 단계
 
 - [x] Step 1 — 기존 U5 설계·코드 확인 (카드 지구 이름 BR-U5-25, 상세 상태 안내 BR-U5-71, 요약 BR-U5-95·96, 피드 API 형식)
-- [ ] Step 2 — 아래 질문 답 받기
-- [ ] Step 3 — domain-entities.md 갱신 (API 공고 지역, 위치 표시 값)
-- [ ] Step 4 — business-rules.md 갱신 (위치 표시, 문구, 요약 없음)
-- [ ] Step 5 — business-logic-model.md·frontend-components.md 갱신
-- [ ] Step 6 — PBT 속성 정의 (PBT-01)
+- [x] Step 2 — 아래 질문 답 받기 (Q1·Q2 = A)
+- [x] Step 3 — domain-entities.md 갱신 (API 공고 지역, 위치 표시 값)
+- [x] Step 4 — business-rules.md 갱신 (위치 표시, 문구, 요약 없음)
+- [x] Step 5 — business-logic-model.md·frontend-components.md 갱신
+- [x] Step 6 — PBT 속성 정의 (PBT-01)
 
 ## 설계 메모 (질문 아님)
 
@@ -37,7 +37,7 @@ B) 카드에도 "서울 (구 확인 필요)"처럼 붙인다
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 2 — 관심 지역 밖이라 AI 요약을 만들지 않은 공고(관심 공고에 담아 두었거나 알림 링크로 들어온 경우)의 상세 요약 자리는?
 
@@ -47,4 +47,4 @@ B) 문구 없이 [원문 보기]만 보여 준다
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A

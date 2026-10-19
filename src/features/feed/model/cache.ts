@@ -2,6 +2,7 @@
 // 공고 정보와 판정 결과(충족·확인 필요)·점수만 담는다. 내 금액·프로필은 없다.
 import { type IsoDate, isIsoDate } from "@shared/domain/dates.ts";
 import { noticeStatus } from "@shared/domain/retention.ts";
+import { parseNoticeRegions } from "@shared/eligibility/area.ts";
 import type { KeyValueStorage } from "@/features/device/identity-store";
 import type { FeedItem, FeedResponse } from "@/features/notice/model/api-types";
 import { FEED_CACHE_KEY } from "@/features/profile/model/storage";
@@ -44,7 +45,9 @@ export function loadFeedCache(storage: KeyValueStorage): FeedCache | null {
     const r = v.response;
     if ((r.state !== "ready" && r.state !== "outdated") || !isIsoDate(r.today) || typeof r.generatedAt !== "string") return null;
     if (!Array.isArray(r.items) || !r.items.every(isFeedItem)) return null;
-    return { savedAt: v.savedAt, response: r as unknown as FeedResponse };
+    // 변경 2 전 저장본에는 공고 지역이 없다 → 빈 목록 (지구 이름은 그대로 보인다)
+    const items = r.items.map((i) => ({ ...i, regions: parseNoticeRegions((i as unknown as { regions?: unknown }).regions) }));
+    return { savedAt: v.savedAt, response: { ...(r as unknown as FeedResponse), items } };
   } catch {
     return null;
   }

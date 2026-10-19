@@ -4,6 +4,7 @@
 // - 저장본이 있으면 먼저 그리고 새 응답을 받으면 바꾼다 (NFR-4.1)
 // - 서버에 프로필이 없으면(no_profile) 동기화를 한 번 보낸 뒤 다시 받는다
 import { toKstDate } from "@shared/domain/dates.ts";
+import { placeNames } from "@shared/feed/place.ts";
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ErrorMessage } from "@/features/app-chrome/ErrorMessage";
@@ -145,6 +146,7 @@ export function FeedView() {
 
 export function NoticeCard({ item, today, isNew: fresh }: { item: FeedItem; today: string; isNew: boolean }) {
   const name = item.complexName ?? item.title;
+  const places = placeNames(item.districts.map((d) => d.name), item.regions ?? []); // 지구, 없으면 "서울 강서구" (BR-U5-C1)
   return (
     <article className={`${card} flex items-start gap-1 p-5 transition-transform active:scale-[0.99]`}>
       <Link replace href={`/notice/${item.id}`} className="flex min-h-touch min-w-0 flex-1 flex-col gap-2">
@@ -156,7 +158,7 @@ export function NoticeCard({ item, today, isNew: fresh }: { item: FeedItem; toda
         <span className="text-title font-bold leading-snug tracking-tight text-ink">{name}</span>
         {item.supplyTypes.length > 0 && <span className="text-body text-ink">{listWithMore(item.supplyTypes.map((s) => s.plain), 2)}</span>}
         <span className="flex flex-col text-caption text-muted">
-          {item.districts.length > 0 && <span>{listWithMore(item.districts.map((d) => d.name), 2, "")}</span>}
+          {places.length > 0 && <span>{listWithMore(places, 2, "")}</span>}
           <span>접수 {periodLabel(item.applyStart, item.applyEnd, today)}</span>
         </span>
       </Link>

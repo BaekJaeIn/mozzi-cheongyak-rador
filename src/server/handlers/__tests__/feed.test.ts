@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { createRouteGuard } from "../../auth/route-guard";
 import { createMemoryDevices, seedDevice } from "../../__tests__/helpers";
 import type { FeedQueryRepository, FeedRow, JudgementRecord, JudgementStats, NoticeBundle } from "../../feed/types";
+import { interestRegions } from "../feed";
 import { createCalendarHandler, createFeedHandler, createNoticeDetailHandler, createNoticeSummariesHandler, type FeedDeps, parseIds } from "../feed";
 
 const NOW = new Date("2026-10-20T03:00:00Z"); // KST 2026-10-20 12:00
@@ -31,6 +32,7 @@ const bundle = (id: string, over: Partial<NoticeBundle["notice"]> = {}): NoticeB
     contractEnd: null,
     summary: { eligibilityPlain: "쉬운 말", forSeniorCouple: "노부부" },
     summaryStatus: "done",
+    regions: [],
     firstSeenAt: "2026-10-18T00:00:00.000Z",
     ...over,
   },
@@ -242,5 +244,14 @@ describe("GET /api/notices/[id]/calendar", () => {
     const t = await setup();
     expect((await t.calendar(MISSING)).status).toBe(404);
     expect((await t.calendar("x")).status).toBe(404);
+  });
+});
+
+describe("서버 프로필의 관심 지역 (변경 2)", () => {
+  it("평문 prefs.regions를 읽고, 형식이 틀리면 빈 목록", () => {
+    const stored = (regions: unknown) => ({ data: { prefs: { districtIds: [], regions } } }) as unknown as Parameters<typeof interestRegions>[0];
+    expect(interestRegions(stored([{ sido: "서울", sigungu: "강서구" }]))).toEqual([{ sido: "서울", sigungu: "강서구" }]);
+    expect(interestRegions(stored([{ sido: "부산", sigungu: null }]))).toEqual([]);
+    expect(interestRegions(null)).toEqual([]);
   });
 });

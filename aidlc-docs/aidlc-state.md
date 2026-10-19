@@ -68,7 +68,8 @@
 - [x] U4 Functional Design (2026-10-19 승인)
 - [x] U4 Code Generation (2026-10-19 승인, 커밋 5759d29)
 - 운영 반영 (2026-10-19): 운영 DB 0009·0010, Edge Function collect·analyze·dispatch 배포, push 5759d29
-- [ ] U5 Functional Design — 질문 답 기다림 (plans/U5-feed-detail-change-2-functional-design-plan.md)
+- [x] U5 Functional Design (2026-10-19 승인)
+- [ ] U5 Code Generation — Step 1~7 완료 (단위 723, pgTAP 150, E2E 71+3, 스모크 13/13), 승인 대기
 - 계획: User Stories(가볍게) → U2(FD·Code) → U3(FD·NFR-R·NFR-D·Code) → U4(FD·Code) → U5(FD·Code) → Build and Test
 
 ## Current Status

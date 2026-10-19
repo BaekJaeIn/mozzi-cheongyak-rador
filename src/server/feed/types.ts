@@ -1,6 +1,7 @@
 // U5 조회 저장소 형식 (Node 전용 — Deno 쪽 공고·판정 저장소 계약 K2는 바꾸지 않는다)
 import type { IsoDate } from "@shared/domain/dates.ts";
 import type { SourceCode, SummaryStatus, Tenure, Verdict } from "@shared/db/types.ts";
+import type { NoticeRegion } from "@shared/eligibility/types.ts";
 
 import type { DistrictInfo, FeedRow, JudgementStats } from "@shared/feed/visible.ts";
 
@@ -22,6 +23,8 @@ export interface NoticeCore {
   contractEnd: IsoDate | null;
   summary: unknown;
   summaryStatus: SummaryStatus;
+  /** 공고 지역 (regions_ai ?? regions, 변경 2) */
+  regions: NoticeRegion[];
   /** ISO 시각 */
   firstSeenAt: string;
 }

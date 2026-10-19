@@ -4,8 +4,10 @@ import type { IsoDate } from "../domain/dates.ts";
 import { noticeStatus } from "../domain/retention.ts";
 import type { Tenure } from "../db/types.ts";
 import { compareFeedItems } from "../eligibility/scoring.ts";
-import type { CriterionKey, CriterionResult, UnitJudgement, UserValueKey, Verdict } from "../eligibility/types.ts";
+import type { RegionPick } from "../domain/profile.ts";
+import type { CriterionKey, CriterionResult, NoticeRegion, UnitJudgement, UserValueKey, Verdict } from "../eligibility/types.ts";
 import { isVisible } from "../eligibility/visibility.ts";
+import { orderRegions } from "./place.ts";
 
 export interface DistrictInfo {
   id: string;
@@ -33,6 +35,8 @@ export interface FeedRow {
     applyEnd: IsoDate | null;
     /** ISO 시각 */
     firstSeenAt: string;
+    /** 공고 지역 (U3 regions_ai ?? regions). 알림 발송처럼 쓰지 않는 곳은 비워 둬도 된다 (변경 2) */
+    regions?: NoticeRegion[];
   };
   districts: DistrictInfo[];
 }
@@ -43,6 +47,8 @@ export interface FeedItem {
   complexName: string | null;
   /** 관심 지구 먼저, 이름 순 (BR-U5-25) */
   districts: DistrictRef[];
+  /** 공고 지역 — 내 관심 지역 먼저 (변경 2 BR-U5-C2). 지구가 없는 공고의 위치 표시 */
+  regions: NoticeRegion[];
   tenure: Tenure;
   applyStart: IsoDate | null;
   applyEnd: IsoDate | null;
@@ -124,6 +130,7 @@ export function buildFeed(
   today: IsoDate,
   labels: TypeLabels,
   interestDistrictIds: readonly string[],
+  interestRegions: readonly RegionPick[] = [],
 ): FeedItem[] {
   const interest = new Set(interestDistrictIds);
   const items: FeedItem[] = [];
@@ -137,6 +144,7 @@ export function buildFeed(
       title: n.title,
       complexName: n.complexName,
       districts: orderDistricts(row.districts, interest),
+      regions: orderRegions(n.regions ?? [], interestRegions),
       tenure: n.tenure,
       applyStart: n.applyStart,
       applyEnd: n.applyEnd,

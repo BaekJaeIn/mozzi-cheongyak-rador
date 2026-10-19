@@ -95,14 +95,14 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       },
       refresh(summaries, missing) {
         try {
-          setItems(store().refresh(summaries, missing));
+          setItems(store().refresh(summaries, missing, stored?.profile.prefs.regions ?? []));
         } catch {
           // 고친 정보를 저장하지 못해도 화면은 저장된 정보로 보인다
         }
       },
       announce,
     }),
-    [loaded, items, store, reload, announce],
+    [loaded, items, store, reload, announce, stored],
   );
 
   return (

@@ -4,6 +4,7 @@ import { noticeStatus } from "@shared/domain/retention.ts";
 import type { SourceCode } from "@shared/db/types.ts";
 import { isVisible } from "@shared/eligibility/visibility.ts";
 import { labelOf, orderDistricts, parseJudgementDetail, type TypeLabels } from "@shared/feed/visible.ts";
+import { orderRegions } from "@shared/feed/place.ts";
 import type {
   JudgementView,
   NoticeDetail,
@@ -96,6 +97,7 @@ export function toNoticeDetail(bundle: NoticeBundle, today: IsoDate, labels: Typ
     },
     status: noticeStatus({ applyStart: n.applyStart, applyEnd: n.applyEnd }, today),
     districts: orderDistricts(bundle.districts, new Set(interestDistrictIds)),
+    regions: orderRegions(n.regions, []), // 공용 목록 순서 — 관심 지역 순서는 기기에서 (BR-U5-C5)
     units: bundle.units.map((u) => {
       const l = labelOf(labels, u.supplyType);
       return { ...u, plain: l.plain, formal: l.formal };
@@ -132,6 +134,7 @@ export function toNoticeSummary(bundle: NoticeBundle, today: IsoDate, labels: Ty
     title: n.title,
     complexName: n.complexName,
     districts: [...bundle.districts].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "ko")).map((d) => d.name),
+    regions: orderRegions(n.regions, []),
     applyStart: n.applyStart,
     applyEnd: n.applyEnd,
     status: noticeStatus({ applyStart: n.applyStart, applyEnd: n.applyEnd }, today),

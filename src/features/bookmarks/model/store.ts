@@ -2,6 +2,8 @@
 import { type IsoDate, isIsoDate } from "@shared/domain/dates.ts";
 import { noticeStatus } from "@shared/domain/retention.ts";
 import type { KeyValueStorage } from "@/features/device/identity-store";
+import type { RegionPick } from "@shared/domain/profile.ts";
+import { orderRegions, placeNames } from "@shared/feed/place.ts";
 import type { NoticeSummary } from "@/features/notice/model/api-types";
 import { BOOKMARKS_KEY, LocalSaveError } from "@/features/profile/model/storage";
 
@@ -11,6 +13,7 @@ export const MAX_SNAPSHOT_SUPPLY_TYPES = 3;
 export interface BookmarkSnapshot {
   title: string;
   complexName: string | null;
+  /** 위치 이름 — 지구 이름, 지구가 없으면 지역 이름 "서울 강서구" (변경 2 BR-U5-C1). 칸 이름은 옛 저장본과 같게 둔다 */
   districts: string[];
   applyStart: IsoDate | null;
   applyEnd: IsoDate | null;
@@ -111,7 +114,7 @@ export function createBookmarkStore(storage: KeyValueStorage) {
     },
 
     /** 서버 최신 정보로 화면용 정보를 고치고, 없는 공고는 gone (BR-U5-119·120) */
-    refresh(summaries: readonly NoticeSummary[], missing: readonly string[]): Bookmark[] {
+    refresh(summaries: readonly NoticeSummary[], missing: readonly string[], interest: readonly RegionPick[] = []): Bookmark[] {
       const byId = new Map(summaries.map((s) => [s.id, s]));
       const gone = new Set(missing);
       const items = loadBookmarks(storage).map((b): Bookmark => {
@@ -123,7 +126,7 @@ export function createBookmarkStore(storage: KeyValueStorage) {
             snapshot: snapshotOf({
               title: s.title,
               complexName: s.complexName,
-              districts: s.districts,
+              districts: placeNames(s.districts, orderRegions(s.regions ?? [], interest)), // BR-U5-C5
               applyStart: s.applyStart,
               applyEnd: s.applyEnd,
               supplyTypes: s.supplyTypes,

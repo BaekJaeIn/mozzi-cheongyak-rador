@@ -1423,3 +1423,35 @@
 **Context**: CONSTRUCTION - U5 Functional Design (변경 요청 2)
 
 ---
+
+## 변경 요청 2 — U5 기능 설계 답
+**Timestamp**: 2026-10-19T14:20:00Z
+**User Input**: "완료"
+**AI Response**: "답 확인 (Q1·Q2 = A). U5 기능 설계 변경 2 절 작성: domain-entities §8(API regions, place.ts 순수 함수, P-U5-C1~C3), business-rules §16(BR-U5-C1~C8: 위치 표시·관심 지역 먼저·시도까지만 '서울'·상세 확인 안내, '관심 지역 밖' 문구, 요약 자리 3가지), business-logic-model §11, frontend-components §8. 승인 요청."
+**Context**: CONSTRUCTION - U5 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U5 기능 설계 승인
+**Timestamp**: 2026-10-19T14:30:00Z
+**User Input**: "진행"
+**AI Response**: "U5 기능 설계 승인으로 기록. U5 코드 생성 계획(7단계) 작성, 승인 요청."
+**Context**: CONSTRUCTION - U5 Code Generation Part 1 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U5 코드 생성 계획 승인
+**Timestamp**: 2026-10-19T14:35:00Z
+**User Input**: "진행"
+**AI Response**: "U5 코드 생성 시작 (Step 1부터)."
+**Context**: CONSTRUCTION - U5 Code Generation Part 2 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U5 코드 생성 완료
+**Timestamp**: 2026-10-19T21:40:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U5 Step 1~7 완료: _shared/feed/place.ts(위치 이름·관심 지역 먼저·요약 자리), 피드·상세·관심 공고 API에 regions(regions_ai 우선), 카드·관심 공고 위치 줄, 상세 위치 줄·'관심 지역 밖' 안내·요약 자리 3가지, 옛 피드 저장본 호환. 검증: typecheck·lint·deno check, 단위 723(seed 3개), pgTAP 150, E2E 71+3, 스모크 13/13(첫 실행은 함수 서버 기동 직후 빈 응답으로 중단, 재실행 통과). 로컬 커밋, 승인 요청."
+**Context**: CONSTRUCTION - U5 Code Generation (변경 요청 2)
+
+---

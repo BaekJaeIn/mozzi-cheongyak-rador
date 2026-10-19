@@ -1,7 +1,7 @@
 // U5 API 응답 형식 (domain-entities §2~4) — 서버 핸들러와 화면이 함께 쓴다
 import type { IsoDate } from "@shared/domain/dates.ts";
 import type { SourceCode } from "@shared/db/types.ts";
-import type { UnitJudgement, Verdict } from "@shared/eligibility/types.ts";
+import type { NoticeRegion, UnitJudgement, Verdict } from "@shared/eligibility/types.ts";
 import type { DistrictRef, FeedItem } from "@shared/feed/visible.ts";
 
 export type { DistrictRef, FeedItem };
@@ -51,6 +51,8 @@ export interface NoticeDetail {
   schedule: Schedule;
   status: "upcoming" | "open" | "closed";
   districts: DistrictRef[];
+  /** 공고 지역 (변경 2, 공용 목록 순서) */
+  regions: NoticeRegion[];
   units: UnitInfo[];
   /** BR-U5-95 조건을 만족할 때만 */
   summary: { eligibilityPlain: string; forSeniorCouple: string } | null;
@@ -80,6 +82,8 @@ export interface NoticeSummary {
   title: string;
   complexName: string | null;
   districts: string[];
+  /** 공고 지역 (변경 2) */
+  regions: NoticeRegion[];
   applyStart: IsoDate | null;
   applyEnd: IsoDate | null;
   status: "upcoming" | "open" | "closed";

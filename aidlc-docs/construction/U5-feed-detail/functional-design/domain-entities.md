@@ -180,3 +180,54 @@ interface Bookmark {
 | P-U5-13 | 열어 본 기록: `markSeen` 뒤 그 공고는 `isNew` 거짓, 정리 뒤 개수 ≤ 500, 14일 지난 항목 없음 | `seen` 저장소 | 불변식 |
 
 예시 기반 테스트(PBT-10): 실제 U3 공고 묶음 픽스처로 피드 항목·상세 응답 모양, D-day 표의 각 줄, 2026-10-20(월)~23(목) 같은 고정 날짜.
+
+---
+
+## 8. 변경 요청 2 (2026-10-19)
+
+> 계획: `plans/U5-feed-detail-change-2-functional-design-plan.md` (Q1·Q2 = A). 공고 지역 `NoticeRegion = { sido: "서울"|"경기"|"인천", sigungu: string | null }`은 U2 그대로, 공고의 지역 값은 U3 `regions_ai ?? regions`.
+
+### 8.1 API에 더하는 것
+
+```ts
+// 피드 카드 (GET /api/feed)
+interface FeedItem {
+  // …기존 그대로
+  /** 공고 지역 — 내 관심 지역에 드는 것 먼저, 그다음 공용 목록 순서 (BR-U5-C2) */
+  regions: NoticeRegion[];
+}
+
+// 상세 (GET /api/notices/{id})
+interface NoticeDetail {
+  // …기존 그대로
+  /** 공고 지역 (순서는 기기에서 내 관심 지역으로 정함) */
+  regions: NoticeRegion[];
+}
+
+// 관심 공고 목록 (POST /api/notices/summaries)
+interface NoticeSummary {
+  // …기존 그대로
+  regions: NoticeRegion[];
+}
+```
+
+- 서버 내부 `FeedRow.notice`에 `regions` 추가 (U3 읽기와 같은 `regions_ai ?? regions`, 틀린 값은 빈 목록)
+- 판정·노출 형식(`inDistrict` 등)은 바꾸지 않는다
+
+### 8.2 화면에서 만드는 값 (순수 함수, 공용 `_shared/feed/place.ts`)
+
+| 함수 | 설명 |
+|---|---|
+| `orderRegions(regions, interest: RegionPick[])` | 관심 지역에 드는 것(U2 `regionMatches`) 먼저, 같은 무리 안에서는 공용 목록 순서. 원소는 그대로(순서만) |
+| `regionName(r)` | "서울 강서구" / 시·도까지만이면 "서울" (Q1=A) |
+| `placeLabel(districtNames, regions)` | 카드 위치 한 줄: 지구가 있으면 지구 이름(기존 BR-U5-25), 없으면 지역 이름. 2개 넘으면 "첫째, 둘째 외 N". 둘 다 없으면 `null` |
+| `placeNeedsCheck(districtNames, regions)` | 지구가 없고 지역 중 시·도까지만인 것이 있으면 참 → 상세에 "정확한 위치는 공고문에서 확인해 주세요" |
+| `summaryView(summary, judgement)` | 상세 요약 자리: `"summary"`(요약 있음) / `"outOfArea"`(요약 없음 + 이 기기 판정이 관심 지역 밖, Q2=A) / `"preparing"`(그 밖) |
+
+### 8.3 속성 기반 테스트 대상 추가 (PBT-01)
+
+| # | 속성 | 대상 | 종류 |
+|---|---|---|---|
+| P-U5-C1 | `orderRegions`는 순열이고(원소·개수 같음), 관심 지역에 드는 것이 모두 앞에 온다. 관심 지역이 비면 공용 목록 순서 | `orderRegions` | 불변식 |
+| P-U5-C2 | 지구나 지역이 하나라도 있으면 `placeLabel`은 비지 않고, 지구가 있으면 지역 이름은 쓰지 않는다. "외 N"의 N = 전체 − 2 | `placeLabel` | 불변식 |
+| P-U5-C3 | `summaryView`가 `outOfArea`면 요약이 없고 판정이 관심 지역 밖이다. 요약이 있으면 항상 `summary` | `summaryView` | 불변식 |

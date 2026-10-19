@@ -14,6 +14,8 @@ const noticeJoin = {
   apply_start: "2026-10-20",
   apply_end: null,
   first_seen_at: "2026-10-18 09:00:00+09",
+  regions: [{ sido: "서울", sigungu: null }],
+  regions_ai: [{ sido: "서울", sigungu: "강동구" }], // AI가 고친 지역이 우선 (변경 2)
   notice_districts: [{ districts: { id: "gyosan", name: "하남 교산", sort_order: 2 } }, { districts: null }],
 };
 
@@ -30,7 +32,7 @@ describe("FeedQueryRepository", () => {
         inDistrict: true,
         score: 2,
         detail: { units: [] },
-        notice: { id: NOTICE, title: "공고", complexName: "단지", tenure: "rent", applyStart: "2026-10-20", applyEnd: null, firstSeenAt: "2026-10-18T00:00:00.000Z" },
+        notice: { id: NOTICE, title: "공고", complexName: "단지", tenure: "rent", applyStart: "2026-10-20", applyEnd: null, firstSeenAt: "2026-10-18T00:00:00.000Z", regions: [{ sido: "서울", sigungu: "강동구" }] },
         districts: [{ id: "gyosan", name: "하남 교산", sortOrder: 2 }],
       },
     ]);

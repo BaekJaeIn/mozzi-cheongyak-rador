@@ -108,3 +108,16 @@ BookmarksView (/bookmarks)
 - 안내(저장했어요, 지웠어요, 불러오는 중)는 `role="status"`로 읽힌다.
 - 쉬운 모드·좁은 화면(360px)에서 가로 스크롤 없음. E2E에서 axe 위반 0을 확인한다.
 - 화면마다 h1 하나: "맞춤 공고", 공고명, "관심 공고".
+
+---
+
+## 8. 변경 요청 2 (2026-10-19)
+
+| 컴포넌트 | 바뀐 것 |
+|---|---|
+| `NoticeCard`(피드)·관심 공고 카드 | 위치 줄 = `placeLabel(지구 이름, regions)` (BR-U5-C1~C3) |
+| `NoticeDetailView` | 공고명 아래 위치 줄 + 시·도까지만 안내(BR-U5-C4), 상태 안내 문구·[관심 지역 고치기](BR-U5-C6), 요약 자리 3가지(`summaryView`, BR-U5-C7) |
+| 순수 로직 | `_shared/feed/place.ts`(서버·기기 공용): `orderRegions`, `regionName`, `placeLabel`, `placeNeedsCheck`, `summaryView` |
+| 기기 관심 지역 | 상세·관심 공고는 `useProfile().stored?.profile.prefs.regions`로 순서를 정한다 (BR-U5-C5) |
+
+새 API 없음. 기존 세 API 응답에 `regions`만 더한다.

@@ -141,3 +141,42 @@ E2E에서 첫 피드 표시 시간을 측정해 기록한다(4G 흉내 조건은
 - **순수 함수 + 속성 기반 테스트**: domain-entities §7의 P-U5-1~13.
 - **예시 테스트**: D-day 표 각 줄, 타임라인 오늘 위치, 판정 묶기(같음·다름), 내 금액 붙이기, .ics 내용, API 핸들러(인증·404·400·다시 계산·no_profile).
 - **E2E (로컬 Supabase)**: 공고·판정을 넣어 두고 피드 카드 → 상세 → 원문 링크, 별 저장 → 관심 공고 화면 → 지우기, 저장본 표시(오프라인), 접근성 axe.
+
+---
+
+## 11. 변경 요청 2 (2026-10-19)
+
+> 규칙 business-rules §16, 형식 domain-entities §8.
+
+```text
+GET /api/feed (서버)
+  공고 읽기에 regions_ai·regions 추가 → FeedRow.notice.regions
+  서버 프로필 평문 prefs에서 관심 지구 + 관심 지역 읽기 (금액 복호화 없음)
+  FeedItem.districts = orderDistricts(지구, 관심 지구)        (그대로)
+  FeedItem.regions   = orderRegions(공고 지역, 관심 지역)       BR-U5-C2
+
+GET /api/notices/{id}, POST /api/notices/summaries (서버)
+  notice.regions = 공고 지역 (순서는 기기에서)
+
+기기
+  카드:  placeLabel(지구 이름, 지역)                            BR-U5-C1~C3
+  상세:  위치 줄 = 지역 전체 이름(orderRegions with 기기 관심 지역)
+         placeNeedsCheck → "정확한 위치는 공고문에서 확인해 주세요"   BR-U5-C4
+         상태 안내 "관심 지역 밖의 공고예요" + [관심 지역 고치기]     BR-U5-C6
+         요약 자리 = summaryView(summary, judgement)                 BR-U5-C7
+```
+
+### 11.1 예시
+
+| 공고 | 지구 | 지역 | 카드 위치 | 상세 |
+|---|---|---|---|---|
+| 하남 교산 A2 (LH) | 교산 | 경기 하남시 | 하남 교산 | 하남 교산 |
+| 강서구 행복주택 (SH) | 없음 | 서울 강서구 | 서울 강서구 | 서울 강서구 |
+| 고덕강일 3단지 (SH, AI 전) | 없음 | 서울 | 서울 | 서울 + "정확한 위치는 공고문에서 확인해 주세요" |
+| 통합 공고 (청약홈) | 없음 | 서울 마포구, 경기 고양시, 서울 강서구 | (강서구 관심) 서울 강서구, 서울 마포구 외 1 | 서울 강서구, 서울 마포구, 경기 고양시 |
+
+### 11.2 테스트 방향
+
+- 순수 함수 예시 + P-U5-C1~C3 (`_shared/feed/__tests__`)
+- 피드·상세·요약 목록 API 응답에 `regions` (기존 handler 테스트 + 저장소 매핑)
+- E2E: 로컬 DB에 지구 없는 서울 강서구 공고를 넣고 관심 지역을 강서구로 고른 프로필 → 피드 카드 "서울 강서구", 상세 위치 줄. 관심 지역 밖 공고 상세 → 요약 자리 문구

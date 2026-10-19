@@ -82,6 +82,7 @@ export const feedItemArb = (id: string): fc.Arbitrary<FeedItem> =>
     title: id,
     complexName: null,
     districts: [],
+    regions: [],
     tenure: "rent",
     applyStart: p.applyStart,
     applyEnd: p.applyEnd,

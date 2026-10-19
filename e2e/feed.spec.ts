@@ -2,13 +2,25 @@
 // 실행 전제: 로컬 Supabase(Docker) + 마이그레이션 적용. 공고는 로컬 DB에만 넣고, 판정은 실제 U2 재계산으로 만든다
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { cleanupFeedNotices, type FeedFixture, hasLocalDb, releaseRegistrationLimit, seedFeedNotices, seedStoredProfile } from "./helpers";
+import {
+  cleanupFeedNotices,
+  type FeedFixture,
+  hasLocalDb,
+  type RegionFixture,
+  releaseRegistrationLimit,
+  SAMPLE_PROFILE_GANGSEO,
+  seedFeedNotices,
+  seedRegionNotices,
+  seedStoredProfile,
+} from "./helpers";
 
 test.skip(!hasLocalDb(), "로컬 Supabase에서만 실행 (운영 DB에는 공고를 넣지 않는다)");
 
 let fx: FeedFixture;
+let rx: RegionFixture;
 test.beforeAll(async ({}, testInfo) => {
   fx = await seedFeedNotices(testInfo.project.name);
+  rx = await seedRegionNotices(testInfo.project.name); // 변경 2: 지구가 없는 서울 공고
 });
 test.afterAll(async ({}, testInfo) => {
   await cleanupFeedNotices(testInfo.project.name);
@@ -202,5 +214,37 @@ test("쉬운 모드에서도 상세에 가로 스크롤이 없다 (NFR-1)", asyn
   await expect(page.getByText("판정 이유")).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+  await axe(page);
+});
+
+// ---------- 변경 요청 2: 지구가 없는 공고의 위치·요약 자리 (US-12·13·15) ----------
+
+test("지구가 없는 공고: 강서구를 고르면 피드에 '서울 강서구'로 보이고, 상세에 위치 줄 (FR-C2-12·13)", async ({ page }) => {
+  await seedStoredProfile(page, SAMPLE_PROFILE_GANGSEO);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: "맞춤 공고" })).toBeVisible({ timeout: 15_000 });
+  const gangseo = card(page, rx.gangseo.name);
+  await expect(gangseo).toBeVisible();
+  await expect(gangseo.getByText("서울 강서구", { exact: true })).toBeVisible();
+  await expect(card(page, rx.mapo.name)).toHaveCount(0); // 관심 지역 밖은 숨김
+  await expect(card(page, fx.open.name).getByText("하남 교산", { exact: true })).toBeVisible(); // 지구 공고는 지구 이름 그대로
+  await axe(page);
+
+  await gangseo.getByRole("link").first().click();
+  await expect(page.getByRole("heading", { level: 1, name: new RegExp(rx.gangseo.name) })).toBeVisible();
+  await expect(page.getByText("위치 서울 강서구", { exact: true })).toBeVisible();
+  await expect(page.getByText("관심 지역 밖의 공고예요")).toHaveCount(0);
+  await expect(page.getByText("서울에 사는 무주택 세대가 신청할 수 있어요.")).toBeVisible();
+});
+
+test("관심 지역 밖 공고 상세: 상태 안내와 요약을 만들지 않았다는 안내, [관심 지역 고치기] (BR-U5-C6·C7)", async ({ page }) => {
+  await seedStoredProfile(page, SAMPLE_PROFILE_GANGSEO);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: "맞춤 공고" })).toBeVisible({ timeout: 15_000 });
+  await page.goto(`/notice/${rx.mapo.id}`);
+  await expect(page.getByText("관심 지역 밖의 공고예요")).toBeVisible();
+  await expect(page.getByText("관심 지역 밖의 공고라 요약을 만들지 않았어요. 정확한 내용은 원문을 확인해 주세요")).toBeVisible();
+  await expect(page.getByText("요약을 준비 중이에요")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "관심 지역 고치기" }).first()).toHaveAttribute("href", "/profile/edit/districts");
   await axe(page);
 });

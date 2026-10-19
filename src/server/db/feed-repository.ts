@@ -3,12 +3,13 @@
 import "server-only";
 import type { FeedQueryRepository, FeedRow, NoticeBundle, NoticeCore, SourceRow, UnitRow, DistrictInfo } from "../feed/types";
 import type { SourceCode, SummaryStatus, Tenure, Verdict } from "@shared/db/types.ts";
+import { parseNoticeRegions } from "@shared/eligibility/area.ts";
 import { type DbClient, DbError } from "./client";
 
 const PAGE = 1000;
 
 const NOTICE_COLUMNS =
-  "id, title, complex_name, location, provider, primary_source, tenure, announced_at, apply_start, apply_end, result_at, contract_start, contract_end, summary, summary_status, first_seen_at";
+  "id, title, complex_name, location, provider, primary_source, tenure, announced_at, apply_start, apply_end, result_at, contract_start, contract_end, summary, summary_status, first_seen_at, regions, regions_ai";
 const BUNDLE_SELECT = `${NOTICE_COLUMNS}, housing_units(id, label, supply_type, exclusive_area_m2, supply_count), notice_districts(districts(id, name, sort_order)), source_notices(source, original_url, last_seen_at)`;
 
 interface DistrictJoin {
@@ -32,6 +33,8 @@ interface NoticeRowLite {
   summary: unknown;
   summary_status: SummaryStatus;
   first_seen_at: string;
+  regions?: unknown;
+  regions_ai?: unknown;
 }
 
 interface BundleRow extends NoticeRowLite {
@@ -53,6 +56,8 @@ interface FeedJoinRow {
     apply_start: string | null;
     apply_end: string | null;
     first_seen_at: string;
+    regions?: unknown;
+    regions_ai?: unknown;
     notice_districts: DistrictJoin[] | null;
   } | null;
 }
@@ -81,6 +86,7 @@ export function toNoticeCore(r: NoticeRowLite): NoticeCore {
     summary: r.summary,
     summaryStatus: r.summary_status,
     firstSeenAt: toIso(r.first_seen_at),
+    regions: parseNoticeRegions(r.regions_ai ?? r.regions), // AI가 고친 지역 우선 (변경 2)
   };
 }
 
@@ -112,6 +118,7 @@ export function toFeedRow(r: FeedJoinRow): FeedRow | null {
       applyStart: n.apply_start,
       applyEnd: n.apply_end,
       firstSeenAt: toIso(n.first_seen_at),
+      regions: parseNoticeRegions(n.regions_ai ?? n.regions),
     },
     districts: toDistricts(n.notice_districts),
   };
@@ -125,7 +132,7 @@ export function createFeedRepository(db: DbClient): FeedQueryRepository {
         const { data, error } = await db
           .from("judgements")
           .select(
-            "verdict, in_district, score, detail, notices!inner(id, title, complex_name, tenure, apply_start, apply_end, first_seen_at, notice_districts(districts(id, name, sort_order)))",
+            "verdict, in_district, score, detail, notices!inner(id, title, complex_name, tenure, apply_start, apply_end, first_seen_at, regions, regions_ai, notice_districts(districts(id, name, sort_order)))",
           )
           .eq("device_id", deviceId)
           .neq("verdict", "ineligible")

@@ -4,6 +4,7 @@
 import "server-only";
 import type { ProfileRepository } from "@shared/db/repositories.ts";
 import type { StoredProfile } from "@shared/db/types.ts";
+import { isValidRegionPicks, type RegionPick } from "@shared/domain/profile.ts";
 import { type IsoDate, toKstDate } from "@shared/domain/dates.ts";
 import { createLogger, type LogSink } from "@shared/log/logger.ts";
 import type { DeviceRecomputeStatus } from "@shared/services/judgement-service.ts";
@@ -40,6 +41,12 @@ export function interestDistrictIds(stored: StoredProfile | null): string[] {
   return Array.isArray(ids) ? ids.filter((x): x is string => typeof x === "string") : [];
 }
 
+/** 서버 프로필의 관심 지역 (변경 2, 평문 부분만). 형식이 틀리면 빈 목록 — 순서에만 쓴다 */
+export function interestRegions(stored: StoredProfile | null): RegionPick[] {
+  const regions = (stored?.data as { prefs?: { regions?: unknown } } | undefined)?.prefs?.regions;
+  return isValidRegionPicks(regions) ? regions : [];
+}
+
 /** "/api/notices/{id}" 또는 "/api/notices/{id}/calendar"에서 공고 ID */
 export function noticeIdFromUrl(url: string): string {
   const parts = new URL(url).pathname.split("/").filter(Boolean);
@@ -74,7 +81,7 @@ export function createFeedHandler(deps: FeedDeps) {
     }
 
     const [rows, labels] = await Promise.all([feed.listFeedRows(deviceId, today), deps.labels()]);
-    const items = buildFeed(rows, today, labels, interestDistrictIds(stored));
+    const items = buildFeed(rows, today, labels, interestDistrictIds(stored), interestRegions(stored));
     log.info("feed.served", { state, count: items.length });
     return respond(state, items);
   };

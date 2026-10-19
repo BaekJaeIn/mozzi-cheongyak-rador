@@ -1,8 +1,9 @@
 "use client";
 
-// 공고 상세 (US-13~17, business-logic-model §3~5, BR-U5-70~111)
+// 공고 상세 (US-13~17, business-logic-model §3~5, BR-U5-70~111, 변경 2 BR-U5-C4~C8)
 // 알림 → 상세 → [원문 보기] 2탭: 원문 버튼을 맨 위에 둔다 (NFR-1.4)
-import type { HouseholdProfile } from "@shared/domain/profile.ts";
+import type { HouseholdProfile, RegionPick } from "@shared/domain/profile.ts";
+import { orderRegions, placeNames, placeNeedsCheck, regionName, summaryView } from "@shared/feed/place.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -26,7 +27,11 @@ export const DETAIL_TEXT = {
   notFound: "공고를 찾을 수 없어요. 오래된 공고는 1년이 지나면 지워져요",
   closed: "접수가 끝난 공고예요",
   ineligible: "지금 조건으로는 신청이 어려운 공고예요",
-  outOfDistrict: "관심 지구 밖의 공고예요",
+  outOfDistrict: "관심 지역 밖의 공고예요",
+  editArea: "관심 지역 고치기",
+  placeCheck: "정확한 위치는 공고문에서 확인해 주세요",
+  aiOutOfArea: "관심 지역 밖의 공고라 요약을 만들지 않았어요. 정확한 내용은 원문을 확인해 주세요",
+  aiOutOfAreaHint: "관심 지역에 넣으면 다음 날부터 요약해 드려요",
   noProfile: "내 정보를 넣으면 이 공고에 신청할 수 있는지 알려 드려요",
   noJudgement: "아직 판정 결과가 없어요. 잠시 뒤 다시 확인해 주세요",
   outdated: "최근 바꾼 내 정보가 아직 반영되지 않았어요",
@@ -36,6 +41,8 @@ export const DETAIL_TEXT = {
 } as const;
 
 type State = { phase: "loading" } | { phase: "ready"; data: NoticeDetailResponse } | { phase: "not_found" } | { phase: "error"; message: string };
+
+const EDIT_AREA_HREF = "/profile/edit/districts";
 
 export function NoticeDetailView({ id }: { id: string }) {
   const [state, setState] = useState<State>({ phase: "loading" });
@@ -102,13 +109,13 @@ function NotFound({ id }: { id: string }) {
   );
 }
 
-function snapshotOf(n: NoticeDetail): BookmarkSnapshot {
+function snapshotOf(n: NoticeDetail, interest: readonly RegionPick[]): BookmarkSnapshot {
   const plains: string[] = [];
   for (const u of n.units) if (!plains.includes(u.plain)) plains.push(u.plain);
   return {
     title: n.title,
     complexName: n.complexName,
-    districts: n.districts.map((d) => d.name),
+    districts: placeNames(n.districts.map((d) => d.name), orderRegions(n.regions ?? [], interest)), // 위치 이름 (BR-U5-C1)
     applyStart: n.schedule.applyStart,
     applyEnd: n.schedule.applyEnd,
     supplyTypes: plains,
@@ -118,6 +125,9 @@ function snapshotOf(n: NoticeDetail): BookmarkSnapshot {
 function Detail({ data }: { data: NoticeDetailResponse }) {
   const { notice, judgement, today, profile } = data;
   const { stored } = useProfile();
+  const interest = stored?.profile.prefs.regions ?? [];
+  const regions = orderRegions(notice.regions ?? [], interest); // 내 관심 지역 먼저 (BR-U5-C5)
+  const districtNames = notice.districts.map((d) => d.name);
   const supplyTypes = [...new Map(notice.units.map((u) => [u.supplyType, u])).values()];
   return (
     <article className="flex flex-col gap-4" aria-labelledby="notice-title">
@@ -126,12 +136,19 @@ function Detail({ data }: { data: NoticeDetailResponse }) {
       <section className={`${card} flex flex-col gap-4 p-5`}>
         <header className="flex flex-col gap-2">
           <p className="text-caption font-bold text-muted">
-            {[notice.provider, notice.tenure === "sale" ? "분양" : "임대", ...notice.districts.map((d) => d.name)].join(" · ")}
+            {[notice.provider, notice.tenure === "sale" ? "분양" : "임대", ...districtNames].join(" · ")}
           </p>
           <h1 id="notice-title" className="text-heading font-bold leading-snug tracking-tight">
             {notice.title}
           </h1>
           {notice.complexName && <p className="text-body text-muted">{notice.complexName}</p>}
+          {districtNames.length === 0 && regions.length > 0 && (
+            <p className="text-body">
+              <span className="font-bold">위치 </span>
+              {regions.map(regionName).join(", ")}
+              {placeNeedsCheck(districtNames, regions) && <span className="block text-caption text-muted">{DETAIL_TEXT.placeCheck}</span>}
+            </p>
+          )}
           {supplyTypes.length > 0 && (
             <ul className="flex flex-wrap gap-1.5 pt-1">
               {supplyTypes.map((u) => (
@@ -145,7 +162,7 @@ function Detail({ data }: { data: NoticeDetailResponse }) {
         </header>
         <OriginalLink notice={notice} />
         <div className="grid grid-cols-2 gap-2">
-          <BookmarkButton id={notice.id} snapshot={snapshotOf(notice)} size="large" />
+          <BookmarkButton id={notice.id} snapshot={snapshotOf(notice, interest)} size="large" />
           <CalendarButton notice={notice} />
         </div>
       </section>
@@ -154,7 +171,7 @@ function Detail({ data }: { data: NoticeDetailResponse }) {
       <ScheduleTimeline notice={notice} today={today} />
       <UnitList notice={notice} />
       {judgement && <JudgementReasons judgement={judgement} notice={notice} profile={stored?.profile ?? null} />}
-      <AiSummary notice={notice} />
+      <AiSummary notice={notice} judgement={judgement} />
     </article>
   );
 }
@@ -188,13 +205,19 @@ function StatusNotice({ notice, judgement }: { notice: NoticeDetail; judgement: 
   const lines: string[] = [];
   if (notice.status === "closed") lines.push(DETAIL_TEXT.closed);
   if (judgement?.verdict === "ineligible") lines.push(DETAIL_TEXT.ineligible);
-  if (judgement && !judgement.inDistrict) lines.push(DETAIL_TEXT.outOfDistrict);
+  const outOfArea = judgement !== null && !judgement.inDistrict;
+  if (outOfArea) lines.push(DETAIL_TEXT.outOfDistrict);
   if (lines.length === 0) return null;
   return (
     <div className="flex flex-col gap-1 rounded-card bg-ink px-5 py-4 text-body font-bold text-surface">
       {lines.map((l) => (
         <p key={l}>{l}</p>
       ))}
+      {outOfArea && (
+        <Link replace href={EDIT_AREA_HREF} className="min-h-touch content-center font-normal underline">
+          {DETAIL_TEXT.editArea}
+        </Link>
+      )}
     </div>
   );
 }
@@ -369,8 +392,9 @@ function paragraphs(text: string): string[] {
   return text.split(/\n+/).map((s) => s.trim()).filter(Boolean);
 }
 
-function AiSummary({ notice }: { notice: NoticeDetail }) {
+function AiSummary({ notice, judgement }: { notice: NoticeDetail; judgement: JudgementView | null }) {
   const s = notice.summary;
+  const view = summaryView(s, judgement); // 요약 / 관심 지역 밖 / 준비 중 (BR-U5-C7)
   return (
     <section className={`${card} flex flex-col gap-3 p-5`} aria-labelledby="ai-title">
       <h2 id="ai-title" className="text-title font-bold">
@@ -393,11 +417,19 @@ function AiSummary({ notice }: { notice: NoticeDetail }) {
         </>
       ) : (
         <>
-          <p className="text-body">{DETAIL_TEXT.aiPending}</p>
+          <p className="text-body">{view === "outOfArea" ? DETAIL_TEXT.aiOutOfArea : DETAIL_TEXT.aiPending}</p>
           {notice.sources[0] && (
             <a href={notice.sources[0].url} target="_blank" rel="noopener noreferrer" className={`${secondaryButton} flex items-center justify-center`}>
               원문 보기
             </a>
+          )}
+          {view === "outOfArea" && (
+            <p className="text-body text-muted">
+              {DETAIL_TEXT.aiOutOfAreaHint}{" "}
+              <Link replace href={EDIT_AREA_HREF} className={linkButton}>
+                {DETAIL_TEXT.editArea}
+              </Link>
+            </p>
           )}
         </>
       )}

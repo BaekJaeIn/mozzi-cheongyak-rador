@@ -54,7 +54,7 @@ describe("BookmarkStore", () => {
     store.toggle("a", snap(), NOW);
     store.toggle("b", snap(), NOW);
     const items = store.refresh(
-      [{ id: "a", title: "새 제목", complexName: null, districts: ["남양주 왕숙"], applyStart: null, applyEnd: "2026-11-01", status: "upcoming", supplyTypes: ["일반"] }],
+      [{ id: "a", title: "새 제목", complexName: null, districts: ["남양주 왕숙"], regions: [], applyStart: null, applyEnd: "2026-11-01", status: "upcoming", supplyTypes: ["일반"] }],
       ["b"],
     );
     expect(items[0]).toMatchObject({ id: "a", snapshot: { title: "새 제목", applyEnd: "2026-11-01", supplyTypes: ["일반"] } });
@@ -123,6 +123,7 @@ describe("피드 저장본 (BR-U5-50~55)", () => {
     title: id,
     complexName: null,
     districts: [{ id: "gyosan", name: "하남 교산" }],
+    regions: [],
     tenure: "rent",
     applyStart,
     applyEnd,
