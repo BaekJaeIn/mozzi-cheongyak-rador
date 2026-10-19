@@ -20,6 +20,7 @@ interface NoticeBundleRow {
   housing_units: { id: string; supply_type: string; exclusive_area_m2: number | string | null; requirements: unknown }[] | null;
   notice_districts: { district_id: string }[] | null;
   regions: unknown;
+  regions_ai?: unknown;
 }
 
 export function toNoticeForJudgement(row: NoticeBundleRow): NoticeForJudgement {
@@ -30,7 +31,7 @@ export function toNoticeForJudgement(row: NoticeBundleRow): NoticeForJudgement {
     applyStart: row.apply_start,
     applyEnd: row.apply_end,
     districtIds: (row.notice_districts ?? []).map((d) => d.district_id),
-    regions: parseNoticeRegions(row.regions),
+    regions: parseNoticeRegions(row.regions_ai ?? row.regions), // AI가 고친 지역 우선 (변경 2 P-U3-C4)
     units: (row.housing_units ?? []).map((u) => ({
       id: u.id,
       supplyType: u.supply_type,
@@ -55,7 +56,7 @@ export function createNoticeRepository(db: DbClient): NoticeRepository {
         const { data, error } = await db
           .from("notices")
           .select(
-            "id, tenure, announced_at, apply_start, apply_end, regions, housing_units(id, supply_type, exclusive_area_m2, requirements), notice_districts(district_id)",
+            "id, tenure, announced_at, apply_start, apply_end, regions, regions_ai, housing_units(id, supply_type, exclusive_area_m2, requirements), notice_districts(district_id)",
           )
           .order("id")
           .range(from, from + PAGE - 1);

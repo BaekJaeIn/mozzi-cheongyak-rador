@@ -5,6 +5,19 @@ import { MOCK_PDF_PREFIX, mockExtractionFor, mockRawNotices } from "./mock-data.
 import { APPLYHOME_ENDPOINT, APPLYHOME_MAX_PAGES, APPLYHOME_PER_PAGE, parseApplyhomePage } from "./parsers/applyhome.ts";
 import { ghCardToRaw, ghNetFunnelActive, GH_MAIN_URL, parseGhAttachments, parseGhCards } from "./parsers/gh.ts";
 import {
+  isShExcluded,
+  isShListPage,
+  parseShDetail,
+  parseShList,
+  SH_BOARDS,
+  SH_LIST_PAGES,
+  SH_STALE_DAYS,
+  shCardToRaw,
+  shListUrl,
+  shViewUrl,
+  type ShCard,
+} from "./parsers/sh.ts";
+import {
   isLhErrorBody,
   LH_DETAIL_ENDPOINT,
   LH_LIST_ENDPOINT,
@@ -25,6 +38,8 @@ export interface HttpGet {
 export interface CollectorDeps {
   http: HttpGet;
   nowMs: () => number;
+  /** 요청 사이 쉬기 (SH 1초, NFR-U3-C7). 테스트는 바로 돌아오는 함수를 넣는다 */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 /** 요청 하나의 시간 제한: 최대 15초, 남은 시간 안 */
@@ -207,9 +222,98 @@ export function ghCollector(deps: CollectorDeps): Collector {
   };
 }
 
+// ---------- SH 서울주택도시개발공사 (HTML, 변경 2 BR-U3-C10~C16, NFR-U3-C5~C8) ----------
+export const SH_DETAIL_MAX = 15;
+export const SH_GAP_MS = 1_000;
+
+export function shCollector(deps: CollectorDeps): Collector {
+  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  return {
+    source: "sh",
+    async collect(ctx) {
+      const warnings: string[] = [];
+      const notices: RawNotice[] = [];
+      const known = ctx.knownTitles ?? new Map<string, string>();
+      const staleBefore = addDays(ctx.today, -SH_STALE_DAYS);
+      const budget = ctx.deadline - deps.nowMs();
+      let requests = 0;
+      let excluded = 0;
+      let unchanged = 0;
+      let cardsTotal = 0;
+      let listOk = false;
+      const wait = async () => {
+        if (requests++ > 0) await sleep(SH_GAP_MS);
+      };
+      // 남은 시간이 예산의 10% 미만이면 더 요청하지 않는다 (P-U3-C5)
+      const lowOnTime = () => ctx.deadline - deps.nowMs() < budget * 0.1 || requestTimeout(ctx, deps) === null;
+
+      // 1) 두 게시판 목록을 먼저 모두 읽는다 — 한 게시판 상세가 시간을 다 써서 다른 게시판을 놓치지 않게
+      const candidates: { board: (typeof SH_BOARDS)[number]; card: ShCard }[] = [];
+      const seen = new Set<string>();
+      for (const board of SH_BOARDS) {
+        for (let page = 1; page <= SH_LIST_PAGES; page++) {
+          if (lowOnTime()) {
+            warnings.push(`시간 상한으로 ${board.label} ${page}쪽부터 생략`);
+            break;
+          }
+          await wait();
+          const html = await deps.http.getText(shListUrl(board, page), requestTimeout(ctx, deps)!);
+          if (!isShListPage(html)) {
+            warnings.push(`${board.label} 목록이 정상 화면이 아님(대기열·차단 의심) — 건너뜀`);
+            break;
+          }
+          listOk = true;
+          const cards = parseShList(html);
+          cardsTotal += cards.length;
+          for (const card of cards) {
+            if (seen.has(card.seq)) continue;
+            seen.add(card.seq);
+            if (isShExcluded(card.title)) {
+              excluded += 1;
+              continue;
+            }
+            if (card.registeredAt && card.registeredAt < staleBefore) continue; // 오래된 글 (SH_STALE_DAYS)
+            if (known.get(card.seq) === card.title) {
+              unchanged += 1; // 저장된 글 그대로 — 상세를 다시 읽지 않고 내보내지도 않는다 (NFR-U3-C6)
+              continue;
+            }
+            candidates.push({ board, card });
+          }
+          // 이 쪽에서 오래된 글이 나오면 다음 쪽은 더 오래됐다
+          if (cards.length === 0 || cards.some((c) => c.registeredAt !== null && c.registeredAt < staleBefore)) break;
+        }
+      }
+
+      // 2) 상세는 최근 등록 순으로, 최대 15건·시간 안에서
+      candidates.sort((a, b) => (b.card.registeredAt ?? "").localeCompare(a.card.registeredAt ?? ""));
+      let deferred = 0;
+      let details = 0;
+      for (const { board, card } of candidates) {
+        if (details >= SH_DETAIL_MAX || lowOnTime()) {
+          deferred += 1;
+          continue;
+        }
+        details += 1;
+        await wait();
+        try {
+          const detail = parseShDetail(await deps.http.getText(shViewUrl(board, card.seq), requestTimeout(ctx, deps)!));
+          notices.push(shCardToRaw(board, card, detail));
+        } catch {
+          warnings.push(`상세 실패: ${card.title.slice(0, 40)}`);
+        }
+      }
+      if (listOk && cardsTotal === 0) warnings.push("SH 0건 — 화면 구조 변경 의심 (BR-U3-C16)");
+      if (deferred > 0) warnings.push(`상세 ${deferred}건은 다음 실행에`);
+      // 기록 숫자 (NFR-U3-C12) — 경고가 아니라 정보
+      warnings.push(`SH 요청 ${requests}회, 모집공고 아닌 글 ${excluded}건 제외, 저장된 글 ${unchanged}건 건너뜀`);
+      return { notices, warnings };
+    },
+  };
+}
+
 // ---------- 목업 (로컬 COLLECT_MOCK=1, BR-U3-07) ----------
 export function mockCollectorSet(): Collector[] {
-  return (["applyhome", "lh_rental", "gh"] as const).map((source) => ({
+  return (["applyhome", "lh_rental", "gh", "sh"] as const).map((source) => ({
     source,
     collect: async (ctx: CollectorContext) => ({ notices: mockRawNotices(ctx.today)[source], warnings: [] }),
   }));

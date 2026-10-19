@@ -119,6 +119,21 @@ export function mockRawNotices(today: IsoDate): Record<CollectSource, RawNotice[
         attachments: [{ name: "공고문.pdf", url: `${MOCK_PDF_PREFIX}wangsuk-happy.pdf` }],
       }),
     ],
+    sh: [
+      // ① 서울 강서구 — 3기 신도시 밖, 관심 시군구로 고른 사람에게만 (변경 2)
+      base({
+        source: "sh",
+        sourceNoticeNo: "MOCK-SH-1",
+        title: "강서구 고령자복지주택 입주자 모집공고",
+        location: "서울특별시",
+        sigungu: "강서구",
+        provider: "SH",
+        supplyTypeText: "주택임대",
+        tenureHint: "rent",
+        dates: dates(today, { announced: -2, start: 4, end: 8 }),
+        attachments: [{ name: "입주자모집공고문.pdf", url: `${MOCK_PDF_PREFIX}sh-gangseo.pdf` }],
+      }),
+    ],
   };
 }
 

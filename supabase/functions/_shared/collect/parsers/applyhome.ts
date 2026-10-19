@@ -6,7 +6,7 @@ export const APPLYHOME_ENDPOINT = "https://api.odcloud.kr/api/ApplyhomeInfoDetai
 export const APPLYHOME_PER_PAGE = 100;
 export const APPLYHOME_MAX_PAGES = 5;
 
-const TARGET_AREA = /경기|인천/;
+const TARGET_AREA = /서울|경기|인천/; // 변경 2: 수도권 전체 (BR-U3-C1)
 
 const text = (v: unknown): string | null => {
   const s = typeof v === "string" ? v.trim() : typeof v === "number" ? String(v) : "";

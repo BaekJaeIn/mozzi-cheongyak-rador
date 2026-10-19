@@ -23,6 +23,7 @@ export function buildUserPrompt(input: { title: string; supplyTypeHint: string }
     "- 가구원수별 소득 금액표가 있으면 incomeAmounts에 원 단위로",
     "- 총자산·자동차 기준은 만원 단위 정수 (3억 4,500만원 → 34500)",
     "- residenceSido는 시도 줄임 이름 (서울, 인천, 경기 등)",
+    "- supplySigungu: 공급 위치(단지 소재지)의 시도·시군구를 공고문 표기대로 (예: \"서울특별시 강동구\", \"경기도 고양시\"). 여러 곳이면 모두, 없으면 null",
     "- welfareAnyOf: 생계·의료급여 수급자 → livelihood_or_medical, 차상위 → near_poverty, 국가유공자·장애인 등 → other_priority",
     "- summary.eligibilityPlain: 신청 자격을 어르신도 이해할 쉬운 말로 3~5문장",
     "- summary.forSeniorCouple: 만 60세 이상 부부 2인 가구가 특히 볼 점을 2~3문장 (가족 정보는 모르니 일반적으로)",
@@ -96,6 +97,7 @@ export const RESPONSE_SCHEMA = {
         required: ["supplyTypeText"],
       },
     },
+    supplySigungu: nullableStringArray,
     summary: {
       type: "object",
       nullable: true,

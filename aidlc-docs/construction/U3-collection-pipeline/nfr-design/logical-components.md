@@ -60,3 +60,45 @@ pg_cron (매시)  -> analyze/index.ts -> FunctionGuard
 | PBT-06 | `analyze` 반복 실행(공고 추가·변경·처리·실패)을 상태 기반 테스트 후보로 Code Generation 계획에 포함 |
 
 Blocking finding 없음.
+
+---
+
+## 5. 변경 요청 2 (2026-10-18)
+
+### 컴포넌트
+
+| 컴포넌트 | 위치 | 역할 |
+|---|---|---|
+| RegionResolver (새) | `_shared/collect/regions.ts` | 공고 지역 판별·정리·묶음 합집합·AI 고치기·인천 옛 구 (P-U3-C6) |
+| ShCollector (새) | `_shared/collect/collectors.ts` + `parsers/sh.ts` | SH 목록·상세 파싱, 상세 줄이기 (P-U3-C5) |
+| CollectGroups | `_shared/collect/collect-orchestrator.ts` | 묶음별 수집기·예산, 재계산 시점 (P-U3-C1·C2) |
+| Normalizer | `normalize.ts` | `regions` 채우기, 지역 없으면 버림(BR-U3-C2) |
+| Bundler | `bundle.ts` | 묶음 지역 합집합(BR-U3-C7), 대표 우선순위에 sh |
+| Extraction | `prompt.ts`·`extraction.ts` | `supplySigungu` 스키마·검증 |
+| AnalyzeOrchestrator | `analyze-orchestrator.ts` | 추출 뒤 `regions_ai` 저장 |
+| 공고 읽기 | `_lib/db/repositories.ts`, `src/server/db/notice-repository.ts`·`feed-repository.ts` | `regions_ai ?? regions` |
+| collect 함수 | `functions/collect/index.ts` | 요청 본문 `group` 읽기 |
+
+### DB 변경 (`0010_collect_regions.sql`)
+
+| 변경 | 내용 |
+|---|---|
+| 칸 | `notices.regions_ai jsonb` (null 허용, 배열 검사) |
+| 제약 | `source_notices.source`·`notices.primary_source` 검사에 `sh` |
+| RPC | `upsert_notice_bundle`: `notice.regions` 저장(regions_ai 유지) · 분석 저장 경로에 `regions_ai` |
+| 함수 | `notice_in_any_interest(uuid, timestamptz)` (P-U3-C3), `claim_notices_for_analysis` 대상 조건 추가 |
+| Edge 호출 | `invoke_edge_function(p_name text, p_body jsonb default '{}')` — 본문 전달 |
+| cron | `collect-daily` 본문 `{"group":"api"}`, 새 `collect-crawl` 20:10 UTC 본문 `{"group":"crawl"}` |
+| 권한 | 새 함수 service_role만 (기존 원칙) |
+
+### 호출 관계 (바뀐 부분)
+
+```text
+pg_cron 20:00 ─▶ collect {group:api}  ─▶ 청약홈·LH ─▶ 정규화+지역 ─▶ 묶기 ─▶ 저장 ─▶ (저장분 있으면) recomputeAll
+pg_cron 20:10 ─▶ collect {group:crawl}─▶ GH·SH(상세 줄이기) ─▶ … ─▶ 저장 ─▶ recomputeAll
+pg_cron 매시30 ─▶ analyze ─▶ claim(마감 전·대기·관심 지역 안) ─▶ Gemini ─▶ 요건·요약·regions_ai 저장 ─▶ recomputeAll
+```
+
+### PBT 준수 요약 (이 단계)
+
+PBT-02~08 대상은 RegionResolver·SH 파서(순수 함수)로 분리해 두었다(P-U3-C6). SQL·TS 관심 지역 일치는 공유 표 테스트로. Blocking finding 없음.

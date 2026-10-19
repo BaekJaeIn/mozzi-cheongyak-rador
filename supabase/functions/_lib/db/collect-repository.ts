@@ -37,6 +37,17 @@ export function createCollectRepository(db: DbClient): CollectRepository {
       return toStoredSourceState((data ?? []) as CollectStateRow[]);
     },
 
+    async sourceTitles(source) {
+      // 원천별 저장 글번호 → 제목 (SH 상세 줄이기, P-U3-C5). 최근 글 위주라 1,000행이면 충분
+      const { data, error } = await db.from("source_notices").select("source_notice_no, raw").eq("source", source).limit(1000);
+      if (error) throw new DbError("source_notices.titles", error);
+      const out = new Map<string, string>();
+      for (const r of (data ?? []) as { source_notice_no: string; raw: { title?: unknown } | null }[]) {
+        if (typeof r.raw?.title === "string") out.set(r.source_notice_no, r.raw.title);
+      }
+      return out;
+    },
+
     async upsertBundle(bundle) {
       const { data, error } = await db.rpc("upsert_notice_bundle", { p_bundle: bundle });
       if (error) throw new DbError("upsert_notice_bundle", error);
@@ -54,7 +65,7 @@ export function createCollectRepository(db: DbClient): CollectRepository {
       const { data, error } = await db
         .from("notices")
         .select(
-          "dedup_key, title, complex_name, location, sido, sigungu, provider, primary_source, tenure, announced_at, apply_start, apply_end, result_at, contract_start, contract_end, ai_attempts, source_notices(source, source_notice_no, original_url, raw, content_hash, attachments), housing_units(supply_type, label), notice_districts(district_id)",
+          "dedup_key, title, complex_name, location, sido, sigungu, provider, primary_source, tenure, announced_at, apply_start, apply_end, result_at, contract_start, contract_end, ai_attempts, regions, source_notices(source, source_notice_no, original_url, raw, content_hash, attachments), housing_units(supply_type, label), notice_districts(district_id)",
         )
         .eq("id", noticeId)
         .maybeSingle();

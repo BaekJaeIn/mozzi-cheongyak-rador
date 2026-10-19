@@ -10,7 +10,7 @@ import { inScope } from "./scope.ts";
 import type { CollectSource, NoticeGroup, NormalizedNotice } from "./types.ts";
 
 /** NFR-U3-01 소스별 시간 상한 */
-export const SOURCE_BUDGET_MS: Record<CollectSource, number> = { applyhome: 20_000, lh_rental: 40_000, gh: 10_000 };
+export const SOURCE_BUDGET_MS: Record<CollectSource, number> = { applyhome: 20_000, lh_rental: 55_000, gh: 10_000, sh: 35_000 } // 변경 2 NFR-U3-C2;
 
 export interface CollectDeps {
   collectors: readonly Collector[];
@@ -19,10 +19,22 @@ export interface CollectDeps {
   clock: Clock;
 }
 
+/** 두 묶음 호출 (변경 2 NFR-U3-C1, P-U3-C1): 새벽 5:00 api, 5:10 crawl. 묶음 없이 부르면 전체 */
+export type CollectGroup = "api" | "crawl";
+export const COLLECT_GROUPS: Readonly<Record<CollectGroup, readonly CollectSource[]>> = {
+  api: ["applyhome", "lh_rental"],
+  crawl: ["gh", "sh"],
+};
+export function parseCollectGroup(value: unknown): CollectGroup | null {
+  return value === "api" || value === "crawl" ? value : null;
+}
+
 export interface CollectOptions {
   runId: string;
   today: IsoDate;
   budgets?: Partial<Record<CollectSource, number>>;
+  /** 없으면 전체 (수동 실행·옛 cron) */
+  group?: CollectGroup | null;
 }
 
 export interface SourceOutcome {
@@ -68,31 +80,39 @@ export async function runCollect(deps: CollectDeps, opts: CollectOptions): Promi
   const notices: NormalizedNotice[] = [];
   const sources: SourceOutcome[] = [];
 
+  const collectors = opts.group ? deps.collectors.filter((c) => COLLECT_GROUPS[opts.group!].includes(c.source)) : deps.collectors;
+
   // 3. 소스마다 격리 (BR-U3-01)
-  for (const collector of deps.collectors) {
+  for (const collector of collectors) {
     const startedAt = clock.now();
     const budget = opts.budgets?.[collector.source] ?? SOURCE_BUDGET_MS[collector.source];
     const outcome: SourceOutcome = { source: collector.source, ok: true, fetched: 0, kept: 0, warnings: [], error: null };
     try {
+      // SH는 저장된 글 제목을 넘겨 상세를 줄인다 (P-U3-C5)
+      const knownTitles = collector.source === "sh" && repo.sourceTitles ? await repo.sourceTitles("sh") : undefined;
       const result = await withTimeout(
-        collector.collect({ today: opts.today, deadline: clock.nowMs() + budget }),
+        collector.collect({ today: opts.today, deadline: clock.nowMs() + budget, ...(knownTitles ? { knownTitles } : {}) }),
         budget + 5_000,
         collector.source,
       );
       outcome.fetched = result.notices.length;
       outcome.warnings.push(...result.warnings);
       const candidates: string[] = [];
+      const noRegion: string[] = [];
       for (const raw of result.notices) {
         const n = await normalizeNotice(raw, districts);
         if (!n || !inScope(n.schedule, opts.today)) continue; // BR-U3-14·40
-        if (n.districtIds.length === 0) {
-          if (isDistrictCandidate(n, districts)) candidates.push(n.title); // BR-U3-22
-          continue; // BR-U3-21
+        if (n.districtIds.length === 0 && isDistrictCandidate(n, districts)) candidates.push(n.title); // BR-U3-22
+        if (n.regions.length === 0) {
+          // 수도권 밖이거나 시도를 모름 → 저장 안 함 (변경 2 BR-U3-C2·C3). 수도권 밖은 정상이라 시도를 모를 때만 센다
+          if (n.sido === null) noRegion.push(n.title);
+          continue;
         }
         notices.push(n);
         outcome.kept += 1;
       }
       if (candidates.length > 0) outcome.warnings.push(`지구 후보(동 키워드 확인): ${candidates.slice(0, 10).join(" / ")}`);
+      if (noRegion.length > 0) outcome.warnings.push(`지역 판별 실패 ${noRegion.length}건: ${noRegion.slice(0, 5).join(" / ")}`);
       if (collector.source === "gh" && result.notices.length === 0 && result.warnings.length === 0) {
         outcome.warnings.push("GH 0건 — 화면 구조 변경 의심 (BR-U3-71)");
       }
@@ -134,13 +154,15 @@ export async function runCollect(deps: CollectDeps, opts: CollectOptions): Promi
     }
   }
 
-  // 7. 전체 판정 재계산 (나이가 날마다 바뀌므로 매일)
+  // 7. 전체 판정 재계산 (나이가 날마다 바뀌므로 매일). api 묶음은 저장한 공고가 있을 때만 — 하루 한 번은 crawl 묶음이 한다 (P-U3-C2)
   let recompute: RecomputeAllSummary | null = null;
   let recomputeError: string | null = null;
-  try {
-    recompute = await deps.recomputer.recomputeAll(opts.today);
-  } catch (e) {
-    recomputeError = errorMessage(e);
+  if (opts.group !== "api" || saved > 0) {
+    try {
+      recompute = await deps.recomputer.recomputeAll(opts.today);
+    } catch (e) {
+      recomputeError = errorMessage(e);
+    }
   }
 
   const summary: CollectSummary = { runId: opts.runId, sources, groups: groups.length, changed, saved, saveErrors, recompute, recomputeError };
@@ -150,7 +172,7 @@ export async function runCollect(deps: CollectDeps, opts: CollectOptions): Promi
     ok: recomputeError === null && saveErrors === 0 && sources.every((s) => s.ok),
     fetchedCount: sources.reduce((a, s) => a + s.fetched, 0),
     upsertedCount: saved,
-    warning: JSON.stringify({ groups: groups.length, changed, saveErrors, recompute }),
+    warning: JSON.stringify({ group: opts.group ?? "all", groups: groups.length, changed, saveErrors, recompute }),
     error: recomputeError,
     startedAt: runStartedAt,
     finishedAt: clock.now(),

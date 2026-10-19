@@ -23,7 +23,7 @@ const row = (over: Partial<StoredNoticeRow> = {}): StoredNoticeRow => ({
   source_notices: [
     { source: "applyhome", source_notice_no: "1", original_url: "https://a/1", raw: null, content_hash: "h1", attachments: [{ name: "모집공고.pdf", url: "https://a/a.pdf" }] },
     { source: "lh_rental", source_notice_no: "9", original_url: "https://l/9", raw: { x: 1 }, content_hash: "h9", attachments: [{ name: "입주자모집공고문.pdf", url: "https://l/l.pdf" }] },
-    { source: "sh", source_notice_no: "old", original_url: "https://s", raw: null, content_hash: "h", attachments: [] },
+    { source: "sh_old", source_notice_no: "old", original_url: "https://s", raw: null, content_hash: "h", attachments: [] },
   ],
   housing_units: [{ supply_type: "happy_senior", label: null }],
   notice_districts: [{ district_id: "wangsuk" }],
@@ -56,7 +56,7 @@ describe("baseFromStoredNotice", () => {
 describe("상태·기록 행", () => {
   it("수집 대상 원천만 상태로", () => {
     const base = { notice_id: "n", dedup_key: "k", content_hash: "h", summary_status: "done" as const, ai_attempts: 0 };
-    expect(toStoredSourceState([{ ...base, source: "gh", source_notice_no: "1" }, { ...base, source: "sh", source_notice_no: "2" }])).toEqual([
+    expect(toStoredSourceState([{ ...base, source: "gh", source_notice_no: "1" }, { ...base, source: "sh_old", source_notice_no: "2" }])).toEqual([
       { source: "gh", sourceNoticeNo: "1", noticeId: "n", dedupKey: "k", contentHash: "h", summaryStatus: "done", aiAttempts: 0 },
     ]);
   });

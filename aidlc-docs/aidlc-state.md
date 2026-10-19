@@ -60,7 +60,11 @@
 - [x] Workflow Planning — change-2-execution-plan.md (2026-10-17 승인)
 - [x] User Stories (가볍게) — US-04·05·07·12 고침, US-21 추가 (2026-10-17 승인)
 - [x] U2 Functional Design (2026-10-17 승인)
-- [ ] U2 Code Generation — Step 1~10 완료 (단위 642, pgTAP 125, 로컬 E2E 59+3), 승인 대기
+- [x] U2 Code Generation (2026-10-17 승인, 커밋 9e94303)
+- [x] U3 Functional Design (2026-10-18 승인)
+- [x] U3 NFR Requirements (2026-10-18 승인)
+- [x] U3 NFR Design (2026-10-18 승인)
+- [ ] U3 Code Generation — Step 1~10 완료 (단위 683, pgTAP 150, E2E 59+3, 스모크 13/13, SH 실제 1회), 승인 대기
 - 계획: User Stories(가볍게) → U2(FD·Code) → U3(FD·NFR-R·NFR-D·Code) → U4(FD·Code) → U5(FD·Code) → Build and Test
 
 ## Current Status

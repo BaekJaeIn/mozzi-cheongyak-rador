@@ -2,6 +2,7 @@
 import {
   applyhomeCollector,
   ghCollector,
+  shCollector,
   lhCollector,
   mockCollectorSet,
   mockExtractor,
@@ -44,7 +45,7 @@ export function createPipeline(env: FunctionEnv, log: Logger) {
     const list: Collector[] = [];
     if (env.dataGoKrKey) list.push(applyhomeCollector(env.dataGoKrKey, deps), lhCollector(env.dataGoKrKey, deps));
     else log.warn("DATA_GO_KR_API_KEY 없음 — 청약홈·LH 건너뜀");
-    list.push(ghCollector(deps));
+    list.push(ghCollector(deps), shCollector(deps));
     return list;
   }
 

@@ -4,10 +4,11 @@ import type { Tenure } from "../domain/profile.ts";
 import type { SupplyTypeCode } from "../domain/supply-types.ts";
 import type { JsonObject } from "../db/types.ts";
 import type { Requirements } from "../domain/requirements.ts";
+import type { NoticeRegion } from "../eligibility/types.ts";
 
 /** 1차 수집 소스 (U3 Q1=A). U1 enum 값을 그대로 쓴다. */
-export type CollectSource = "applyhome" | "lh_rental" | "gh";
-export const COLLECT_SOURCES: readonly CollectSource[] = ["applyhome", "lh_rental", "gh"];
+export type CollectSource = "applyhome" | "lh_rental" | "gh" | "sh";
+export const COLLECT_SOURCES: readonly CollectSource[] = ["applyhome", "lh_rental", "gh", "sh"];
 
 export interface Attachment {
   name: string;
@@ -72,6 +73,8 @@ export interface NormalizedNotice {
   tenure: Tenure;
   schedule: Schedule;
   districtIds: string[];
+  /** 공고 지역 (변경 2 BR-U3-C4~C8). 비면 저장하지 않는다 (BR-U3-C2) */
+  regions: NoticeRegion[];
   blockKey: string | null;
   originalUrl: string;
   attachments: Attachment[];
@@ -103,6 +106,8 @@ export interface NoticeBundle {
     result_at: IsoDate | null;
     contract_start: IsoDate | null;
     contract_end: IsoDate | null;
+    /** 수집이 판별한 지역 (변경 2) */
+    regions: NoticeRegion[];
   };
   sources: {
     source: CollectSource;
@@ -128,6 +133,8 @@ export interface NoticeBundle {
   ai_attempts?: number;
   ai_source_url?: string | null;
   release_claim?: boolean;
+  /** 분석이 고친 지역 — 있을 때만 덮어쓴다 (BR-U3-C9, P-U3-C4) */
+  regions_ai?: NoticeRegion[] | null;
 }
 
 /** Gemini 추출 결과 (검증 후) — U3 domain-entities §5 */
@@ -145,6 +152,8 @@ export interface NoticeExtraction {
   schedule: Schedule;
   units: ExtractedUnit[];
   summary: { eligibilityPlain: string; forSeniorCouple: string } | null;
+  /** 공급 위치 시군구 원문 표기 (변경 2 BR-U3-C9). 없으면 null */
+  supplySigungu?: string[] | null;
 }
 
 /** collect_runs 기록 */

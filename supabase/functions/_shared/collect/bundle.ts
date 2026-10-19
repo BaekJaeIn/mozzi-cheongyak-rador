@@ -5,7 +5,9 @@ import type { Requirements } from "../domain/requirements.ts";
 import { resolveRequirements } from "../domain/requirement-resolver.ts";
 import { classifySupplyType, type SupplyTypeCode } from "../domain/supply-types.ts";
 import type { JsonObject } from "../db/types.ts";
+import type { NoticeRegion } from "../eligibility/types.ts";
 import { mergedSchedule } from "./grouping.ts";
+import { mergeRegions } from "./regions.ts";
 import {
   type CollectSource,
   type NoticeBundle,
@@ -31,6 +33,7 @@ export interface BundleBase {
   supplyType: SupplyTypeCode;
   schedule: Schedule;
   districtIds: string[];
+  regions: NoticeRegion[];
   sources: NoticeBundle["sources"];
 }
 
@@ -49,6 +52,7 @@ export function baseFromGroup(group: NoticeGroup): BundleBase {
     supplyType: p.supplyType,
     schedule: mergedSchedule(group),
     districtIds: [...new Set(group.members.flatMap((m) => m.districtIds))].sort(),
+    regions: mergeRegions(...group.members.map((m) => m.regions)), // 묶음 지역 = 합집합 (BR-U3-C7)
     sources: group.members.map((m) => ({
       source: m.source,
       source_notice_no: m.sourceNoticeNo,
@@ -108,7 +112,7 @@ export function fillSchedule(source: Schedule, extracted: Schedule | null): Sche
 export function buildBundle(
   base: BundleBase,
   units: NoticeBundle["units"],
-  extra: Pick<NoticeBundle, "summary" | "summary_status" | "ai_attempts" | "ai_source_url" | "release_claim"> = {},
+  extra: Pick<NoticeBundle, "summary" | "summary_status" | "ai_attempts" | "ai_source_url" | "release_claim" | "regions_ai"> = {},
   schedule: Schedule = base.schedule,
 ): NoticeBundle {
   const d = (k: keyof Schedule): IsoDate | null => schedule[k];
@@ -129,6 +133,7 @@ export function buildBundle(
       result_at: d("resultAt"),
       contract_start: d("contractStart"),
       contract_end: d("contractEnd"),
+      regions: base.regions,
     },
     sources: base.sources,
     units,

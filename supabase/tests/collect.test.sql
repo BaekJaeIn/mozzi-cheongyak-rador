@@ -12,7 +12,8 @@ create or replace function pg_temp.bundle(p_key text, p_no text, p_end_offset in
 returns jsonb language sql as $$
   select jsonb_build_object(
     'notice', jsonb_build_object('dedup_key', p_key, 'title', '테스트 ' || p_key, 'provider', 'GH', 'primary_source', 'gh',
-      'tenure', 'rent', 'apply_end', (select d from t_today) + p_end_offset),
+      'tenure', 'rent', 'apply_end', (select d from t_today) + p_end_offset,
+      'regions', '[{"sido":"경기","sigungu":null}]'::jsonb),
     'sources', jsonb_build_array(jsonb_build_object('source', 'gh', 'source_notice_no', p_no, 'original_url', 'https://g/' || p_no,
       'content_hash', 'h-' || p_no, 'attachments', jsonb_build_array(jsonb_build_object('name', '공고문.pdf', 'url', 'https://g/' || p_no || '.pdf')))),
     'units', jsonb_build_array(jsonb_build_object('supply_type', 'happy_senior', 'requirements', '{}'::jsonb)),
@@ -51,6 +52,10 @@ select public.upsert_notice_bundle(pg_temp.bundle('c-soon', '2', 1));
 select public.upsert_notice_bundle(pg_temp.bundle('c-closed', '3', -1));
 select public.upsert_notice_bundle(pg_temp.bundle('c-failed3', '4', 2, '{"summary_status":"failed","ai_attempts":3}'));
 select public.upsert_notice_bundle(pg_temp.bundle('c-failed1', '5', 3, '{"summary_status":"failed","ai_attempts":1}'));
+-- 관심 기기 하나 (변경 2: 분석은 관심 지역 안 공고만, BR-U3-C18) — 공고 지역 "경기(시도까지만)" × 관심 "경기 하남시"
+insert into public.devices (id, token_hash) values ('dddddddd-0000-4000-8000-000000000001', repeat('d', 64));
+insert into public.device_profiles (device_id, schema_version, data)
+values ('dddddddd-0000-4000-8000-000000000001', 2, '{"prefs":{"districtIds":[],"regions":[{"sido":"경기","sigungu":"하남시"}]}}');
 -- 대상: c-soon(+1), c-failed1(+3), c-new(+5). 제외: c-closed(마감), c-failed3(3회), c-1(done)
 
 create temp table t_claim1 as select * from public.claim_notices_for_analysis(2, now()) as id;

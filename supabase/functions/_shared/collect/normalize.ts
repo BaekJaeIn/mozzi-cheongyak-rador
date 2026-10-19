@@ -3,6 +3,7 @@ import { type DistrictRule, matchDistricts } from "../domain/district-matcher.ts
 import { findSido, normalizeSido } from "../domain/profile.ts";
 import { classifySupplyType, compactText, SUPPLY_TYPES } from "../domain/supply-types.ts";
 import { extractBlockKey } from "./block-key.ts";
+import { resolveRegions } from "./regions.ts";
 import { contentHash } from "./content-hash.ts";
 import { parseSchedule } from "./dates.ts";
 import type { NormalizedNotice, RawNotice } from "./types.ts";
@@ -38,6 +39,8 @@ export function normalizeWithoutHash(
   const supplyType = classifySupplyType({ text: `${title} ${supplyTypeText ?? ""}`, source: raw.source }); // BR-U3-12
   const sigungu = clean(raw.sigungu) ?? extractSigungu(location);
   const sidoText = findSido(`${location ?? ""} ${title}`);
+  const sido = sidoText ? normalizeSido(sidoText) : null;
+  const districtIds = matchDistricts({ title, complexName, location, sigungu }, districts); // BR-U3-20
 
   return {
     source: raw.source,
@@ -45,14 +48,15 @@ export function normalizeWithoutHash(
     title,
     complexName,
     location,
-    sido: sidoText ? normalizeSido(sidoText) : null, // BR-U3-15
+    sido, // BR-U3-15
     sigungu,
     provider: clean(raw.provider) ?? raw.source,
     supplyTypeText,
     supplyType,
     tenure: raw.tenureHint ?? SUPPLY_TYPES[supplyType].tenure, // BR-U3-13
     schedule: parseSchedule(raw.dates), // BR-U3-10·11
-    districtIds: matchDistricts({ title, complexName, location, sigungu }, districts), // BR-U3-20
+    districtIds,
+    regions: resolveRegions({ sido, sigungu, text: [location, title, complexName].filter(Boolean).join(" "), districtIds, districts }), // 변경 2
     blockKey: extractBlockKey(`${title} ${complexName ?? ""}`),
     originalUrl: raw.originalUrl,
     attachments: raw.attachments.filter((a) => a.url.trim() !== ""),

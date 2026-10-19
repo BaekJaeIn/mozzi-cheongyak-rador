@@ -25,3 +25,7 @@ U1·U2 결정을 그대로 쓰고, Deno Edge Function에 필요한 것만 추가
 | `collectors/gh.ts`, `collectors/parsers.ts`(GH 부분) | 메인 카드 파서, 대기열 감지 | 첨부 링크(상세 페이지) 확인 |
 | `analyze.ts` (Gemini 호출부) | 사고 토큰 대응, JSON 강제 | 프롬프트·스키마를 U2 `Requirements`로, PDF 입력 |
 | `mock.ts` | 목업 구조 | 3기 신도시 공고로 새로 작성 |
+
+## 변경 요청 2 (2026-10-18)
+
+새 라이브러리 없음. SH HTML은 GH와 같은 방식(정규식·문자열 파싱, `parsers/html.ts` 공용 도구)으로 읽는다. 두 묶음 호출은 기존 pg_cron + `invoke_edge_function`에 요청 본문만 더한다.

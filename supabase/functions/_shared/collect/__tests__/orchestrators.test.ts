@@ -1,6 +1,6 @@
 // 예시 기반 통합 테스트 — collect·analyze 오케스트레이터 (가짜 의존성, NFR-U3-24)
 import { describe, expect, it } from "vitest";
-import { runCollect } from "../collect-orchestrator.ts";
+import { parseCollectGroup, runCollect } from "../collect-orchestrator.ts";
 import { runAnalyze } from "../analyze-orchestrator.ts";
 import {
   CLAIM_EXPIRE_MS,
@@ -33,19 +33,28 @@ function analyzeOnce(box: ReturnType<typeof createMemoryCollectRepo>, opts: { ex
 const titles = (box: ReturnType<typeof createMemoryCollectRepo>) => [...box.notices.values()].map((n) => n.bundle.notice.title).sort();
 
 describe("runCollect", () => {
-  it("목업 전체 흐름: 지구·범위 필터, 교산 A2 묶기, 표준 요건·pending 저장, 재계산", async () => {
+  it("목업 전체 흐름: 수도권 범위(지구 밖 포함, 변경 2), 교산 A2 묶기, 표준 요건·pending 저장, 재계산", async () => {
     const box = await collectOnce();
     expect(titles(box)).toEqual([
       "[하남교산] A-2BL 뉴:홈 공공분양 입주자모집", // LH 대표, 청약홈과 묶임
       "고양창릉 S-3블록 국민임대 예비입주자 모집",
       "남양주왕숙 행복주택 입주자 모집",
       "인천계양 A10블록 민간 아파트",
-    ]);
+      "판교 대장지구 민간분양", // 지구 밖이어도 수도권이면 저장 (BR-U3-C2)
+      "하남미사 행복주택 추가모집",
+      "강서구 고령자복지주택 입주자 모집공고", // SH (변경 2)
+    ].sort());
+    const regionsOf = (title: string) => [...box.notices.values()].find((n) => n.bundle.notice.title === title)!.bundle.notice.regions;
+    expect(regionsOf("판교 대장지구 민간분양")).toEqual([{ sido: "경기", sigungu: "성남시" }]); // "성남시 분당구" → 성남시
+    expect(regionsOf("고양창릉 S-3블록 국민임대 예비입주자 모집")).toEqual([{ sido: "경기", sigungu: "고양시" }]);
+    expect(regionsOf("인천계양 A10블록 민간 아파트")).toEqual([{ sido: "인천", sigungu: "계양구" }]);
+    expect(regionsOf("남양주왕숙 행복주택 입주자 모집")).toEqual([{ sido: "경기", sigungu: "남양주시" }]); // GH "경기도"뿐이지만 지구 지역(BR-U3-C8)
+    expect(regionsOf("강서구 고령자복지주택 입주자 모집공고")).toEqual([{ sido: "서울", sigungu: "강서구" }]);
     const gyosan = [...box.notices.values()].find((n) => n.bundle.notice.dedup_key.startsWith("gyosan|A2|"))!;
     expect(gyosan.bundle.sources.map((s) => s.source).sort()).toEqual(["applyhome", "lh_rental"]);
     expect(gyosan.summaryStatus).toBe("pending");
     expect(gyosan.bundle.units[0]!.requirements).toEqual(STANDARD_REQUIREMENTS.public_sale_general);
-    expect(box.summary).toMatchObject({ saved: 4, changed: 4, saveErrors: 0 });
+    expect(box.summary).toMatchObject({ saved: 7, changed: 7, saveErrors: 0 });
     expect(box.recomputer.calls).toBe(1);
   });
 
@@ -53,7 +62,7 @@ describe("runCollect", () => {
     const box = await collectOnce();
     const lh = box.runs.find((r) => r.source === "lh_rental")!;
     expect(lh.warning).toContain("하남미사 행복주택 추가모집");
-    expect(box.runs.map((r) => r.source)).toEqual(["applyhome", "lh_rental", "gh", "all"]);
+    expect(box.runs.map((r) => r.source)).toEqual(["applyhome", "lh_rental", "gh", "sh", "all"]);
   });
 
   it("같은 데이터로 다시 실행하면 저장하지 않는다 (멱등, BR-U3-51)", async () => {
@@ -82,8 +91,40 @@ describe("runCollect", () => {
       { runId: "r", today: TODAY, budgets: { gh: 10 } },
     );
     expect(summary.sources.find((s) => s.source === "gh")).toMatchObject({ ok: false });
-    expect(summary.saved).toBe(3);
+    expect(summary.saved).toBe(6);
   }, 15_000);
+});
+
+describe("runCollect — 두 묶음 (변경 2 P-U3-C1·C2)", () => {
+  const run = (box: ReturnType<typeof createMemoryCollectRepo>, group: "api" | "crawl" | null) => {
+    const recomputer = fakeRecomputer();
+    return runCollect({ collectors: mockCollectors(), repo: box.repo, recomputer, clock: fakeClock() }, { runId: "g", today: TODAY, group }).then((summary) => ({ summary, recomputer }));
+  };
+
+  it("api 묶음은 청약홈·LH만, crawl 묶음은 GH·SH만 돈다", async () => {
+    const box = createMemoryCollectRepo();
+    const api = await run(box, "api");
+    expect(api.summary.sources.map((s) => s.source)).toEqual(["applyhome", "lh_rental"]);
+    const crawl = await run(box, "crawl");
+    expect(crawl.summary.sources.map((s) => s.source)).toEqual(["gh", "sh"]);
+    expect(JSON.parse(box.runs.at(-1)!.warning!).group).toBe("crawl");
+  });
+
+  it("api 묶음은 저장한 공고가 있을 때만 재계산, crawl 묶음·전체는 항상", async () => {
+    const box = createMemoryCollectRepo();
+    expect((await run(box, "api")).recomputer.calls).toBe(1); // 새 공고 저장
+    expect((await run(box, "api")).recomputer.calls).toBe(0); // 바뀐 것 없음
+    expect((await run(box, "crawl")).recomputer.calls).toBe(1);
+    expect((await run(box, "crawl")).recomputer.calls).toBe(1);
+    expect((await run(box, null)).recomputer.calls).toBe(1);
+  });
+
+  it("묶음 이름 읽기: 모르는 값은 전체", () => {
+    expect(parseCollectGroup("api")).toBe("api");
+    expect(parseCollectGroup("crawl")).toBe("crawl");
+    expect(parseCollectGroup("x")).toBeNull();
+    expect(parseCollectGroup(undefined)).toBeNull();
+  });
 });
 
 describe("runAnalyze", () => {

@@ -1,5 +1,7 @@
 // U3 오케스트레이터 테스트용 가짜 의존성 — 메모리 CollectRepository는 0007 DB 함수와 같은 규칙을 구현한다
 import { addDays, diffDays, toKstDate } from "../domain/dates.ts";
+import { inInterestArea } from "../eligibility/area.ts";
+import type { RegionPick } from "../domain/profile.ts";
 import type { Requirements } from "../domain/requirements.ts";
 import type { SupplyTypeCode } from "../domain/supply-types.ts";
 import { DISTRICTS, STANDARD_REQUIREMENTS } from "../eligibility/reference-data.ts";
@@ -27,11 +29,17 @@ export interface StoredNotice {
   summaryStatus: "pending" | "done" | "failed";
   aiAttempts: number;
   aiSourceUrl: string | null;
+  /** 분석이 고친 지역 (0010 regions_ai) — 수집 저장은 건드리지 않는다 */
+  regionsAi: NoticeBundle["regions_ai"] | null;
   claimedAt: Date | null;
   order: number;
 }
 
-export function createMemoryCollectRepo() {
+/** 관심 기기들의 관심 지역 (요약 대상 제한 BR-U3-C18의 가짜). 기본: 3기 신도시 지구만 고른 기기 하나 */
+export type InterestPrefs = { districtIds: string[]; regions: RegionPick[] }[];
+export const DEFAULT_INTEREST: InterestPrefs = [{ districtIds: DISTRICTS.map((d) => d.id), regions: [] }];
+
+export function createMemoryCollectRepo(interest: InterestPrefs = DEFAULT_INTEREST) {
   const notices = new Map<string, StoredNotice>();
   const sourceOwner = new Map<string, string>(); // "source:no" → notice id
   const runs: CollectRunRecord[] = [];
@@ -66,7 +74,7 @@ export function createMemoryCollectRepo() {
     async upsertBundle(bundle) {
       let existing = [...notices.values()].find((n) => n.bundle.notice.dedup_key === bundle.notice.dedup_key);
       if (!existing) {
-        existing = { id: `notice-${++seq}`, bundle, summary: null, summaryStatus: "pending", aiAttempts: 0, aiSourceUrl: null, claimedAt: null, order: seq };
+        existing = { id: `notice-${++seq}`, bundle, summary: null, summaryStatus: "pending", aiAttempts: 0, aiSourceUrl: null, regionsAi: null, claimedAt: null, order: seq };
         notices.set(existing.id, existing);
       }
       const previousOwners = new Set<string>();
@@ -84,6 +92,7 @@ export function createMemoryCollectRepo() {
       if (bundle.summary_status !== undefined) existing.summaryStatus = bundle.summary_status;
       if (bundle.ai_attempts !== undefined) existing.aiAttempts = bundle.ai_attempts;
       if (bundle.ai_source_url !== undefined) existing.aiSourceUrl = bundle.ai_source_url;
+      if (bundle.regions_ai !== undefined) existing.regionsAi = bundle.regions_ai;
       if (bundle.release_claim) existing.claimedAt = null;
       // 원천이 모두 다른 공고로 옮겨 간 옛 공고는 지운다 (0007)
       for (const prevId of previousOwners) {
@@ -100,6 +109,7 @@ export function createMemoryCollectRepo() {
         .filter((n) => n.summaryStatus === "pending" || (n.summaryStatus === "failed" && n.aiAttempts < 3))
         .filter((n) => n.claimedAt === null || now.getTime() - n.claimedAt.getTime() > CLAIM_EXPIRE_MS)
         .filter((n) => n.bundle.notice.apply_end === null || diffDays(today, n.bundle.notice.apply_end) >= 0)
+        .filter((n) => interest.some((p) => inInterestArea({ districtIds: n.bundle.district_ids, regions: n.regionsAi ?? n.bundle.notice.regions }, p)))
         .sort((a, b) => {
           const ea = a.bundle.notice.apply_end ?? "9999-12-31";
           const eb = b.bundle.notice.apply_end ?? "9999-12-31";
@@ -133,6 +143,7 @@ export function createMemoryCollectRepo() {
           contractEnd: b.notice.contract_end,
         },
         districtIds: b.district_ids,
+        regions: b.notice.regions,
         sources: b.sources,
       };
       return { base, aiAttempts: n.aiAttempts };
@@ -155,7 +166,7 @@ export function createMemoryCollectRepo() {
 
 /** 목업 원천 데이터를 돌려주는 가짜 Collector (failWith를 주면 실패) */
 export function mockCollectors(options: { fail?: CollectSource[]; empty?: CollectSource[]; hang?: CollectSource[] } = {}): Collector[] {
-  return (["applyhome", "lh_rental", "gh"] as const).map((source) => ({
+  return (["applyhome", "lh_rental", "gh", "sh"] as const).map((source) => ({
     source,
     async collect(ctx) {
       if (options.fail?.includes(source)) throw new Error(`${source} 실패 https://api.example/x?serviceKey=SECRET`);

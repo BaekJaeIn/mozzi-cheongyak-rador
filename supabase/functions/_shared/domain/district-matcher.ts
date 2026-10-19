@@ -3,6 +3,8 @@ import { compactText } from "./supply-types.ts";
 
 export interface DistrictRule {
   id: string;
+  /** 지구의 시도 (지역 판별용, 변경 2 BR-U3-C8) */
+  sido?: string;
   sigungu: string[];
   keywords: string[];
   areaKeywords: string[];

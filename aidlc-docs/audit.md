@@ -1295,3 +1295,75 @@
 **Context**: CONSTRUCTION - U2 Code Generation (변경 요청 2)
 
 ---
+
+## 변경 요청 2 — U2 코드 승인, U3 기능 설계 시작
+**Timestamp**: 2026-10-17T10:00:00Z
+**User Input**: "진행"
+**AI Response**: "U2 코드 생성 승인으로 기록(커밋 9e94303, push 안 함). U3 기능 설계 시작."
+**Context**: CONSTRUCTION - U3 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 기능 설계 계획
+**Timestamp**: 2026-10-17T10:20:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U3 기능 설계 계획 작성: 수도권 범위, 공고 지역 판별, SH 수집기(게시판 robots 허용·HTML 구조 확인), 요약 대상 제한. 질문 3개(SH 대상 글, 시군구 모르는 공고, 관심 기기 기준)."
+**Context**: CONSTRUCTION - U3 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 기능 설계 답변·문서
+**Timestamp**: 2026-10-18T00:10:00Z
+**User Input**: "완료"
+**AI Response**: "Q1~Q3 모두 A. U3 문서 갱신: business-rules §10(BR-U3-C1~C20: 수도권 범위, 지역 판별·인천 옛 구·통합 공고·묶음 합집합·지구 지역, AI 지역 고치기 regions_ai, SH 수집기, 요약 대상 90일 관심 기기), domain-entities(sh 원천, regions/regions_ai, supplySigungu, 인천 동 표), business-logic-model(흐름, PBT P-U3-C1~C7). 승인 요청."
+**Context**: CONSTRUCTION - U3 Functional Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 기능 설계 승인
+**Timestamp**: 2026-10-18T00:20:00Z
+**User Input**: "진행"
+**AI Response**: "U3 기능 설계 승인으로 기록. U3 NFR Requirements 시작."
+**Context**: CONSTRUCTION - U3 NFR Requirements (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 NFR 요구사항 답변·문서
+**Timestamp**: 2026-10-18T00:35:00Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q3 A로 기록. nfr-requirements.md 변경 2 절(NFR-U3-C1~C15: 두 묶음 호출·묶음별 예산·재계산, SH 요청 예절, API·Gemini 양, 관측, PBT), tech-stack 새 라이브러리 없음. 재계산은 크롤링 묶음 끝 + API 묶음은 저장분 있을 때만(누락 대비) — 사용자에게 알림. 승인 요청."
+**Context**: CONSTRUCTION - U3 NFR Requirements (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 NFR 요구사항 승인, NFR 설계
+**Timestamp**: 2026-10-18T00:45:00Z
+**User Input**: "진행"
+**AI Response**: "NFR 요구사항 승인으로 기록. NFR 설계: 질문 없음(기존 패턴으로 결정). nfr-design-patterns §6(P-U3-C1~C6: 묶음 호출, 재계산 시점, 관심 지역 SQL=TS 공유 표, regions_ai, SH 상세 줄이기, 순수 지역 판별), logical-components §5(컴포넌트, 0010, 호출 관계). 승인 요청."
+**Context**: CONSTRUCTION - U3 NFR Design (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 NFR 설계 승인
+**Timestamp**: 2026-10-18T00:55:00Z
+**User Input**: "진행"
+**AI Response**: "NFR 설계 승인으로 기록. U3 코드 생성 계획 작성."
+**Context**: CONSTRUCTION - U3 Code Generation Part 1 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 코드 생성 계획 승인
+**Timestamp**: 2026-10-19T00:05:00Z
+**User Input**: "승인"
+**AI Response**: "U3 코드 생성 시작 (Step 1부터)."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U3 코드 생성 완료
+**Timestamp**: 2026-10-19T10:30:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U3 Step 1~10 완료: regions.ts, 정규화·묶기·수도권 범위, SH 수집기(실제 화면 사본, innoFD 첨부 주소 확인), 두 묶음·재계산 시점, AI supplySigungu→regions_ai, 0010(관심 지역 SQL·claim 조건·cron 두 묶음), 지역 읽기 regions_ai 우선, 예시·PBT·공유 표 테스트. SH 실제 1회 실행에서 분양 게시판 누락 발견 → 목록 먼저·상세 최근 순으로 고침(BR-U3-C22), 오래된 글 120일 컷오프(BR-U3-C21) 추가. 검증: typecheck·lint·deno, 단위 683(seed 222에서 무관한 P-13 시간 초과 1건, 단독 통과), pgTAP 150, E2E 59+3, 스모크 13/13. 실수로 저장소 밖에 만든 빈 파일(D:/백재인/스터디/supabase-placeholder.txt)은 즉시 삭제. 로컬 커밋, 승인 요청."
+**Context**: CONSTRUCTION - U3 Code Generation (변경 요청 2)
+
+---

@@ -1,10 +1,11 @@
 // U3 생성기 (PBT-07): 날짜 문자열 변형, 블록 표기 변형, 원천·정규화 공고
 import fc from "fast-check";
+import { mergeRegions } from "../../collect/regions.ts";
 import type { IsoDate } from "../../domain/dates.ts";
 import { formatBlock } from "../../collect/block-key.ts";
 import { COLLECT_SOURCES, type NormalizedNotice, type RawNotice, type Schedule } from "../../collect/types.ts";
 import { SUPPLY_TYPE_CODES } from "../../domain/supply-types.ts";
-import { DISTRICT_IDS, noticeDateArb } from "./eligibility.ts";
+import { DISTRICT_IDS, noticeDateArb, noticeRegionArb } from "./eligibility.ts";
 
 /** 유효한 날짜를 원천 형식 중 하나로 */
 export const sourceDateArb = fc
@@ -46,6 +47,7 @@ export const normalizedArb: fc.Arbitrary<NormalizedNotice> = fc
     sourceNoticeNo: fc.constantFrom("N1", "N2", "N3", "N4", "N5", "N6"),
     title: fc.string({ minLength: 1, maxLength: 20 }),
     districtIds: fc.subarray(DISTRICT_IDS.slice(0, 2)),
+    regions: fc.array(noticeRegionArb, { minLength: 1, maxLength: 2 }).map((r) => mergeRegions(r)),
     blockKey: fc.option(fc.constantFrom("A1", "A2", "S1"), { nil: null }),
     announcedAt: fc.option(fc.constantFrom("2026-10-01", "2026-10-02"), { nil: null }),
     schedule: scheduleArb,
@@ -66,6 +68,7 @@ export const normalizedArb: fc.Arbitrary<NormalizedNotice> = fc
     tenure: "rent",
     schedule: { ...r.schedule, announcedAt: r.announcedAt },
     districtIds: r.districtIds,
+    regions: r.regions,
     blockKey: r.blockKey,
     originalUrl: "https://example.invalid",
     attachments: [],

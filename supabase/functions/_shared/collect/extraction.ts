@@ -107,6 +107,13 @@ function parseSummary(v: unknown): NoticeExtraction["summary"] {
   return a && b ? { eligibilityPlain: a, forSeniorCouple: b } : null;
 }
 
+/** 공급 위치: 문자열 최대 10개, 각 40자 (판별은 regions.ts가 공용 목록으로) */
+function parseSupplySigungu(v: unknown): string[] | null {
+  if (!Array.isArray(v)) return null;
+  const out = v.slice(0, 10).map((s) => str(s, 40)).filter((s): s is string => s !== null);
+  return out.length > 0 ? out : null;
+}
+
 /** 응답 전체 검증. 최상위 형식이 틀리면 null (실패로 셈) */
 export function parseExtraction(json: unknown): NoticeExtraction | null {
   if (!isObject(json) || typeof json.isNotice !== "boolean") return null;
@@ -114,5 +121,5 @@ export function parseExtraction(json: unknown): NoticeExtraction | null {
   const units = Array.isArray(json.units)
     ? json.units.slice(0, MAX_UNITS).map(parseUnit).filter((u): u is ExtractedUnit => u !== null)
     : [];
-  return { isNotice: true, schedule: parseSchedule(json.schedule), units, summary: parseSummary(json.summary) };
+  return { isNotice: true, schedule: parseSchedule(json.schedule), units, summary: parseSummary(json.summary), supplySigungu: parseSupplySigungu(json.supplySigungu) };
 }

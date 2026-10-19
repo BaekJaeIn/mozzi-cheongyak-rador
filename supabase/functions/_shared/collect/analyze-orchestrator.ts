@@ -5,6 +5,7 @@ import { SUPPLY_TYPES } from "../domain/supply-types.ts";
 import type { RecomputeAllSummary } from "../services/judgement-service.ts";
 import { buildBundle, buildUnits, fillSchedule, type StandardRequirements } from "./bundle.ts";
 import { parseExtraction } from "./extraction.ts";
+import { applyAiRegions } from "./regions.ts";
 import { pickNoticePdfFromSources } from "./pdf-locator.ts";
 import {
   type AnalyzeFailure,
@@ -89,6 +90,8 @@ async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: Standa
       ai_attempts: aiAttempts + 1,
       ai_source_url: pdf.url,
       release_claim: true,
+      // 공고문의 공급 위치로 "시도까지만" 지역 고치기 — 고칠 것이 없으면 null (BR-U3-C9, P-U3-C4)
+      regions_ai: applyAiRegions(base.regions, extraction.supplySigungu ?? null),
     },
     fillSchedule(base.schedule, extraction.schedule), // BR-U3-66
   );

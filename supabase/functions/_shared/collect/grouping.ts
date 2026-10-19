@@ -3,7 +3,7 @@ import type { CollectSource, NoticeGroup, NormalizedNotice, Schedule } from "./t
 import { SCHEDULE_KEYS } from "./types.ts";
 
 /** 공급 기관 원문 > 청약홈 (BR-U3-33) */
-const SOURCE_PRIORITY: Record<CollectSource, number> = { lh_rental: 0, gh: 0, applyhome: 1 };
+const SOURCE_PRIORITY: Record<CollectSource, number> = { lh_rental: 0, gh: 0, sh: 0, applyhome: 1 };
 
 export function dedupKeyOf(n: Pick<NormalizedNotice, "source" | "sourceNoticeNo" | "districtIds" | "blockKey" | "schedule">): string {
   if (n.blockKey && n.districtIds.length > 0 && n.schedule.announcedAt) {

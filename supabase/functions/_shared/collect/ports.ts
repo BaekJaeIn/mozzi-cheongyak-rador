@@ -10,6 +10,8 @@ export interface CollectorContext {
   today: IsoDate;
   /** 이 시각(epoch ms)이 지나면 그때까지 모은 것만 돌려준다 (NFR-U3-01) */
   deadline: number;
+  /** 이미 저장한 원천 글번호 → 제목 (SH 상세 줄이기, NFR-U3-C6). 없으면 모두 새 글로 본다 */
+  knownTitles?: ReadonlyMap<string, string>;
 }
 
 export interface CollectorResult {
@@ -37,6 +39,8 @@ export interface CollectRepository {
   loadDistricts(): Promise<DistrictRule[]>;
   loadStandards(): Promise<Record<string, Requirements>>;
   collectState(keys: { source: CollectSource; sourceNoticeNo: string }[]): Promise<StoredSourceState[]>;
+  /** 원천별 저장된 글번호 → 제목 (SH 상세 줄이기, P-U3-C5). 없는 구현은 빈 표 */
+  sourceTitles?(source: CollectSource): Promise<Map<string, string>>;
   /** 대표 공고 id */
   upsertBundle(bundle: NoticeBundle): Promise<string>;
   claimForAnalysis(limit: number, now: Date): Promise<string[]>;

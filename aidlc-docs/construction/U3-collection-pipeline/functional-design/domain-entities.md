@@ -104,3 +104,37 @@ interface NoticeExtraction {
 |---|---|
 | `applyhome` / `lh_rental` / `gh` | 소스별: ok, fetched_count(원천), upserted_count(저장 대표 공고), warning(0건·대기열·지구 후보), error |
 | `all` | 실행 전체: 처리 공고 수, AI 호출 수, 재계산 요약(U2 `RecomputeAllSummary`)을 warning에 JSON으로 |
+
+---
+
+## 변경 요청 2 (2026-10-18)
+
+### 원천 `sh` 추가
+
+`CollectSource = "applyhome" | "lh_rental" | "gh" | "sh"`. DB `source_notices.source`·`notices.primary_source` 검사 제약에 `sh` 추가(마이그레이션).
+
+### 정규화 공고에 지역
+
+```ts
+interface NormalizedNotice {
+  // …(그대로: sido, sigungu, districtIds …)
+  regions: NoticeRegion[];      // U2 NoticeRegion (수도권 시도 + 시군구|null). 비면 저장 안 함 (BR-U3-C2)
+}
+```
+
+DB: `notices.regions`(U2 0009). 묶음 저장 RPC(`upsert_notice_bundle`)가 `regions`를 받아 저장하되, **AI가 고친 지역(`regions_ai`)이 있으면 유지** — 고친 결과를 따로 칸 `notices.regions_ai jsonb`(null = 고친 적 없음)에 두고, 판정·노출용 지역 = `regions_ai ?? regions`로 읽는다.
+
+### Gemini 응답에 공급 위치
+
+`RESPONSE_SCHEMA`에 `supplySigungu: string[] | null` (공고문에 적힌 공급 위치 시군구, "서울특별시 강동구" 같은 원문 표기 그대로). 프롬프트 규칙 한 줄 추가.
+
+### 인천 옛 구 → 새 구 동 목록 (BR-U3-C5)
+
+| 새 구 | 옛 구 | 가르는 동(주소·제목에 나오면) |
+|---|---|---|
+| 영종구 | 중구 일부 | 영종·운서·운남·운북·중산·을왕·남북·덕교·무의·용유 |
+| 제물포구 | 중구 나머지 + 동구 | (영종 쪽 동이 아니면) |
+| 검단구 | 서구 일부 | 검단·대곡·불로·마전·금곡·오류·왕길·당하·원당·아라 |
+| 서해구 | 서구 나머지 | (검단 쪽 동이 아니면) |
+
+동 목록은 코드 단계에서 행정안전부 행정구역 자료와 한 번 더 대조한다.

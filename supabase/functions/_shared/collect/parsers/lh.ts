@@ -11,7 +11,7 @@ export const LH_PAGE_SIZE = 100;
 export const LH_MAX_PAGES = 5;
 
 const NON_HOUSING = /토지|상가|용지|점포|주유소|어린이집|창고|물류|공장|근린생활/;
-const TARGET_SIDO = new Set(["경기", "인천"]);
+const TARGET_SIDO = new Set(["서울", "경기", "인천"]); // 변경 2: 수도권 전체 (BR-U3-C1)
 const DETAIL_PARAM_KEYS = ["PAN_ID", "CCR_CNNT_SYS_DS_CD", "SPL_INF_TP_CD", "UPP_AIS_TP_CD", "AIS_TP_CD"] as const;
 
 function pick(r: Record<string, unknown>, keys: string[]): string | null {
@@ -58,7 +58,7 @@ export function parseLhListPage(json: unknown): { rowCount: number; candidates: 
     if (NON_HOUSING.test(`${supply ?? ""} ${title}`)) continue;
     const region = pick(r, ["CNP_CD_NM", "LCT_ARA_DTL_ADR"]);
     const sido = findSido(`${region ?? ""} ${title}`);
-    if (!sido || !TARGET_SIDO.has(sido)) continue; // 경기·인천만
+    if (!sido || !TARGET_SIDO.has(sido)) continue; // 수도권만
     const detailParams = Object.fromEntries(DETAIL_PARAM_KEYS.map((k) => [k, pick(r, [k]) ?? ""])) as LhCandidate["detailParams"];
     candidates.push({
       detailParams,

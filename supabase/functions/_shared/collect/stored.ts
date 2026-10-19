@@ -3,9 +3,8 @@ import { isIsoDate, type IsoDate } from "../domain/dates.ts";
 import { SUPPLY_TYPE_CODES, type SupplyTypeCode } from "../domain/supply-types.ts";
 import type { BundleBase } from "./bundle.ts";
 import type { StoredSourceState } from "./ports.ts";
-import type { Attachment, CollectRunRecord, CollectSource } from "./types.ts";
-
-const COLLECT_SOURCES: readonly CollectSource[] = ["applyhome", "lh_rental", "gh"];
+import { parseNoticeRegions } from "../eligibility/area.ts";
+import { type Attachment, COLLECT_SOURCES, type CollectRunRecord, type CollectSource } from "./types.ts";
 
 export interface StoredNoticeRow {
   dedup_key: string;
@@ -24,6 +23,7 @@ export interface StoredNoticeRow {
   contract_start: string | null;
   contract_end: string | null;
   ai_attempts: number;
+  regions?: unknown;
   source_notices: {
     source: string;
     source_notice_no: string;
@@ -101,6 +101,7 @@ export function baseFromStoredNotice(row: StoredNoticeRow): { base: BundleBase; 
         contractEnd: isoOrNull(row.contract_end),
       },
       districtIds: (row.notice_districts ?? []).map((d) => d.district_id).sort(),
+      regions: parseNoticeRegions(row.regions), // 수집 값 (AI 고치기는 이것 기준, BR-U3-C9)
       sources,
     },
   };
