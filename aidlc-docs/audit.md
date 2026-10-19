@@ -1407,3 +1407,19 @@
 **Context**: CONSTRUCTION - U4 Code Generation (변경 요청 2)
 
 ---
+
+## 변경 요청 2 — U4 코드 생성 승인 + 운영 반영
+**Timestamp**: 2026-10-19T13:45:00Z
+**User Input**: "푸시하고 진행"
+**AI Response**: "U4 코드 생성 승인으로 기록. push 전 확인: 앱 코드가 운영 DB에 없는 notices.regions·regions_ai를 읽어 push만 하면 판정 재계산이 깨질 수 있음 → 사용자 선택(질문 도구) 'DB 먼저 반영 후 push (추천)'. 실행: supabase db push --linked(0009·0010 적용, migration list로 확인), functions deploy collect·analyze·dispatch, git push 50d407c..5759d29. U5 기능 설계 시작."
+**Context**: CONSTRUCTION - U4 Code Generation 승인, 운영 반영 (변경 요청 2)
+
+---
+
+## 변경 요청 2 — U5 기능 설계 질문
+**Timestamp**: 2026-10-19T14:00:00Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "운영 배포 확인(/profile/update 200, 약 30초 뒤). U5 기능 설계 계획·질문 파일 작성: Q1 시·도까지만 확인된 공고의 카드 표시, Q2 관심 지역 밖이라 요약 없는 공고의 상세 표시."
+**Context**: CONSTRUCTION - U5 Functional Design (변경 요청 2)
+
+---
