@@ -8,8 +8,11 @@ import {
   hasLocalDb,
   type RegionFixture,
   releaseRegistrationLimit,
+  SAMPLE_NEWLYWED_PROFILE,
   SAMPLE_PROFILE_GANGSEO,
+  type SeededNotice,
   seedFeedNotices,
+  seedNewlywedNotice,
   seedRegionNotices,
   seedStoredProfile,
 } from "./helpers";
@@ -18,9 +21,11 @@ test.skip(!hasLocalDb(), "로컬 Supabase에서만 실행 (운영 DB에는 공�
 
 let fx: FeedFixture;
 let rx: RegionFixture;
+let nx: SeededNotice;
 test.beforeAll(async ({}, testInfo) => {
   fx = await seedFeedNotices(testInfo.project.name);
   rx = await seedRegionNotices(testInfo.project.name); // 변경 2: 지구가 없는 서울 공고
+  nx = await seedNewlywedNotice(testInfo.project.name); // 변경 3: 공공분양(신혼 특공·생애최초·일반공급)
 });
 test.afterAll(async ({}, testInfo) => {
   await cleanupFeedNotices(testInfo.project.name);
@@ -247,4 +252,36 @@ test("관심 지역 밖 공고 상세: 상태 안내와 요약을 만들지 않�
   await expect(page.getByText("요약을 준비 중이에요")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "관심 지역 고치기" }).first()).toHaveAttribute("href", "/profile/edit/districts");
   await axe(page);
+});
+
+// ---------- 변경 3: 신혼 가구 (US-24·25·26) ----------
+
+test("신혼 가구: 카드에 신청 방법 한 줄, 상세에 신청 방법 목록·신혼부부가 볼 점 (BR-U5-D1·D10·D20)", async ({ page }) => {
+  await seedStoredProfile(page, SAMPLE_NEWLYWED_PROFILE);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1, name: "맞춤 공고" })).toBeVisible({ timeout: 15_000 });
+  const sale = card(page, nx.name);
+  await expect(sale).toBeVisible({ timeout: 15_000 });
+  await expect(sale.getByText(/로 신청할 수 (있어 보여요|있는지 확인이 필요해요)$/)).toBeVisible();
+  await axe(page);
+
+  await sale.getByRole("link").first().click();
+  await expect(page.getByRole("heading", { level: 1, name: nx.name })).toBeVisible();
+  const reasons = page.getByRole("region", { name: "판정 이유" });
+  await expect(reasons.getByText("신청 방법", { exact: true })).toBeVisible();
+  await expect(reasons.getByText("신혼부부 특별공급").first()).toBeVisible();
+  await expect(reasons.getByText("생애최초 특별공급").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "신혼부부가 볼 점" })).toBeVisible();
+  await expect(page.getByText("예비신혼부부도 신혼부부 특별공급을 신청할 수 있어요.")).toBeVisible();
+  await expect(page.getByText("노부부 가구가 볼 점")).toHaveCount(0);
+  await expect(page.getByText("노부부 가구는 일반공급으로 신청해요.")).toHaveCount(0);
+  await axe(page);
+});
+
+test("노부부 가구는 그대로: 카드에 신청 방법 줄이 없고 상세는 노부부 볼 점 (US-26)", async ({ page }) => {
+  await openFeed(page);
+  await expect(card(page, fx.open.name).getByText(/로 신청할 수/)).toHaveCount(0);
+  await card(page, fx.open.name).getByRole("link").first().click();
+  await expect(page.getByRole("heading", { name: "노부부 가구가 볼 점" })).toBeVisible();
+  await expect(page.getByText("신청 방법", { exact: true })).toHaveCount(0);
 });

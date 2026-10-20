@@ -262,3 +262,71 @@ export async function seedRegionNotices(tag: string): Promise<RegionFixture> {
 
 /** 관심 지역에 서울 강서구를 고른 프로필 (v2) */
 export const SAMPLE_PROFILE_GANGSEO = { ...SAMPLE_PROFILE, prefs: { ...SAMPLE_PROFILE.prefs, regions: [{ sido: "서울", sigungu: "강서구" }] } };
+
+// ---------- 변경 3: 신혼 가구 ----------
+
+/** 신혼 가구 프로필 (v3) — 예비신혼, 경기 안양시, 맞벌이, 통장 두 분, 자녀 1명. 관심 지역 = 3기 신도시 교산 */
+export const SAMPLE_NEWLYWED_PROFILE = {
+  schemaVersion: 3,
+  householdKind: "newlywed",
+  self: { birthDate: "1996-04-12" },
+  spouse: { birthDate: "1997-09-03" },
+  householdType: "couple",
+  householdSize: 3,
+  householdHead: "self",
+  residence: { sido: "경기", sigungu: "안양시", years: 2 },
+  housing: { homeless: true, homelessYears: 0, ownedCount: 0 },
+  savings: { has: true, owner: "self", kind: "comprehensive", months: 24, paymentCount: 24, depositManwon: 600 },
+  money: { monthlyIncome: 550, spouseMonthlyIncome: 250, totalAsset: 8000, carValue: 0, spouseEarns: true },
+  welfare: null,
+  newlywed: {
+    marriage: "engaged",
+    marriageDate: "2027-03-01",
+    children: 1,
+    neverOwnedHome: true,
+    incomeTax5y: true,
+    spouseSavings: { has: true, owner: "spouse", kind: "comprehensive", months: 60, paymentCount: 60, depositManwon: 1200 },
+  },
+  prefs: { districtIds: ["gyosan"], regions: [], areaBands: [], tenure: "both", lowFloor: false },
+};
+
+/** 공공분양 공고 1건 (교산, 접수 중, 신혼부부가 볼 점 있음) — 신혼 가구는 신혼 특공·생애최초·일반공급으로 판정된다 */
+export async function seedNewlywedNotice(tag: string): Promise<SeededNotice> {
+  const name = `E2E 교산 공공분양 신혼 ${tag}`;
+  const [notice] = (await rest("notices", {
+    method: "POST",
+    prefer: "return=representation",
+    body: JSON.stringify({
+      dedup_key: `e2e:${tag}:newlywed-sale`,
+      title: `${name} 입주자 모집공고`,
+      complex_name: name,
+      location: "경기도 하남시 교산동",
+      sido: "경기",
+      sigungu: "하남시",
+      provider: "LH",
+      primary_source: "applyhome",
+      tenure: "sale",
+      announced_at: kstDate(-9),
+      apply_start: kstDate(-1),
+      apply_end: kstDate(5),
+      summary: {
+        eligibilityPlain: "무주택 세대구성원이 신청할 수 있어요.",
+        forSeniorCouple: "노부부 가구는 일반공급으로 신청해요.",
+        forNewlywed: "예비신혼부부도 신혼부부 특별공급을 신청할 수 있어요.",
+      },
+      summary_status: "done",
+    }),
+  })) as { id: string }[];
+  const id = notice!.id;
+  await rest("notice_districts", { method: "POST", body: JSON.stringify({ notice_id: id, district_id: "gyosan" }) });
+  await rest("housing_units", {
+    method: "POST",
+    body: JSON.stringify({ notice_id: id, label: "59A", supply_type: "public_sale_general", exclusive_area_m2: 59, supply_count: 200, requirements: { homeless: { minYears: null } } }),
+  });
+  const url = `https://apply.lh.or.kr/e2e/${tag}/newlywed-sale`;
+  await rest("source_notices", {
+    method: "POST",
+    body: JSON.stringify({ source: "applyhome", source_notice_no: `e2e-${tag}-newlywed-sale`, notice_id: id, original_url: url, content_hash: "e2e" }),
+  });
+  return { id, name, url };
+}

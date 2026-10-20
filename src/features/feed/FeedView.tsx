@@ -11,6 +11,7 @@ import { ErrorMessage } from "@/features/app-chrome/ErrorMessage";
 import { BookmarkButton } from "@/features/bookmarks/BookmarkButton";
 import { getApiClient } from "@/features/device/api-client";
 import type { FeedItem, FeedResponse } from "@/features/notice/model/api-types";
+import { routeHintText } from "@/features/notice/model/judgement";
 import { isNew, periodLabel } from "@/features/notice/model/display";
 import { DdayBadge, NewBadge, VerdictBadge } from "@/features/notice/ui/badges";
 import { feedItemSnapshot, kstTimeLabel, listWithMore } from "@/features/notice/ui/format";
@@ -157,6 +158,7 @@ export function NoticeCard({ item, today, isNew: fresh }: { item: FeedItem; toda
         </span>
         <span className="text-title font-bold leading-snug tracking-tight text-ink">{name}</span>
         {item.supplyTypes.length > 0 && <span className="text-body text-ink">{listWithMore(item.supplyTypes.map((s) => s.plain), 2)}</span>}
+        {item.routeHint && <span className="text-body font-bold text-primary">{routeHintText(item.routeHint)}</span>}
         <span className="flex flex-col text-caption text-muted">
           {places.length > 0 && <span>{listWithMore(places, 2, "")}</span>}
           <span>접수 {periodLabel(item.applyStart, item.applyEnd, today)}</span>

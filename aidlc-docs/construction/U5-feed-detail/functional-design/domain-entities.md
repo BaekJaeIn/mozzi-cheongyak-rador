@@ -231,3 +231,46 @@ interface NoticeSummary {
 | P-U5-C1 | `orderRegions`는 순열이고(원소·개수 같음), 관심 지역에 드는 것이 모두 앞에 온다. 관심 지역이 비면 공용 목록 순서 | `orderRegions` | 불변식 |
 | P-U5-C2 | 지구나 지역이 하나라도 있으면 `placeLabel`은 비지 않고, 지구가 있으면 지역 이름은 쓰지 않는다. "외 N"의 N = 전체 − 2 | `placeLabel` | 불변식 |
 | P-U5-C3 | `summaryView`가 `outOfArea`면 요약이 없고 판정이 관심 지역 밖이다. 요약이 있으면 항상 `summary` | `summaryView` | 불변식 |
+
+---
+
+## 9. 변경 요청 3 (2026-10-20)
+
+> 계획: `plans/U5-feed-detail-change-3-functional-design-plan.md` (Q1~Q3 = A). 신청 방법 `ApplyRoute`·`ROUTE_LABELS`·`UnitJudgement.routes`(신혼 가구만)는 U2 그대로, 요약 `forNewlywed`는 U3 그대로.
+
+### 9.1 API에 더하는 것
+
+```ts
+// 피드 카드 (GET /api/feed) — 신혼 가구만, 노부부는 키 없음 (Q3=A)
+interface FeedItem {
+  // …기존 그대로
+  routeHint?: {
+    verdict: "eligible" | "unknown";
+    /** 충족 방법이 있으면 충족 방법만, 없으면 확인 필요 방법. ROUTE 표 순서, 중복 없음 */
+    routes: ApplyRoute[];
+  };
+}
+```
+
+- 상세 API는 바꾸지 않는다: `judgement.units[].routes`가 이미 오고, `summary.forNewlywed?`도 이미 온다(U3 변경 3)
+- `routeHint`는 서버 피드 계산(`visible.ts`)에서 보이는 주택형(충족·확인 필요)의 `routes`로 만든다
+
+### 9.2 화면에서 만드는 값 (순수 함수)
+
+| 함수 | 위치 | 설명 |
+|---|---|---|
+| `routeHintOf(units)` | `_shared/feed/visible.ts` | 주택형 판정들 → `routeHint` (routes가 없으면 `undefined`) |
+| `routeHintText(hint)` | `notice/model/judgement.ts` | "신혼부부 특별공급·생애최초 특별공급으로 신청할 수 있어 보여요" / "…로 신청할 수 있는지 확인이 필요해요". 3개 이상이면 "A·B 외 1개" |
+| `JudgementGroup.routes` | `notice/model/judgement.ts` | 묶음의 신청 방법별 `{ route, label, verdict, criteria, childHint }[]` — 가장 좋은 방법 먼저(판정 → ROUTE 표 순서) |
+| `criteriaSignature` | 같은 곳 | 묶음 기준에 `routes`(방법·판정·조건) 추가 — 방법별 결과가 다르면 따로 묶음 |
+| `summarySection(summary, kind)` | `notice/model/judgement.ts` | 볼 점 절: 노부부 → `{ title: "노부부 가구가 볼 점", text }`, 신혼 → `{ title: "신혼부부가 볼 점", text: forNewlywed ?? null }`(null = 준비 중, Q1=A) |
+| `withUserValue` | 같은 곳 | 신혼 가구의 `monthlyIncome`은 "(두 분 합계)"를 붙인다 |
+
+### 9.3 속성 기반 테스트 대상 추가 (PBT-01)
+
+| # | 속성 | 대상 | 종류 |
+|---|---|---|---|
+| P-U5-D1 | **노부부 불변**: `routes`가 없는 판정에서 `groupJudgement` 결과의 묶음·순서·조건은 변경 3 전 함수와 같고 `routes`는 비어 있다. `routeHintOf`는 `undefined` | 묶기·카드 | 불변식 (NFR-C3-1) |
+| P-U5-D2 | `routeHint`의 방법은 모두 보이는 주택형 중 그 판정을 받은 방법이고, 충족 방법이 하나라도 있으면 `verdict = eligible`이며 확인 필요 방법은 들어가지 않는다 | `routeHintOf` | 불변식 |
+| P-U5-D3 | 묶음의 첫 신청 방법 판정 = 묶음 판정(가장 좋은 것), 방법 목록은 판정 순서로 정렬돼 있다 | `groupJudgement` | 불변식 |
+| P-U5-D4 | `summarySection`: 신혼 가구에게 노부부 볼 점 글이 나오지 않고, 노부부에게 신혼 볼 점 글이 나오지 않는다 | 요약 절 | 불변식 |

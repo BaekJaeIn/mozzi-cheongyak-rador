@@ -121,3 +121,19 @@ BookmarksView (/bookmarks)
 | 기기 관심 지역 | 상세·관심 공고는 `useProfile().stored?.profile.prefs.regions`로 순서를 정한다 (BR-U5-C5) |
 
 새 API 없음. 기존 세 API 응답에 `regions`만 더한다.
+
+---
+
+## 9. 변경 요청 3 (2026-10-20)
+
+> 규칙 business-rules §17, 형식 domain-entities §9.
+
+| 컴포넌트 | 바뀌는 것 |
+|---|---|
+| `AiSummary` | 볼 점 절을 `summarySection(summary, 가구 종류)`로 고른다. 신혼인데 글이 없으면 "신혼부부가 볼 점은 준비 중이에요" (BR-U5-D1·D2) |
+| `GroupBlock` | `group.routes`가 2개 이상이면 "신청 방법" 목록: 첫 방법은 펼친 `RouteBlock`, 나머지는 `<details>` + `<summary>`(이름 + 판정 표시, 터치 크기 ≥ 토큰). 1개면 제목 옆 "· ○○으로" + 조건 줄 (BR-U5-D10~D12) |
+| `RouteBlock` (새) | 조건 줄 목록(지금 `GroupBlock` 안의 줄을 함수로 뺌) + 자녀 안내(BR-U5-D14) |
+| 피드 `NoticeCard` | `item.routeHint`가 있으면 공급 유형 줄 아래 `routeHintText` 한 줄 (BR-U5-D20~D22) |
+
+- 기기 프로필은 지금처럼 `useProfile()`로 읽는다(가구 종류·자녀 수). 서버로 보내지 않는다
+- 접근성: `details`의 `summary`에 "신혼부부 특별공급, 확인 필요"처럼 판정 글자를 함께 읽힌다(기호는 `aria-hidden`)

@@ -1,7 +1,8 @@
 // U5 속성 기반 테스트 생성기 — 일정·판정 행·주택형 판정·관심 공고 (domain-entities §7)
 import { fc } from "@fast-check/vitest";
 import { addDays, type IsoDate } from "@shared/domain/dates.ts";
-import type { CriterionResult, UnitJudgement, Verdict } from "@shared/eligibility/types.ts";
+import { APPLY_ROUTES } from "@shared/eligibility/routes.ts";
+import type { CriterionResult, RouteJudgement, UnitJudgement, Verdict } from "@shared/eligibility/types.ts";
 import type { FeedItem } from "../api-types";
 import type { FeedRow } from "@/server/feed/types";
 
@@ -97,3 +98,27 @@ export const feedItemsArb: fc.Arbitrary<FeedItem[]> = fc
   .uniqueArray(fc.integer({ min: 1, max: 999 }), { maxLength: 15 })
   .chain((ids) => fc.tuple(...ids.map((n) => feedItemArb(`f${n}`))))
   .map((items) => items as FeedItem[]);
+
+// ---------- 변경 3: 신혼 가구 판정 (routes) ----------
+
+const RANK: Readonly<Record<Verdict, number>> = { eligible: 2, unknown: 1, ineligible: 0 };
+const NEWLYWED_ROUTES = APPLY_ROUTES.filter((r) => r !== "own_type");
+
+/** 신혼 가구 주택형 판정: 방법 1~4개, 주택형 판정·조건 = 가장 좋은 방법 (U2 BR-U2-D11·D12와 같은 모양) */
+export const routedUnitsArb: fc.Arbitrary<UnitJudgement[]> = unitJudgementsArb.chain((units) =>
+  fc
+    .tuple(
+      ...units.map(() =>
+        fc.uniqueArray(fc.constantFrom(...NEWLYWED_ROUTES), { minLength: 1, maxLength: 4 }).chain((routes) =>
+          fc.tuple(...routes.map((route) => fc.record({ route: fc.constant(route), verdict: verdictArb, criteria: criteriaArb }))),
+        ),
+      ),
+    )
+    .map((all) =>
+      units.map((u, i) => {
+        const routes = all[i] as RouteJudgement[];
+        const best = routes.reduce((a, b) => (RANK[b.verdict] > RANK[a.verdict] ? b : a));
+        return { ...u, verdict: best.verdict, criteria: best.criteria, routes };
+      }),
+    ),
+);

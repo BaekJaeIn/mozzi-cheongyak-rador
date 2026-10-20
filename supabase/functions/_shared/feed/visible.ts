@@ -59,6 +59,14 @@ export interface FeedItem {
   /** 충족·확인 필요 주택형의 공급유형, 중복 없음 (BR-U5-22) */
   supplyTypes: { code: string; plain: string }[];
   firstSeenAt: string;
+  /** 신혼 가구만 — 신청할 수 있어 보이는 방법 (변경 3 BR-U5-D20~D22). 노부부는 키 없음 */
+  routeHint?: RouteHint;
+}
+
+export interface RouteHint {
+  verdict: "eligible" | "unknown";
+  /** 충족 방법이 있으면 충족 방법만, 없으면 확인 필요 방법. 방법 표 순서, 중복 없음 */
+  routes: ApplyRoute[];
 }
 
 export interface JudgementStats {
@@ -135,6 +143,20 @@ export function feedSupplyTypes(units: readonly UnitJudgement[], labels: TypeLab
   return out;
 }
 
+/**
+ * 카드의 신청 방법 한 줄 (변경 3 domain-entities §9.2). 보이는 주택형(충족·확인 필요)의 routes에서 모은다.
+ * routes가 없으면(노부부) undefined — 카드는 지금 그대로 (BR-U5-D22)
+ */
+export function routeHintOf(units: readonly UnitJudgement[]): RouteHint | undefined {
+  const routes = units.filter((u) => u.verdict !== "ineligible").flatMap((u) => u.routes ?? []);
+  if (!units.some((u) => u.routes !== undefined)) return undefined;
+  const pick = (v: Verdict) => APPLY_ROUTES.filter((r) => routes.some((x) => x.route === r && x.verdict === v));
+  const eligible = pick("eligible");
+  if (eligible.length > 0) return { verdict: "eligible", routes: eligible };
+  const unknown = pick("unknown");
+  return unknown.length > 0 ? { verdict: "unknown", routes: unknown } : undefined;
+}
+
 /** 노출 조건(isVisible)을 통과한 공고를 카드 값으로 바꾸고 피드 순서로 정렬 */
 export function buildFeed(
   rows: readonly FeedRow[],
@@ -150,6 +172,8 @@ export function buildFeed(
     const status = noticeStatus({ applyStart: n.applyStart, applyEnd: n.applyEnd }, today);
     if (!isVisible({ verdict: row.verdict, inDistrict: row.inDistrict, status })) continue;
     if (row.verdict === "ineligible" || status === "closed") continue; // isVisible과 같음 — 타입 좁히기
+    const units = parseJudgementDetail(row.detail).units;
+    const hint = routeHintOf(units);
     items.push({
       id: n.id,
       title: n.title,
@@ -162,8 +186,9 @@ export function buildFeed(
       status,
       verdict: row.verdict,
       score: row.score ?? 0,
-      supplyTypes: feedSupplyTypes(parseJudgementDetail(row.detail).units, labels),
+      supplyTypes: feedSupplyTypes(units, labels),
       firstSeenAt: n.firstSeenAt,
+      ...(hint ? { routeHint: hint } : {}),
     });
   }
   return items.sort((a, b) => compareFeedItems({ ...a, noticeId: a.id }, { ...b, noticeId: b.id }));

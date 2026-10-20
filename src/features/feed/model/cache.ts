@@ -4,6 +4,7 @@ import { type IsoDate, isIsoDate } from "@shared/domain/dates.ts";
 import { noticeStatus } from "@shared/domain/retention.ts";
 import { parseNoticeRegions } from "@shared/eligibility/area.ts";
 import type { KeyValueStorage } from "@/features/device/identity-store";
+import { APPLY_ROUTES, type ApplyRoute } from "@shared/eligibility/routes.ts";
 import type { FeedItem, FeedResponse } from "@/features/notice/model/api-types";
 import { FEED_CACHE_KEY } from "@/features/profile/model/storage";
 
@@ -14,6 +15,10 @@ export interface FeedCache {
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const isNullableDate = (v: unknown) => v === null || isIsoDate(v);
+
+function isRouteHint(v: unknown): boolean {
+  return isObject(v) && (v.verdict === "eligible" || v.verdict === "unknown") && Array.isArray(v.routes) && v.routes.every((r) => APPLY_ROUTES.includes(r as ApplyRoute));
+}
 
 function isFeedItem(v: unknown): v is FeedItem {
   return (
@@ -29,6 +34,7 @@ function isFeedItem(v: unknown): v is FeedItem {
     (v.status === "open" || v.status === "upcoming") &&
     (v.verdict === "eligible" || v.verdict === "unknown") &&
     typeof v.score === "number" &&
+    (v.routeHint === undefined || isRouteHint(v.routeHint)) && // 변경 3 신혼 가구
     Array.isArray(v.supplyTypes) &&
     v.supplyTypes.every((s) => isObject(s) && typeof s.code === "string" && typeof s.plain === "string") &&
     typeof v.firstSeenAt === "string"

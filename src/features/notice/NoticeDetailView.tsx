@@ -19,7 +19,23 @@ import { card, linkButton, primaryButton, secondaryButton } from "@/features/pro
 import type { JudgementView, NoticeDetail, NoticeDetailResponse } from "./model/api-types";
 import { calendarEvent, calendarTarget, googleCalendarUrl, NO_DATES_TEXT } from "./model/calendar";
 import { areaLabel, CRITERION_NAMES, dateLabel, shortAreaLabel, supplyCountLabel, timeline, unitRows } from "./model/display";
-import { DISCLAIMER, groupJudgement, type JudgementGroup, settingsLinkFor, splitGroups, VERDICT_MARK, VERDICT_SUMMARY, withUserValue } from "./model/judgement";
+import type { CriterionResult } from "@shared/eligibility/types.ts";
+import {
+  CHILD_HINT,
+  DISCLAIMER,
+  groupJudgement,
+  type JudgementGroup,
+  NEWLYWED_SUMMARY_PENDING,
+  type RouteView,
+  settingsLinkFor,
+  showChildHint,
+  splitGroups,
+  summarySection,
+  VERDICT_MARK,
+  VERDICT_SUMMARY,
+  withEuro,
+  withUserValue,
+} from "./model/judgement";
 import { VerdictBadge } from "./ui/badges";
 
 export const DETAIL_TEXT = {
@@ -171,7 +187,7 @@ function Detail({ data }: { data: NoticeDetailResponse }) {
       <ScheduleTimeline notice={notice} today={today} />
       <UnitList notice={notice} />
       {judgement && <JudgementReasons judgement={judgement} notice={notice} profile={stored?.profile ?? null} />}
-      <AiSummary notice={notice} judgement={judgement} />
+      <AiSummary notice={notice} judgement={judgement} profile={stored?.profile ?? null} />
     </article>
   );
 }
@@ -340,49 +356,103 @@ function JudgementReasons({ judgement, notice, profile }: { judgement: Judgement
 
 function GroupBlock({ group, profile }: { group: JudgementGroup; profile: HouseholdProfile | null }) {
   const areas = group.areas.map(shortAreaLabel).join(", ");
+  const [best, ...others] = group.routes; // 신혼 가구만 (BR-U5-D10~D12)
   return (
     <div className="flex flex-col gap-2 rounded-2xl bg-canvas p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-body font-bold">
           {group.plain}
           {group.formal !== group.plain && <span className="font-normal text-muted"> ({group.formal})</span>}
+          {best && others.length === 0 && <span className="font-normal text-muted"> · {withEuro(best.label)}</span>}
         </h3>
         <VerdictBadge verdict={group.verdict} />
       </div>
       <p className="text-caption text-muted">전용 {areas}</p>
-      {group.criteria.length > 0 && (
-        <ul className="flex flex-col gap-2">
-          {group.criteria.map((c) => {
-            const mark = VERDICT_MARK[c.verdict];
-            const mine = withUserValue(c, profile);
-            const link = c.verdict === "unknown" ? settingsLinkFor(c) : null;
-            return (
-              <li key={`${c.key}-${c.code}`} className="flex flex-col">
-                <span className="text-body">
-                  <span aria-hidden className={c.verdict === "ineligible" ? "text-danger" : c.verdict === "eligible" ? "text-primary" : ""}>
-                    {mark.symbol}{" "}
-                  </span>
-                  <span className="sr-only">{mark.text}: </span>
-                  <span className="font-bold">{CRITERION_NAMES[c.key]}</span>: {c.reason}
-                  {mine && <span> → {mine}</span>}
-                </span>
-                {c.verdict === "unknown" && c.action && (
-                  <span className="text-caption text-muted">
-                    {link ? (
-                      <Link replace href={link} className="text-primary underline">
-                        {c.action}
-                      </Link>
-                    ) : (
-                      c.action
-                    )}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+      {best && others.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-body font-bold">신청 방법</p>
+          <RouteBlock route={best} profile={profile} open />
+          {others.map((r) => (
+            <RouteBlock key={r.route} route={r} profile={profile} />
+          ))}
+        </div>
+      ) : best ? (
+        <RouteBlock route={best} profile={profile} bare />
+      ) : (
+        <CriteriaList criteria={group.criteria} profile={profile} />
       )}
     </div>
+  );
+}
+
+/** 신청 방법 한 개 (BR-U5-D11·D14): 첫 방법은 펼친 채, 나머지는 눌러서 펼친다. bare = 방법이 하나뿐(제목에 이름) */
+function RouteBlock({ route, profile, open, bare }: { route: RouteView; profile: HouseholdProfile | null; open?: boolean; bare?: boolean }) {
+  const mark = VERDICT_MARK[route.verdict];
+  const body = (
+    <>
+      <CriteriaList criteria={route.criteria} profile={profile} />
+      {showChildHint(route, profile) && <p className="text-body text-muted">{CHILD_HINT}</p>}
+    </>
+  );
+  if (bare) return body;
+  const title = (
+    <span className="text-body">
+      <span aria-hidden className={route.verdict === "ineligible" ? "text-danger" : route.verdict === "eligible" ? "text-primary" : ""}>
+        {mark.symbol}{" "}
+      </span>
+      <span className="font-bold">{route.label}</span>
+      <span>, {mark.text}</span>
+    </span>
+  );
+  if (open) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl bg-surface p-3">
+        {title}
+        {body}
+      </div>
+    );
+  }
+  return (
+    <details className="rounded-2xl bg-surface px-3 py-1">
+      <summary className="min-h-touch cursor-pointer content-center">{title}</summary>
+      <div className="flex flex-col gap-2 pb-2">{body}</div>
+    </details>
+  );
+}
+
+function CriteriaList({ criteria, profile }: { criteria: readonly CriterionResult[]; profile: HouseholdProfile | null }) {
+  if (criteria.length === 0) return null;
+  return (
+    <ul className="flex flex-col gap-2">
+      {criteria.map((c) => {
+        const mark = VERDICT_MARK[c.verdict];
+        const mine = withUserValue(c, profile);
+        const link = c.verdict === "unknown" ? settingsLinkFor(c) : null;
+        return (
+          <li key={`${c.key}-${c.code}`} className="flex flex-col">
+            <span className="text-body">
+              <span aria-hidden className={c.verdict === "ineligible" ? "text-danger" : c.verdict === "eligible" ? "text-primary" : ""}>
+                {mark.symbol}{" "}
+              </span>
+              <span className="sr-only">{mark.text}: </span>
+              <span className="font-bold">{CRITERION_NAMES[c.key]}</span>: {c.reason}
+              {mine && <span> → {mine}</span>}
+            </span>
+            {c.verdict === "unknown" && c.action && (
+              <span className="text-caption text-muted">
+                {link ? (
+                  <Link replace href={link} className="text-primary underline">
+                    {c.action}
+                  </Link>
+                ) : (
+                  c.action
+                )}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -392,8 +462,9 @@ function paragraphs(text: string): string[] {
   return text.split(/\n+/).map((s) => s.trim()).filter(Boolean);
 }
 
-function AiSummary({ notice, judgement }: { notice: NoticeDetail; judgement: JudgementView | null }) {
+function AiSummary({ notice, judgement, profile }: { notice: NoticeDetail; judgement: JudgementView | null; profile: HouseholdProfile | null }) {
   const s = notice.summary;
+  const section = s ? summarySection(s, profile?.householdKind ?? null) : null; // 내 가구 종류의 볼 점만 (BR-U5-D1·D2)
   const view = summaryView(s, judgement); // 요약 / 관심 지역 밖 / 준비 중 (BR-U5-C7)
   return (
     <section className={`${card} flex flex-col gap-3 p-5`} aria-labelledby="ai-title">
@@ -407,12 +478,16 @@ function AiSummary({ notice, judgement }: { notice: NoticeDetail; judgement: Jud
               {p}
             </p>
           ))}
-          <h3 className="pt-2 text-body font-bold">노부부 가구가 볼 점</h3>
-          {paragraphs(s.forSeniorCouple).map((p, i) => (
-            <p key={i} className="text-body">
-              {p}
-            </p>
-          ))}
+          <h3 className="pt-2 text-body font-bold">{section!.title}</h3>
+          {section!.text === null ? (
+            <p className="text-body text-muted">{NEWLYWED_SUMMARY_PENDING}</p>
+          ) : (
+            paragraphs(section!.text).map((p, i) => (
+              <p key={i} className="text-body">
+                {p}
+              </p>
+            ))
+          )}
           <p className="text-caption text-muted">{DETAIL_TEXT.aiNotice}</p>
         </>
       ) : (

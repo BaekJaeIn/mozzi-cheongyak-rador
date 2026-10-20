@@ -1704,3 +1704,59 @@
 **Context**: CONSTRUCTION, 변경 요청 3, U4 Code Generation Part 2
 
 ---
+
+## U4 Code Generation (변경 3) — 승인
+**Timestamp**: 2026-10-20T12:50:23Z
+**User Input**: "진행"
+**AI Response**: "U4 변경 3 코드 생성 승인으로 기록. U5 피드·상세 기능 설계(변경 3) 시작"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Code Generation 승인 → U5 Functional Design
+
+---
+
+## U5 Functional Design (변경 3) — 계획·질문
+**Timestamp**: 2026-10-20T12:50:23Z
+**User Input**: (없음 — 질문 파일 작성)
+**AI Response**: "U5-feed-detail-change-3-functional-design-plan.md 작성: 설계 메모(노부부 그대로, 결혼·자녀 링크, 두 분 합계, 자녀 안내, 묶음 기준), 질문 Q1~Q3(볼 점 없을 때, 신청 방법 표시, 피드 카드). 답 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Functional Design Step 1~2
+
+---
+
+## U5 Functional Design (변경 3) — 답
+**Timestamp**: 2026-10-20T12:52:58Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q3 = A로 기록, 기능 설계 문서 작성"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Functional Design Step 2
+
+---
+
+## U5 Functional Design (변경 3) — 완료, 승인 요청
+**Timestamp**: 2026-10-20T12:53:59Z
+**User Input**: (없음)
+**AI Response**: "domain-entities §9, business-rules §17 (BR-U5-D1~D32), frontend-components §9 작성. 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Functional Design Step 3~6
+
+---
+
+## U5 Functional Design (변경 3) — 승인 / Code Generation 계획
+**Timestamp**: 2026-10-20T12:54:30Z
+**User Input**: "진행"
+**AI Response**: "U5 변경 3 기능 설계 승인으로 기록. U5-feed-detail-change-3-code-generation-plan.md 작성(Step 0~5), 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Functional Design 승인 → Code Generation Part 1
+
+---
+
+## U5 Code Generation (변경 3) — 계획 승인
+**Timestamp**: 2026-10-20T12:55:19Z
+**User Input**: "승인"
+**AI Response**: "계획 승인으로 기록, Step 0부터 진행"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Code Generation Part 2
+
+---
+
+## U5 Code Generation (변경 3) — 완료, 승인 요청
+**Timestamp**: 2026-10-20T13:12:57Z
+**User Input**: (없음)
+**AI Response**: "Step 0~5 완료: 카드 신청 방법 한 줄(routeHint), 상세 신청 방법 목록·자녀 안내, 가구 종류별 볼 점 절, 두 분 합계, 결혼·자녀 링크. 단위 815(seed 3회), pgTAP 168, 로컬 E2E 83+3. code-summary-change-3.md, 로컬 커밋. 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Code Generation Part 2
+
+---
