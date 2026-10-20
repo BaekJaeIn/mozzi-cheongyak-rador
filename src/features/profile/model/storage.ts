@@ -32,7 +32,7 @@ export interface StoredProfile {
 }
 
 export interface WizardDraft {
-  version: 2;
+  version: 3;
   answers: WizardAnswers;
   stepId: StepId;
   updatedAt: string;
@@ -116,17 +116,21 @@ export function commitProfile(storage: KeyValueStorage, profile: HouseholdProfil
 // ---------- 초안 ----------
 
 /**
- * 초안 읽기 형식 맞추기 (domain-entities §7.3, P-U4-C3). 버전 2는 그대로, 버전 1은 옮기고, 그 밖은 null.
+ * 초안 읽기 형식 맞추기 (domain-entities §7.3·§8.5, P-U4-C3·D4). 버전 3은 그대로, 1·2는 옮기고, 그 밖은 null.
  * 버전 1: 통장 "있음" → 명의 "나", 그 밖(없음·모름)은 지워 다시 묻는다. 화면 savingsHas → savingsOwner
+ * 버전 2: 가구 종류 노부부 (화면·답 키는 그대로)
  */
 export function migrateDraft(v: unknown): WizardDraft | null {
   if (!isObject(v) || !isObject(v.answers) || typeof v.updatedAt !== "string") return null;
-  if (v.version === 2) return isStepId(v.stepId) ? { version: 2, answers: v.answers as WizardAnswers, stepId: v.stepId, updatedAt: v.updatedAt } : null;
-  if (v.version !== 1) return null;
-  const { savingsHas, ...rest } = v.answers as Record<string, unknown>;
-  const answers = (savingsHas === true ? { ...rest, savingsOwner: "self" } : rest) as WizardAnswers;
-  const stepId = v.stepId === "savingsHas" ? "savingsOwner" : v.stepId;
-  return isStepId(stepId) ? { version: 2, answers, stepId, updatedAt: v.updatedAt } : null;
+  if (v.version === 3) return isStepId(v.stepId) ? { version: 3, answers: v.answers as WizardAnswers, stepId: v.stepId, updatedAt: v.updatedAt } : null;
+  let answers = v.answers as Record<string, unknown>;
+  let stepId = v.stepId;
+  if (v.version === 1) {
+    const { savingsHas, ...rest } = answers;
+    answers = savingsHas === true ? { ...rest, savingsOwner: "self" } : rest;
+    if (stepId === "savingsHas") stepId = "savingsOwner";
+  } else if (v.version !== 2) return null;
+  return isStepId(stepId) ? { version: 3, answers: { ...answers, householdKind: "senior" } as WizardAnswers, stepId, updatedAt: v.updatedAt } : null;
 }
 
 export function loadDraft(storage: KeyValueStorage): WizardDraft | null {
@@ -136,7 +140,7 @@ export function loadDraft(storage: KeyValueStorage): WizardDraft | null {
 }
 
 export function saveDraft(storage: KeyValueStorage, answers: WizardAnswers, stepId: StepId, now: Date): void {
-  writeJson(storage, DRAFT_KEY, { version: 2, answers, stepId, updatedAt: now.toISOString() } satisfies WizardDraft);
+  writeJson(storage, DRAFT_KEY, { version: 3, answers, stepId, updatedAt: now.toISOString() } satisfies WizardDraft);
 }
 
 // ---------- 업데이트 안내 (변경 2) ----------

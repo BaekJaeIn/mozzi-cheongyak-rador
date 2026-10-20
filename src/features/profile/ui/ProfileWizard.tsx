@@ -3,27 +3,29 @@
 // 입력 마법사 (C25, business-logic-model §2, frontend-components §4)
 // mode: setup(처음 입력, 초안 저장) / redo(처음부터 다시 입력, 지금 값으로 채움) / edit(그룹 고치기)
 //       / update(새 항목만 묻는 짧은 입력 화면, 변경 2 BR-U4-C30~C35)
+//       redo + switchTo = 가구 종류 바꾸기 (변경 3 BR-U4-D42~D46)
+import type { HouseholdKind } from "@shared/domain/profile.ts";
 import { type IsoDate, toKstDate } from "@shared/domain/dates.ts";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ErrorMessage } from "@/features/app-chrome/ErrorMessage";
 import { type AmountField, exceedsMax, formatManwon, needsConfirm } from "../model/amount";
-import { fromProfile, hasBlankFields, mergeGroupEdit, mergeUpdate, toProfile } from "../model/convert";
+import { fromProfile, hasBlankFields, mergeGroupEdit, mergeUpdate, switchKind, toProfile } from "../model/convert";
 import { applyRegionDefault } from "../model/regions";
-import { GROUP_LABELS, GROUP_ORDER, type GroupId, canProceed, initialAnswers, isComplete, markUnknown, nextStep, prevStep, progress, pruneHidden, stepById, type StepId, type StepScope, visibleSteps } from "../model/steps";
+import { GROUP_LABELS, groupOrder, type GroupId, KIND_LABELS, canProceed, initialAnswers, isComplete, markUnknown, nextStep, prevStep, progress, pruneHidden, stepById, type StepId, type StepScope, visibleSteps } from "../model/steps";
 import type { UpdateItem } from "../model/updates";
 import { clearDraft, loadDraft, LocalSaveError, saveDraft } from "../model/storage";
 import { ALL_DISTRICT_IDS } from "../model/districts";
 import { groupSummary } from "../model/summary";
 import type { FlushResult } from "../model/sync";
-import { known, type WizardAnswers } from "../model/types";
+import { kindOf, known, type WizardAnswers } from "../model/types";
 import { useProfile } from "../ProfileProvider";
 import { ConfirmDialog, linkButton, primaryButton, secondaryButton } from "./controls";
 import { getPushPort } from "./push-port";
 import { NotifyStep } from "./NotifyStep";
 import { StepScreen, stepHint, stepTitle } from "./StepScreen";
 
-export type WizardMode = { kind: "setup" } | { kind: "redo" } | { kind: "edit"; group: GroupId } | { kind: "update" };
+export type WizardMode = { kind: "setup" } | { kind: "redo"; switchTo?: HouseholdKind } | { kind: "edit"; group: GroupId } | { kind: "update" };
 
 /** 저장하면 입력한 것으로 볼 새 항목 (BR-U4-C34·C36) */
 function resolvedBy(mode: WizardMode, scope: StepScope): readonly UpdateItem[] {
@@ -38,7 +40,11 @@ const AMOUNT_STEPS: Partial<Record<StepId, AmountField>> = {
   asset: "totalAsset",
   car: "carValue",
   savingsAmount: "depositManwon",
+  spouseIncome: "spouseIncome",
+  spouseSavingsAmount: "spouseDepositManwon",
 };
+
+const MONTHLY_FIELDS: readonly AmountField[] = ["monthlyIncome", "spouseIncome"];
 
 const SAVE_MESSAGES: Record<FlushResult, string | null> = {
   synced: "저장했어요.",
@@ -54,10 +60,12 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   const group = mode.kind === "edit" ? mode.group : undefined;
   // 짧은 입력 화면 범위는 열 때 한 번 정한다 (저장 전까지 바뀌지 않게)
   const [updateScope, setUpdateScope] = useState<StepScope>(undefined);
-  const scope: StepScope = mode.kind === "update" ? updateScope : group;
+  // 처음부터 다시 입력은 가구 종류 화면 없이 (BR-U4-D42·D45)
+  const scope: StepScope = mode.kind === "update" ? updateScope : mode.kind === "redo" ? "full" : group;
+  const switchTo = mode.kind === "redo" ? mode.switchTo : undefined;
 
   const [answers, setAnswers] = useState<WizardAnswers | null>(null);
-  const [stepId, setStepId] = useState<StepId>("selfBirth");
+  const [stepId, setStepId] = useState<StepId>("householdKind");
   const [returnToReview, setReturnToReview] = useState(false);
   const [confirm, setConfirm] = useState<{ field: AmountField; value: number } | null>(null);
   const [confirmed, setConfirmed] = useState<Record<string, number>>({});
@@ -73,14 +81,16 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
       const draft = loadDraft(window.localStorage);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAnswers(draft?.answers ?? initialAnswers(ALL_DISTRICT_IDS));
-      setStepId(draft?.stepId ?? "selfBirth");
+      setStepId(draft?.stepId ?? "householdKind");
       return;
     }
     if (!profile.stored) {
       router.replace("/");
       return;
     }
-    const current = fromProfile(profile.stored.profile);
+    const stored = fromProfile(profile.stored.profile);
+    // 가구 종류 바꾸기: 지금 답을 새 종류로 옮겨 채운다 (domain-entities §8.4)
+    const current = switchTo && switchTo !== profile.stored.profile.householdKind ? switchKind(stored, switchTo) : stored;
     if (mode.kind === "update") {
       const pending = profile.updates?.pending ?? [];
       if (pending.length === 0) {
@@ -95,8 +105,9 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
       return;
     }
     setAnswers(current);
-    setStepId(visibleSteps(current, group)[0]!.id);
-  }, [profile.loaded, profile.stored, profile.updates, answers, mode.kind, group, router]);
+    setStepId(visibleSteps(current, scope)[0]!.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scope는 mode·group에서 정해진다
+  }, [profile.loaded, profile.stored, profile.updates, answers, mode.kind, group, switchTo, router]);
 
   // 화면이 바뀌면 질문(제목)에 초점 — 화면 낭독기가 새 질문을 읽는다
   useEffect(() => {
@@ -186,7 +197,7 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
   const onRestart = () => {
     clearDraft(window.localStorage);
     setAnswers(initialAnswers(ALL_DISTRICT_IDS));
-    setStepId("selfBirth");
+    setStepId("householdKind");
   };
 
   const onSave = async (input: WizardAnswers = answers) => {
@@ -238,9 +249,9 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
 
   const step = stepById(stepId);
   const { index, total } = progress(answers, stepId, scope);
-  const groupLabel = mode.kind === "update" ? "새 항목" : step.group === "review" ? "확인" : GROUP_LABELS[step.group];
+  const groupLabel = mode.kind === "update" ? "새 항목" : step.group === "review" ? "확인" : step.group === "kind" ? "가구 종류" : GROUP_LABELS[step.group];
   const isReview = stepId === "review";
-  const hint = stepHint(stepId);
+  const hint = stepHint(stepId, answers);
 
   return (
     <div className="flex flex-col gap-6 pb-8">
@@ -305,7 +316,7 @@ export function ProfileWizard({ mode }: { mode: WizardMode }) {
           message={
             <p>
               <strong className="text-title">
-                {confirm.field === "monthlyIncome" ? "월 " : ""}
+                {MONTHLY_FIELDS.includes(confirm.field) ? "월 " : ""}
                 {formatManwon(confirm.value)}
               </strong>
               <br />
@@ -343,14 +354,23 @@ function ReviewScreen({
     return <p className="text-body text-danger">꼭 넣어야 하는 항목이 비어 있어요. [고치기]로 채워 주세요.</p>;
   }
   const p = toProfile(answers);
-  const groups = group ? [group] : GROUP_ORDER;
+  const groups = group ? [group] : groupOrder(kindOf(answers));
+  // 신혼 가구 소득 합계는 두 분 소득을 모두 알아야 정해진다 (BR-U4-D32)
+  const incomeMissing = p.householdKind === "newlywed" && p.money.monthlyIncome === null;
   return (
     <div className="flex flex-col gap-3">
+      {!group && (
+        <p className="rounded-card bg-surface p-5 shadow-card">
+          <span className="block text-caption text-muted">가구 종류</span>
+          <span className="text-body font-bold">{KIND_LABELS[p.householdKind]}</span>
+        </p>
+      )}
       <ul className="flex flex-col gap-3">
         {groups.map((g) => (
           <li key={g} className="rounded-card bg-surface p-5 shadow-card">
             <p className="text-caption text-muted">{GROUP_LABELS[g]}</p>
             <p className="text-body font-bold">{groupSummary(p, g, today)}</p>
+            {g === "money" && incomeMissing && <p className="text-body text-muted">두 분 소득을 모두 넣어야 소득 조건을 볼 수 있어요.</p>}
             {!group && (
               <button type="button" className={`${linkButton} mt-1`} onClick={() => onEdit(g)}>
                 {GROUP_LABELS[g]} 고치기

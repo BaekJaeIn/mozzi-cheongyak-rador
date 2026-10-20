@@ -41,7 +41,7 @@ export function pendingFromV1(migrated: HouseholdProfile): UpdateItem[] {
 
 /**
  * 처음 기록 (domain-entities §7.4). storedSchemaVersion = 기기에 저장된 원래 JSON의 schemaVersion.
- * 프로필 없음·버전 2는 안내를 본 것으로, 버전 1은 아직 안 본 것으로.
+ * 프로필 없음·버전 2 이상(변경 3 v3 포함, BR-U4-D4)은 안내를 본 것으로, 버전 1은 아직 안 본 것으로.
  */
 export function initialUpdates(stored: { profile: HouseholdProfile; storedSchemaVersion: number } | null, notice = WHATS_NEW.notice): StoredUpdates {
   if (stored && stored.storedSchemaVersion < 2) return { version: 1, noticeSeen: 0, pending: pendingFromV1(stored.profile) };

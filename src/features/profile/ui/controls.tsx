@@ -164,17 +164,31 @@ export function RegionMultiPicker({
   );
 }
 
-/** 생년월일: 연·월·일 드롭다운 (BR-U4-20~23). 셋 다 골라야 값이 정해진다 */
+const BIRTH_LABELS = { y: "태어난 해", m: "태어난 달", d: "태어난 날" } as const;
+
+/**
+ * 날짜: 연·월·일 드롭다운 (BR-U4-20~23). 모두 골라야 값이 정해진다.
+ * 혼인 날짜에도 쓴다 (변경 3 BR-U4-D13): precision "month"면 일 없이 YYYY-MM-01, allowFuture면 오늘 뒤도 고를 수 있다
+ */
 export function BirthDatePicker({
   value,
   years,
   today,
   onChange,
+  precision = "day",
+  allowFuture = false,
+  labels = BIRTH_LABELS,
+  describe,
 }: {
   value: string | undefined;
   years: { from: number; to: number; initial: number };
   today: string;
   onChange: (value: string | undefined) => void;
+  precision?: "month" | "day";
+  allowFuture?: boolean;
+  labels?: { y: string; m: string; d: string };
+  /** 고른 날짜 설명 (기본: "1960년 1월 1일 · 만 66세") */
+  describe?: (date: string) => string;
 }) {
   const initial = value ? value.split("-").map(Number) : [];
   const [parts, setParts] = useState<{ y?: number; m?: number; d?: number }>({ y: initial[0], m: initial[1], d: initial[2] });
@@ -183,29 +197,36 @@ export function BirthDatePicker({
 
   const update = (next: { y?: number; m?: number; d?: number }) => {
     const merged = { ...parts, ...next };
+    if (precision === "month") merged.d = 1;
     // 연·월을 바꿔 날이 없어지면 그 달 마지막 날로 (BR-U4-21)
     if (merged.y && merged.m && merged.d) merged.d = Math.min(merged.d, daysInMonth(merged.y, merged.m));
     setParts(merged);
     if (merged.y && merged.m && merged.d) {
       const date = toBirthDate(merged.y, merged.m, merged.d);
-      onChange(date > today ? undefined : date); // 미래 날짜는 고를 수 없음 (BR-U4-23)
+      onChange(!allowFuture && date > today ? undefined : date); // 미래 날짜는 고를 수 없음 (BR-U4-23)
     } else {
       onChange(undefined);
     }
   };
-  const future = !!(y && m && d) && toBirthDate(y, m, d) > today;
+  const future = !allowFuture && !!(y && m && d) && toBirthDate(y, m, d) > today;
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const days = Array.from({ length: daysInMonth(y ?? years.initial, m ?? 1) }, (_, i) => i + 1);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-[3fr_2fr_2fr] gap-2">
-        <BirthSelect label="태어난 해" placeholder="연도" value={y} options={yearList} unit="년" onChange={(v) => update({ y: v })} />
-        <BirthSelect label="태어난 달" placeholder="월" value={m} options={months} unit="월" onChange={(v) => update({ m: v })} />
-        <BirthSelect label="태어난 날" placeholder="일" value={d} options={days} unit="일" onChange={(v) => update({ d: v })} />
+      <div className={precision === "month" ? "grid grid-cols-[3fr_2fr] gap-2" : "grid grid-cols-[3fr_2fr_2fr] gap-2"}>
+        <BirthSelect label={labels.y} placeholder="연도" value={y} options={yearList} unit="년" onChange={(v) => update({ y: v })} />
+        <BirthSelect label={labels.m} placeholder="월" value={m} options={months} unit="월" onChange={(v) => update({ m: v })} />
+        {precision === "day" && <BirthSelect label={labels.d} placeholder="일" value={d} options={days} unit="일" onChange={(v) => update({ d: v })} />}
       </div>
       <p aria-live="polite" className="rounded-2xl bg-primary-soft p-4 text-center text-title font-bold">
-        {value ? `${y}년 ${m}월 ${d}일 · 만 ${ageAt(value, today)}세` : future ? "오늘보다 뒤의 날짜는 고를 수 없어요" : "연·월·일을 모두 골라 주세요"}
+        {value
+          ? (describe?.(value) ?? `${y}년 ${m}월 ${d}일 · 만 ${ageAt(value, today)}세`)
+          : future
+            ? "오늘보다 뒤의 날짜는 고를 수 없어요"
+            : precision === "month"
+              ? "연·월을 모두 골라 주세요"
+              : "연·월·일을 모두 골라 주세요"}
       </p>
     </div>
   );
@@ -263,12 +284,15 @@ export function AmountInput({
   value,
   monthly,
   onChange,
+  zeroButton,
 }: {
   label: string;
   help: string;
   value: number | undefined;
   monthly?: boolean;
   onChange: (value: number | undefined) => void;
+  /** 0을 한 번에 넣는 버튼 (변경 3 BR-U4-D30 [소득 없어요]) */
+  zeroButton?: string;
 }) {
   const id = useId();
   return (
@@ -292,6 +316,12 @@ export function AmountInput({
       <p aria-live="polite" className="rounded-2xl bg-primary-soft p-4 text-center text-heading font-bold">
         {value === undefined ? "금액을 넣어 주세요" : `${monthly ? "월 " : ""}${formatManwon(value)}`}
       </p>
+      {zeroButton && (
+        <button type="button" aria-pressed={value === 0} onClick={() => onChange(0)} className={optionClass(value === 0)}>
+          <Check on={value === 0} />
+          <span>{zeroButton}</span>
+        </button>
+      )}
       {value !== undefined && exceedsMax(value) && (
         <p role="alert" className="text-body font-bold text-danger">
           ⚠ 금액이 너무 커요. 만원 단위로 넣었는지 확인해 주세요.

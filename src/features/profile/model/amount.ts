@@ -1,7 +1,7 @@
 // 금액 (만원 단위) — 한글 표기, 단위 실수 확인, 상한 (BR-U4-40~46, U2 BR-U2-72)
 import { MAX_AMOUNT_MANWON } from "@shared/domain/profile.ts";
 
-export type AmountField = "monthlyIncome" | "totalAsset" | "carValue" | "depositManwon";
+export type AmountField = "monthlyIncome" | "totalAsset" | "carValue" | "depositManwon" | "spouseIncome" | "spouseDepositManwon";
 
 /** 이 값을 넘으면 [다음] 때 "입력하신 금액이 … 맞나요?"를 묻는다 (BR-U4-43, 만원) */
 export const CONFIRM_ABOVE: Readonly<Record<AmountField, number>> = {
@@ -9,6 +9,9 @@ export const CONFIRM_ABOVE: Readonly<Record<AmountField, number>> = {
   totalAsset: 300_000,
   carValue: 10_000,
   depositManwon: 10_000,
+  // 변경 3: 신혼 가구 배우자 소득·배우자 통장 (같은 기준)
+  spouseIncome: 2_000,
+  spouseDepositManwon: 10_000,
 };
 
 export { MAX_AMOUNT_MANWON };

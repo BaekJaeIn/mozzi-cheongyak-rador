@@ -164,3 +164,53 @@ ProfileWizard
 ### 7.4 사용하는 API
 
 새 API 없음. 짧은 입력 화면 저장도 `PUT /api/profile`(ProfileSync 경유). DB 바꿈 없음 — `prefs.regions`는 프로필 `data`(평문 jsonb)에 들어 있어 U3 0010 `notice_in_any_interest`가 그대로 읽는다.
+
+---
+
+## 8. 변경 요청 3 (2026-10-20)
+
+> 규칙 business-rules §10, 형식 domain-entities §8.
+
+### 8.1 경로
+
+새 경로 없음. 가구 종류 바꾸기는 처음부터 다시 입력 경로에 종류를 붙여 연다: `/profile/setup?redo=1&kind=newlywed` (`kind`가 지금 종류와 같거나 틀린 값이면 그냥 redo).
+
+### 8.2 컴포넌트 추가·변경
+
+```text
+ProfileWizard (mode: setup | redo(+kind) | edit | update)
+└─ StepScreen
+    ├─ HouseholdKindChoice  (새, 큰 보기 2개 + 설명)                       BR-U4-D1
+    ├─ ChoiceList           (marriage, children, neverOwned, incomeTax)     BR-U4-D13~D17
+    ├─ DatePicker           (marriageDate: 예비신혼 연·월 / 신혼 연·월·일)  BR-U4-D13
+    ├─ BirthDatePicker      (가구 종류별 연도 범위)                         BR-U4-D12
+    ├─ (통장 화면 3개)      (배우자 통장 화면은 같은 부품, 제목 앞말만)     BR-U4-D22
+    └─ AmountInput          ([소득 없어요] 버튼 추가 — 소득 화면만)         BR-U4-D30
+SettingsView
+├─ HouseholdKindRow         (새, 맨 위 + [바꾸기])                          BR-U4-D40
+├─ KindChangeDialog         (새, [바꾸기] / [그만두기])                     BR-U4-D41
+└─ 그룹 목록                (groupOrder(가구 종류))                         BR-U4-D50
+```
+
+| 컴포넌트 | 속성 | 동작·검증 |
+|---|---|---|
+| `HouseholdKindChoice` | `value?: HouseholdKind`, `onChange` | 큰 선택 버튼 2개(`aria-pressed`), 제목 굵게 + 설명 한 줄, 터치 크기 ≥ 토큰. 고른 뒤 [다음] |
+| `DatePicker` (혼인) | `precision: "month" \| "day"`, `range`, `value`, `onChange` | 생년월일 고르기와 같은 연·월·일 목록 부품. `month`면 일 목록 없음, `YYYY-MM-01`. 오늘 뒤 날짜 막기는 `day`일 때만 |
+| `AmountInput` | `zeroButton?: string` | [소득 없어요] → 0 저장 후 [다음] 가능. 단위 실수 확인(BR-U4-44)은 0에 띄우지 않는다 |
+| `KindChangeDialog` | `from`, `to`, `onConfirm`, `onCancel` | `role="dialog"` `aria-modal`, 초점은 제목, 앱 뒤로 가기는 창 닫기 먼저(`useBackClose`, 변경 2 부품) |
+| `ProfileWizard` | `mode.kind = "redo"`에 `switchTo?: HouseholdKind` | 시작값 `switchKind(...)`, 가구 종류 화면 없음, 초안 저장 안 함 |
+
+### 8.3 상태·순수 로직
+
+| 모듈 | 바뀌는 것 |
+|---|---|
+| `model/types.ts` | 새 답 키 (domain-entities §8.2) |
+| `model/steps.ts` | 새 화면·그룹, 보이는 조건에 가구 종류, `groupOrder(kind)`, `GROUP_LABELS.marriage`, 생년월일 범위 `birthYears(kind, who, today, current)`, 혼인 날짜 범위 |
+| `model/convert.ts` | `toProfile`·`fromProfile` 가구 종류별 (domain-entities §8.3), `switchKind(answers, kind)`, 그룹 고치기 합치기에 `marriage` 그룹 |
+| `model/storage.ts` | 초안 v3 + v2 옮기기 |
+| `model/updates.ts` | 안내 번호 그대로(1), 처음 기록 "버전 2 이상" |
+| `model/summary.ts` | 결혼·자녀 요약, 신혼 집·통장·소득 요약 (BR-U4-D51) |
+
+### 8.4 사용하는 API
+
+새 API 없음. `PUT /api/profile`이 v3를 받는다(U2에서 끝남: 검증·배우자 소득 암호화). DB 바꿈 없음.

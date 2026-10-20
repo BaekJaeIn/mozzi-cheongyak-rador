@@ -1640,3 +1640,67 @@
 **Context**: CONSTRUCTION - U3 Code Generation (변경 요청 3)
 
 ---
+
+## U3 Code Generation (변경 3) — 승인
+**Timestamp**: 2026-10-20T12:02:06Z
+**User Input**: "진행"
+**AI Response**: "U3 변경 3 코드 생성 승인으로 기록. U4 입력·설정 기능 설계(변경 3) 시작 — 계획·질문 파일 작성"
+**Context**: CONSTRUCTION, 변경 요청 3, U3 Code Generation 승인 → U4 Functional Design
+
+---
+
+## U4 Functional Design (변경 3) — 계획·질문
+**Timestamp**: 2026-10-20T12:02:06Z
+**User Input**: (없음 — 질문 파일 작성)
+**AI Response**: "U4-profile-settings-change-3-functional-design-plan.md 작성: 설계 메모(부모님 기기 안내 없음, 노부부 마법사 그대로, 신혼 = 부부, 복지 화면 생략 등), 질문 Q1~Q5(혼인 화면, 부부 통장, 부부 소득, 가구 종류 바꾸기, 설정 그룹). 답 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Functional Design Step 1~2
+
+---
+
+## U4 Functional Design (변경 3) — 답
+**Timestamp**: 2026-10-20T12:08:20Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q5 = A로 기록, 기능 설계 문서 작성 시작"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Functional Design Step 2
+
+---
+
+## U4 Functional Design (변경 3) — 완료, 승인 요청
+**Timestamp**: 2026-10-20T12:12:03Z
+**User Input**: (없음)
+**AI Response**: "domain-entities §8, business-rules §10 (BR-U4-D1~D62), business-logic-model §9, frontend-components §8 작성. 승인 요청 (Request Changes / Continue to Next Stage)"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Functional Design Step 3~7
+
+---
+
+## U4 Functional Design (변경 3) — 승인
+**Timestamp**: 2026-10-20T12:14:36Z
+**User Input**: "진행"
+**AI Response**: "U4 변경 3 기능 설계 승인으로 기록. U4 Code Generation Part 1(계획) 시작"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Functional Design 승인 → Code Generation
+
+---
+
+## U4 Code Generation (변경 3) — 계획, 승인 요청
+**Timestamp**: 2026-10-20T12:14:36Z
+**User Input**: (없음)
+**AI Response**: "U4-profile-settings-change-3-code-generation-plan.md 작성 (Step 0~8: 노부부 사본, 답·화면, 변환·switchKind, 초안 v3, 요약, 마법사·설정 화면, 테스트, 검증). 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Code Generation Part 1
+
+---
+
+## U4 Code Generation (변경 3) — 계획 승인
+**Timestamp**: 2026-10-20T12:15:48Z
+**User Input**: "승인"
+**AI Response**: "계획 승인으로 기록, Step 0부터 진행"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Code Generation Part 2
+
+---
+
+## U4 Code Generation (변경 3) — 완료, 승인 요청
+**Timestamp**: 2026-10-20T12:49:06Z
+**User Input**: (없음)
+**AI Response**: "Step 0~8 완료: 가구 종류 화면, 신혼 마법사, 변환·switchKind, 초안 v3, 요약, 설정 가구 종류 줄. 단위 802(seed 3회), pgTAP 168, 로컬 E2E 79+3 건너뜀. 신혼 답에서 배우자 생년월일이 지워지던 문제를 P-U4-D6이 잡아 고침. code-summary-change-3.md, 로컬 커밋. 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U4 Code Generation Part 2
+
+---

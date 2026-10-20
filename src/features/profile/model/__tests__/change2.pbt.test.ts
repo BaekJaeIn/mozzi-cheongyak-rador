@@ -25,7 +25,7 @@ test.prop([answersArb])("P-U4-C2 프로필 → 답 → 프로필 왕복 (명의�
 });
 
 test.prop([answersArb, fc.constantFrom(true, false, "unknown" as const), fc.oneof(fc.constantFrom("savingsHas", "income"), fc.string({ maxLength: 12 }))])(
-  "P-U4-C3 버전 1 초안 옮기기는 멱등이고, 옮긴 초안은 버전 2 형식",
+  "P-U4-C3 버전 1 초안 옮기기는 멱등이고, 옮긴 초안은 지금 형식(변경 3: 버전 3)",
   (a, has, stepId) => {
     const rest: Record<string, unknown> = { ...a };
     delete rest.savingsOwner;
@@ -33,7 +33,7 @@ test.prop([answersArb, fc.constantFrom(true, false, "unknown" as const), fc.oneo
     const v1 = { version: 1, answers: { ...rest, savingsHas: has }, stepId, updatedAt: "2026-10-01T00:00:00Z" };
     const once = migrateDraft(v1);
     if (once === null) return; // 모르는 화면 ID는 버린다
-    expect(once.version).toBe(2);
+    expect(once.version).toBe(3);
     expect("savingsHas" in once.answers).toBe(false);
     expect(migrateDraft(once)).toEqual(once);
   },

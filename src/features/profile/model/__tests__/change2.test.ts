@@ -110,20 +110,21 @@ describe("관심 지역 두 화면 (BR-U4-C10~C17)", () => {
 describe("초안 버전 1 옮기기 (domain-entities §7.3)", () => {
   it("통장 있음 → 명의 나, 없음·모름은 지워 다시 묻는다, 화면 ID도 바꾼다", () => {
     const base = { version: 1, updatedAt: "2026-10-01T00:00:00Z" };
+    // 변경 3: 옮긴 초안은 버전 3, 가구 종류 노부부 (domain-entities §8.5)
     expect(migrateDraft({ ...base, answers: { selfBirth: "1960-01-01", savingsHas: true }, stepId: "savingsHas" })).toEqual({
-      version: 2,
-      answers: { selfBirth: "1960-01-01", savingsOwner: "self" },
+      version: 3,
+      answers: { selfBirth: "1960-01-01", savingsOwner: "self", householdKind: "senior" },
       stepId: "savingsOwner",
       updatedAt: base.updatedAt,
     });
-    expect(migrateDraft({ ...base, answers: { savingsHas: false }, stepId: "income" })?.answers).toEqual({});
-    expect(migrateDraft({ ...base, answers: { savingsHas: UNKNOWN }, stepId: "income" })?.answers).toEqual({});
-    expect(migrateDraft({ ...base, version: 3, answers: {}, stepId: "income" })).toBeNull();
+    expect(migrateDraft({ ...base, answers: { savingsHas: false }, stepId: "income" })?.answers).toEqual({ householdKind: "senior" });
+    expect(migrateDraft({ ...base, answers: { savingsHas: UNKNOWN }, stepId: "income" })?.answers).toEqual({ householdKind: "senior" });
+    expect(migrateDraft({ ...base, version: 4, answers: {}, stepId: "income" })).toBeNull();
   });
 
-  it("기기에 남은 버전 1 초안을 읽으면 버전 2로", () => {
+  it("기기에 남은 버전 1 초안을 읽으면 버전 3으로", () => {
     const s = memoryStorage({ [DRAFT_KEY]: JSON.stringify({ version: 1, answers: { savingsHas: true }, stepId: "savingsKind", updatedAt: "x" }) });
-    expect(loadDraft(s)).toMatchObject({ version: 2, answers: { savingsOwner: "self" }, stepId: "savingsKind" });
+    expect(loadDraft(s)).toMatchObject({ version: 3, answers: { savingsOwner: "self", householdKind: "senior" }, stepId: "savingsKind" });
   });
 });
 

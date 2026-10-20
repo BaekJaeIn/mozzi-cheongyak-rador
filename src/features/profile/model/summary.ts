@@ -1,6 +1,6 @@
-// 설정 화면의 그룹 요약 한 줄 (business-logic-model §3). 비어 있으면 "확인 필요".
+// 설정 화면의 그룹 요약 한 줄 (business-logic-model §3, 변경 3 BR-U4-D51). 비어 있으면 "확인 필요".
 import type { IsoDate } from "@shared/domain/dates.ts";
-import { ageAt, type AreaBand, type HouseholdProfile, type RegionPick, type SavingsKind, type SavingsOwner, type WelfareStatus } from "@shared/domain/profile.ts";
+import { ageAt, type AreaBand, type HouseholdProfile, type NewlywedInfo, type RegionPick, type SavingsInfo, type SavingsKind, type SavingsOwner, type WelfareStatus } from "@shared/domain/profile.ts";
 import { formatManwon } from "./amount";
 import { bandLabel, bandOf, HOMELESS_BANDS, MONTHS_BANDS, RESIDENCE_BANDS } from "./bands";
 import { ALL_DISTRICT_IDS, districtName } from "./districts";
@@ -45,8 +45,31 @@ export function districtsSummary(ids: readonly string[], regions: readonly Regio
   return [districts, others].filter(Boolean).join(" · ") || UNKNOWN_LABEL;
 }
 
+/** 통장 한 개: "종합저축 · 2~5년" / "없음" (신혼 가구 통장 줄) */
+function accountSummary(s: SavingsInfo | null): string {
+  if (s === null || s.has === null) return UNKNOWN_LABEL;
+  if (!s.has) return "없음";
+  const kind = s.kind ? SAVINGS_KIND_LABELS[s.kind].name : UNKNOWN_LABEL;
+  const months = s.months === null ? UNKNOWN_LABEL : bandLabel(MONTHS_BANDS, bandOf(MONTHS_BANDS, s.months));
+  return `${kind} ${months}`;
+}
+
+/** 결혼·자녀: "예비신혼 · 2027년 3월 예정 · 자녀 없음" / "혼인신고 2024년 5월 · 자녀 1명" */
+function marriageSummary(n: NewlywedInfo): string {
+  const ym = (d: string) => `${Number(d.slice(0, 4))}년 ${Number(d.slice(5, 7))}월`;
+  const marriage =
+    n.marriage === "engaged" ? ["예비신혼", n.marriageDate ? `${ym(n.marriageDate)} 예정` : `예정일 ${UNKNOWN_LABEL}`]
+    : n.marriage === "married" ? [n.marriageDate ? `혼인신고 ${ym(n.marriageDate)}` : `혼인신고일 ${UNKNOWN_LABEL}`]
+    : [`혼인 ${UNKNOWN_LABEL}`];
+  const children = n.children === null ? `자녀 ${UNKNOWN_LABEL}` : n.children === 0 ? "자녀 없음" : n.children >= 3 ? "자녀 3명 이상" : `자녀 ${n.children}명`;
+  return [...marriage, children].join(" · ");
+}
+
 export function groupSummary(p: HouseholdProfile, group: GroupId, today: IsoDate): string {
+  const n = p.householdKind === "newlywed" ? p.newlywed : null;
   switch (group) {
+    case "marriage":
+      return n ? marriageSummary(n) : UNKNOWN_LABEL;
     case "basic": {
       const head = p.householdHead === null ? UNKNOWN_LABEL : { self: "본인", spouse: "배우자", other: "다른 가족" }[p.householdHead];
       const parts = [`본인 ${age(p.self.birthDate, today)}`];
@@ -60,14 +83,14 @@ export function groupSummary(p: HouseholdProfile, group: GroupId, today: IsoDate
       const years = p.residence.years === null ? UNKNOWN_LABEL : bandLabel(RESIDENCE_BANDS, bandOf(RESIDENCE_BANDS, p.residence.years));
       return `${place} · ${years}`;
     }
-    case "housing":
-      if (p.housing.homeless === null) return UNKNOWN_LABEL;
-      if (p.housing.homeless) {
-        const y = p.housing.homelessYears;
-        return `집 없음 · ${y === null ? UNKNOWN_LABEL : bandLabel(HOMELESS_BANDS, bandOf(HOMELESS_BANDS, y))}`;
-      }
-      return `집 있음 · ${p.housing.ownedCount === null ? UNKNOWN_LABEL : `${p.housing.ownedCount >= 5 ? "5채 이상" : `${p.housing.ownedCount}채`}`}`;
+    case "housing": {
+      const base = housingSummary(p);
+      if (!n) return base;
+      const never = n.neverOwnedHome === null ? `가진 적 ${UNKNOWN_LABEL}` : n.neverOwnedHome ? "집을 가진 적 없음" : "집을 가진 적 있음";
+      return `${base} · ${never}`;
+    }
     case "savings":
+      if (n) return `내 통장 ${accountSummary(p.savings)} · 배우자 통장 ${accountSummary(n.spouseSavings)}`;
       if (p.savings.has === null) return UNKNOWN_LABEL;
       if (!p.savings.has) return "통장 없음";
       return [
@@ -78,6 +101,14 @@ export function groupSummary(p: HouseholdProfile, group: GroupId, today: IsoDate
         .filter(Boolean)
         .join(" · ");
     case "money":
+      if (n) {
+        return [
+          p.money.monthlyIncome === null ? `소득 ${UNKNOWN_LABEL}` : `본인 월 ${money(p.money.monthlyIncome - (p.money.spouseMonthlyIncome ?? 0))}`,
+          `배우자 월 ${money(p.money.spouseMonthlyIncome ?? null)}`,
+          `자산 ${money(p.money.totalAsset)}`,
+          `자동차 ${money(p.money.carValue)}`,
+        ].join(" · ");
+      }
       return [
         `월 ${money(p.money.monthlyIncome)}`,
         `자산 ${money(p.money.totalAsset)}`,
@@ -91,4 +122,13 @@ export function groupSummary(p: HouseholdProfile, group: GroupId, today: IsoDate
       return [area, tenure, p.prefs.lowFloor ? "저층" : null].filter(Boolean).join(" · ");
     }
   }
+}
+
+function housingSummary(p: HouseholdProfile): string {
+  if (p.housing.homeless === null) return UNKNOWN_LABEL;
+  if (p.housing.homeless) {
+    const y = p.housing.homelessYears;
+    return `집 없음 · ${y === null ? UNKNOWN_LABEL : bandLabel(HOMELESS_BANDS, bandOf(HOMELESS_BANDS, y))}`;
+  }
+  return `집 있음 · ${p.housing.ownedCount === null ? UNKNOWN_LABEL : `${p.housing.ownedCount >= 5 ? "5채 이상" : `${p.housing.ownedCount}채`}`}`;
 }

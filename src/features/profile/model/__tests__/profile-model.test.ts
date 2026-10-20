@@ -36,33 +36,34 @@ import { UNKNOWN, type WizardAnswers } from "../types";
 import { memoryStorage, MINIMAL_ANSWERS, MOTHER_ANSWERS } from "./helpers";
 
 
+// 변경 3: 처음 입력 맨 앞에 가구 종류 화면이 하나 늘었다 (BR-U4-D60)
 describe("화면 순서 (business-logic-model §2.1)", () => {
   const ids = (a: WizardAnswers) => visibleSteps(a).map((s) => s.id);
 
-  it("부부, 집 없음, 통장 있음 → 22화면", () => {
+  it("부부, 집 없음, 통장 있음 → 가구 종류 + 22화면", () => {
     const list = ids({ householdType: "couple", sido: "경기", homeOwned: false, savingsOwner: "self" });
     expect(list).toEqual([
-      "selfBirth", "household", "spouseBirth", "head", "residence", "residenceYears", "homeOwned", "homelessYears",
+      "householdKind", "selfBirth", "household", "spouseBirth", "head", "residence", "residenceYears", "homeOwned", "homelessYears",
       "savingsOwner", "savingsKind", "savingsPeriod", "savingsAmount", "income", "spouseEarns", "asset", "car", "welfare",
       "districts", "regions", "area", "tenurePrefs", "review",
     ]);
   });
 
-  it("혼자, 집 있음, 통장 없음 → 17화면", () => {
-    expect(ids({ householdType: "single", sido: "부산", homeOwned: true, savingsOwner: "none" })).toHaveLength(17);
+  it("혼자, 집 있음, 통장 없음 → 가구 종류 + 17화면", () => {
+    expect(ids({ householdType: "single", sido: "부산", homeOwned: true, savingsOwner: "none" })).toHaveLength(18);
   });
 
-  it("다른 가족도 함께(배우자 있음), 집·통장 모름 → 19화면", () => {
+  it("다른 가족도 함께(배우자 있음), 집·통장 모름 → 가구 종류 + 19화면", () => {
     const list = ids({ householdType: "other", householdSize: 4, hasSpouse: true, sido: "서울", homeOwned: UNKNOWN, savingsOwner: UNKNOWN });
-    expect(list).toHaveLength(19);
+    expect(list).toHaveLength(20);
     expect(list).toContain("householdMore");
     expect(list).not.toContain("homeCount");
     expect(list).not.toContain("savingsKind");
   });
 
   it("진행 표시는 지금 답으로 보일 화면 수로 센다", () => {
-    expect(progress({ householdType: "single" }, "household")).toEqual({ index: 2, total: 15 });
-    expect(progress({ householdType: "couple", sido: "경기" }, "head")).toEqual({ index: 4, total: 18 });
+    expect(progress({ householdType: "single" }, "household")).toEqual({ index: 3, total: 16 });
+    expect(progress({ householdType: "couple", sido: "경기" }, "head")).toEqual({ index: 5, total: 19 });
   });
 
   it("다음·이전은 보이는 화면만 지난다", () => {
@@ -70,7 +71,8 @@ describe("화면 순서 (business-logic-model §2.1)", () => {
     expect(nextStep(a, "household")).toBe("head");
     expect(nextStep(a, "homeOwned")).toBe("homelessYears");
     expect(prevStep(a, "head")).toBe("household");
-    expect(prevStep(a, "selfBirth")).toBeNull();
+    expect(prevStep(a, "selfBirth")).toBe("householdKind");
+    expect(prevStep(a, "householdKind")).toBeNull();
     expect(nextStep(a, "review")).toBeNull();
   });
 

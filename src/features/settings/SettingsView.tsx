@@ -1,12 +1,15 @@
 "use client";
 
 // 설정 (C29, US-09·18·20, business-rules §5·§7). 글씨 크기(US-19)는 상단 막대 토글로 옮김 (2026-10-17)
+// 변경 3: 맨 위 "가구 종류" 줄 + 바꾸기 확인 창, 가구 종류별 그룹 (BR-U4-D40·D41·D50)
+import type { HouseholdKind } from "@shared/domain/profile.ts";
 import { toKstDate } from "@shared/domain/dates.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HOURS, hourLabel } from "@/features/profile/model/hour";
-import { GROUP_LABELS, GROUP_ORDER } from "@/features/profile/model/steps";
+import { useBackClose } from "@/features/app-chrome/BackNavigation";
+import { GROUP_LABELS, groupOrder, KIND_LABELS } from "@/features/profile/model/steps";
 import { groupSummary } from "@/features/profile/model/summary";
 import type { FlushResult } from "@/features/profile/model/sync";
 import { useProfile } from "@/features/profile/ProfileProvider";
@@ -54,8 +57,9 @@ export function SettingsView({ saved }: { saved?: string }) {
         <h2 id="my-info" className="px-1 text-title font-bold">
           내 정보
         </h2>
+        <HouseholdKindRow kind={p.householdKind} />
         <ul className={`${card} flex flex-col divide-y divide-line overflow-hidden`}>
-          {GROUP_ORDER.map((g) => (
+          {groupOrder(p.householdKind).map((g) => (
             <li key={g} className="flex items-center gap-3 px-5 py-4">
               <div className="min-w-0 flex-1">
                 <p className="text-caption text-muted">{GROUP_LABELS[g]}</p>
@@ -79,6 +83,46 @@ export function SettingsView({ saved }: { saved?: string }) {
       <NotifySettings />
       <InstallSection />
       <DeleteAllSection />
+    </div>
+  );
+}
+
+/** 가구 종류 줄 (BR-U4-D40~D42): [바꾸기] → 확인 창 → 다른 종류로 처음부터 다시 입력 (저장해야 바뀜) */
+function HouseholdKindRow({ kind }: { kind: HouseholdKind }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const other: HouseholdKind = kind === "senior" ? "newlywed" : "senior";
+  useBackClose(open, () => setOpen(false)); // 뒤로 버튼 = 그만두기
+  return (
+    <div className={`${card} flex items-center gap-3 px-5 py-4`}>
+      <div className="min-w-0 flex-1">
+        <p className="text-caption text-muted">가구 종류</p>
+        <p className="text-body font-bold break-words">{KIND_LABELS[kind]}</p>
+      </div>
+      <button
+        type="button"
+        aria-label="가구 종류 바꾸기"
+        onClick={() => setOpen(true)}
+        className="flex min-h-touch shrink-0 items-center rounded-2xl bg-fill px-4 text-body font-bold active:bg-line"
+      >
+        바꾸기
+      </button>
+      {open && (
+        <ConfirmDialog
+          title="가구 종류를 바꿀까요?"
+          message={
+            <p>
+              {KIND_LABELS[kind]} → <strong>{KIND_LABELS[other]}</strong>
+              <br />
+              바꾸면 질문을 처음부터 다시 해요. 지금 넣은 값은 채워 둘게요.
+            </p>
+          }
+          confirmLabel="바꾸기"
+          cancelLabel="그만두기"
+          onCancel={() => setOpen(false)}
+          onConfirm={() => router.replace(`/profile/setup?redo=1&kind=${other}`)}
+        />
+      )}
     </div>
   );
 }
