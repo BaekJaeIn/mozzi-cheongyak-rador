@@ -9,12 +9,15 @@ import { combineUnit, judgeNotice, judgeUnit } from "../engine.ts";
 import { judgeNotice as legacyJudgeNotice } from "./legacy/engine.ts";
 import type { UnitForJudgement, Verdict } from "../types.ts";
 
+const NEW_IN_CHANGE_3 = new Set(["newlywed_hope_town", "newlywed_special_supply", "first_time_supply", "rental_newlywed_supply"]);
 const RANK: Record<Verdict, number> = { ineligible: 0, unknown: 1, eligible: 2 };
 const asOfArb = noticeDateArb;
 
 test.prop([profileArb({ nullable: true }), noticeArb, asOfArb])(
   "P-C3-1 노부부 불변: 노부부 가구 판정 = 변경 3 전 엔진 판정 (주택형·조건·사유·점수·저장 형식)",
-  (profile, notice, asOf) => {
+  (profile, raw, asOf) => {
+    // BR-U2-D53: 변경 3 전에 있던 공급유형만 (새 신혼 물량 줄은 노부부에게 미충족이 바뀐 동작)
+    const notice = { ...raw, units: raw.units.filter((u) => !NEW_IN_CHANGE_3.has(u.supplyType)) };
     expect(judgeNotice(profile, notice, REFERENCE_2026, asOf)).toEqual(legacyJudgeNotice(profile, notice, REFERENCE_2026, asOf));
   },
 );

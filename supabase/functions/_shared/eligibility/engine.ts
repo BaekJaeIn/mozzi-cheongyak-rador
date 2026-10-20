@@ -12,7 +12,7 @@ import { evaluateFirstTime } from "./criteria/first-time.ts";
 import { evaluateMarriage } from "./criteria/marriage.ts";
 import type { SupplyTypeCode } from "../domain/supply-types.ts";
 import type { Requirements } from "../domain/requirements.ts";
-import { type ApplyRoute, routeRequirements, routesFor } from "./routes.ts";
+import { type ApplyRoute, isNewlywedOnlySupply, routeRequirements, routesFor } from "./routes.ts";
 import { evaluateAsset, evaluateCar, evaluateHomeless, evaluateHousehold, evaluateResidence } from "./criteria/simple.ts";
 import { evaluateWelfare } from "./criteria/welfare.ts";
 import { inInterestArea } from "./area.ts";
@@ -49,7 +49,13 @@ export function judgeUnit(
   ref: EligibilityReference,
   baseDate: IsoDate,
 ): UnitJudgement {
-  return profile.householdKind === "newlywed" ? judgeNewlywedUnit(profile, unit, ref, baseDate) : judgeOwnType(profile, unit, ref, baseDate);
+  if (profile.householdKind === "newlywed") return judgeNewlywedUnit(profile, unit, ref, baseDate);
+  // 노부부 가구: 신혼·생애최초 물량 줄은 미충족 (BR-U2-D51, U3 Q2=A) — 그 밖은 변경 3 전과 같다
+  if (isNewlywedOnlySupply(unit.supplyType as SupplyTypeCode)) {
+    const criteria = [result("type", "ineligible", "type_newlywed_only", MSG_NEWLYWED.newlywedOnly)];
+    return { unitId: unit.id, supplyType: unit.supplyType, verdict: "ineligible", criteria };
+  }
+  return judgeOwnType(profile, unit, ref, baseDate);
 }
 
 /** 노부부 가구 — 변경 3 전 judgeUnit 그대로 (BR-U2-D2, P-C3-1) */
@@ -110,7 +116,7 @@ function contextFor(profile: HouseholdProfile, unit: UnitForJudgement, ref: Elig
 }
 
 function judgeRoute(profile: HouseholdProfile, unit: UnitForJudgement, ref: EligibilityReference, baseDate: IsoDate, route: ApplyRoute): RouteJudgement {
-  const { requirements: req, fromNotice } = routeRequirements(route, { ...unit, supplyType: unit.supplyType as SupplyTypeCode });
+  const { requirements: req, fromNotice, noticeKeys } = routeRequirements(route, { ...unit, supplyType: unit.supplyType as SupplyTypeCode });
   if (req.unclassified) {
     const criteria = [result("type", "unknown", "type_unclassified", MSG.unclassified, { action: ACTION.checkNotice })];
     return { route, verdict: "unknown", criteria };
@@ -132,7 +138,7 @@ function judgeRoute(profile: HouseholdProfile, unit: UnitForJudgement, ref: Elig
   ]
     .filter((c): c is CriterionResult => c !== null)
     .map((c) =>
-      !fromNotice && STANDARD_NOTE_KEYS.has(c.key) && !c.code.endsWith("_requirement_unknown")
+      !fromNotice && !noticeKeys?.has(c.key) && STANDARD_NOTE_KEYS.has(c.key) && !c.code.endsWith("_requirement_unknown")
         ? { ...c, reason: `${c.reason} (${MSG_NEWLYWED.standardNote})` }
         : c,
     );

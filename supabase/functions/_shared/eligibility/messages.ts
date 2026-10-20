@@ -43,6 +43,7 @@ export const MSG_NEWLYWED = {
   engagedNo: "이 공고는 예비신혼부부를 받지 않아요",
   engagedUnknown: "예비신혼부부도 받는지 확인이 필요해요",
   seniorOnly: "어르신 대상 주택이에요",
+  newlywedOnly: "신혼부부·생애최초 대상 물량이에요",
   firstTime: (years: number) => `세대원 모두 집을 가진 적이 없고, ${years}년 이상 소득세를 낸 분이 있어야 해요`,
   firstTimeOwned: "집을 가진 적이 있으면 생애최초로 신청할 수 없어요",
   firstTimeNoTax: (years: number) => `${years}년 이상 소득세를 낸 분이 있어야 해요`,

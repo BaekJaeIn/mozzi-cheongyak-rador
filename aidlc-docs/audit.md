@@ -1592,3 +1592,51 @@
 **Context**: CONSTRUCTION - U2 Code Generation (변경 요청 3)
 
 ---
+
+## 변경 요청 3 — U2 코드 생성 승인
+**Timestamp**: 2026-10-20T10:29:42Z
+**User Input**: "진행"
+**AI Response**: "U2 코드 생성 승인으로 기록. U3 기능 설계 시작."
+**Context**: CONSTRUCTION - U3 Functional Design (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U3 기능 설계 질문
+**Timestamp**: 2026-10-20T10:30:54Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U3 추출·분류 확인: '신혼부부 특별공급' 줄이 민영 일반/기타로 분류되어 공고 요건이 일반공급 방법에 붙는 문제. 질문 Q1 신혼 물량 공급유형 추가, Q2 노부부의 신혼·생애최초 물량 처리, Q3 신혼부부가 볼 점 같은 호출, Q4 기존 공고 다시 분석(하루 5건)."
+**Context**: CONSTRUCTION - U3 Functional Design (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U3 기능 설계 답
+**Timestamp**: 2026-10-20T10:33:39Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q4 = A로 기록(질문 파일에 A 기입). U3 문서 변경 3 절: business-rules §11 (BR-U3-D1~D33: 신혼 물량 분류 순서·새 공급유형 3개, 표준⊕공고 요건, 노부부 미충족, 추출 항목, forNewlywed, 다시 분석 판·하루 5건·실패 보존), domain-entities(추출 형식, 0013 칸·함수), business-logic-model(흐름, P-U3-D1~D4). U2 business-rules §11.9 보완(BR-U2-D50~D53). 승인 요청."
+**Context**: CONSTRUCTION - U3 Functional Design (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U3 기능 설계 승인
+**Timestamp**: 2026-10-20T10:37:46Z
+**User Input**: "진행"
+**AI Response**: "U3 기능 설계 승인으로 기록. U3 코드 생성 계획(7단계, 0013) 작성, 승인 요청."
+**Context**: CONSTRUCTION - U3 Code Generation Part 1 (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U3 코드 생성 계획 승인
+**Timestamp**: 2026-10-20T10:52:24Z
+**User Input**: "승인"
+**AI Response**: "U3 코드 생성 시작 (Step 1부터)."
+**Context**: CONSTRUCTION - U3 Code Generation Part 2 (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U3 코드 생성 완료
+**Timestamp**: 2026-10-20T11:18:01Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U3 Step 1~7 완료: 신혼·생애최초 물량 공급유형 3개·분류 순서, 표준⊕공고 요건, 노부부 미충족, AI 추출 새 칸 6개·forNewlywed, 0013(분석 판·다시 분석 하루 5건·실패 보존), 분석 흐름(새 공고 먼저 → 남는 몫 다시 분석). 발견·수정: 하루 5건이 같은 공고 재시도로 넘던 문제(같은 공고 하루 한 번), P-13 흔들림 원인(테스트 제한 5초 < 검사 예산 45초 → 60초). 검증: 단위 770×3, pgTAP 168, E2E 71+3, 스모크 13/13(포트에 남은 예전 앱 서버를 끄고 재실행). 로컬 커밋, 승인 요청."
+**Context**: CONSTRUCTION - U3 Code Generation (변경 요청 3)
+
+---

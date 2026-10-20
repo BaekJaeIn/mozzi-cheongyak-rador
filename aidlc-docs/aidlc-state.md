@@ -95,5 +95,7 @@
 - [x] User Stories (가볍게) — P3, US-22~26 (2026-10-20 승인)
 - [x] Workflow Planning — change-3-execution-plan.md (2026-10-20 승인)
 - [x] U2 Functional Design (2026-10-20 승인)
-- [ ] U2 Code Generation — Step 1~10 완료 (단위 746, pgTAP 156, E2E 71+3), 승인 대기
+- [x] U2 Code Generation (2026-10-20 승인, 커밋 29e9bf6·1946954)
+- [x] U3 Functional Design (2026-10-20 승인)
+- [ ] U3 Code Generation — Step 1~7 완료 (단위 770, pgTAP 168, E2E 71+3, 스모크 13/13), 승인 대기
 - 참고: 변경 2 Build and Test는 05:10 운영 수집 결과 확인 뒤 승인 요청

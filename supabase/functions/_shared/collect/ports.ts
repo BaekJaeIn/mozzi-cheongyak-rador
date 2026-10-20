@@ -46,6 +46,10 @@ export interface CollectRepository {
   claimForAnalysis(limit: number, now: Date): Promise<string[]>;
   loadForAnalysis(noticeId: string): Promise<{ base: BundleBase; aiAttempts: number } | null>;
   releaseClaim(noticeId: string, failed: boolean): Promise<void>;
+  /** 다시 분석 대상 (변경 3 BR-U3-D31): 판 1·요약 완료·관심 지역 안·마감 전, 하루 5건 상한은 저장소가 지킨다 */
+  claimForReanalysis(limit: number, now: Date): Promise<string[]>;
+  /** 다시 분석 실패: 요약·주택형·판은 그대로, 시도 +1 (BR-U3-D32) */
+  releaseReanalysis(noticeId: string): Promise<void>;
   recordRun(record: CollectRunRecord): Promise<void>;
 }
 

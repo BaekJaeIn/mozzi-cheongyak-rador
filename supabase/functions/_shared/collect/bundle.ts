@@ -112,7 +112,7 @@ export function fillSchedule(source: Schedule, extracted: Schedule | null): Sche
 export function buildBundle(
   base: BundleBase,
   units: NoticeBundle["units"],
-  extra: Pick<NoticeBundle, "summary" | "summary_status" | "ai_attempts" | "ai_source_url" | "release_claim" | "regions_ai"> = {},
+  extra: Pick<NoticeBundle, "summary" | "summary_status" | "ai_attempts" | "ai_source_url" | "release_claim" | "regions_ai" | "analysis_version"> = {},
   schedule: Schedule = base.schedule,
 ): NoticeBundle {
   const d = (k: keyof Schedule): IsoDate | null => schedule[k];

@@ -75,7 +75,11 @@ export function readSummary(status: string, summary: unknown): NoticeDetail["sum
   const a = summary.eligibilityPlain;
   const b = summary.forSeniorCouple;
   if (typeof a !== "string" || typeof b !== "string" || a.trim() === "" || b.trim() === "") return null;
-  return { eligibilityPlain: a.trim(), forSeniorCouple: b.trim() };
+  // 변경 3: 신혼부부가 볼 점은 선택 (BR-U3-D21) — 비면 싣지 않는다
+  const c = summary.forNewlywed;
+  return typeof c === "string" && c.trim() !== ""
+    ? { eligibilityPlain: a.trim(), forSeniorCouple: b.trim(), forNewlywed: c.trim() }
+    : { eligibilityPlain: a.trim(), forSeniorCouple: b.trim() };
 }
 
 export function toNoticeDetail(bundle: NoticeBundle, today: IsoDate, labels: TypeLabels, interestDistrictIds: readonly string[]): NoticeDetail {

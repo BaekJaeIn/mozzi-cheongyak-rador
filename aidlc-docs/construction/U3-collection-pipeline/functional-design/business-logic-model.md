@@ -153,3 +153,30 @@ Gemini 추출 ─▶ supplySigungu → 시군구 맞추기 ─▶ regions_ai = r
 | P-U3-C5 | 요약 대상 | SQL 관심 지역 판정 = TS `inInterestArea` (무작위 지역·관심 지역 쌍) | Model-based (예시 + pgTAP 표로) |
 | P-U3-C6 | SH 목록 파싱 | 제외어가 든 제목은 결과에 없다, 글번호는 중복 없다 | Invariant |
 | P-U3-C7 | 인천 옛 구 | 영종 쪽 동이 들어 있는 "중구" 주소는 항상 영종구, "동구"는 항상 제물포구 | Invariant |
+
+---
+
+## 변경 요청 3 (2026-10-20)
+
+```text
+analyze 실행
+  ① 새 공고 예약 (지금처럼, 관심 지역 안 pending) → 분석 → 판 2로 저장
+  ② 남은 몫 = 배치 − ①의 수
+     → claim_notices_for_reanalysis(남은 몫) (하루 5건 상한)        BR-U3-D31
+     → 같은 분석(PDF + 지시문) → 성공: 주택형·요건·요약 교체, 판 2   BR-U3-D33
+                                  실패: 그대로 두고 시도 +1            BR-U3-D32
+  ③ 판정 다시 계산 (지금처럼)
+
+분류 (BR-U3-D1): AI 줄 "신혼부부 특별공급" → newlywed_special_supply
+  신혼 가구: 신혼 특공 방법 1개, 요건 = 표준 ⊕ 공고문 값                BR-U3-D3·D4
+  노부부 가구: 미충족 "신혼부부·생애최초 대상 물량이에요"               BR-U3-D5
+```
+
+### 테스트 가능한 속성 (PBT-01)
+
+| # | 속성 | 종류 |
+|---|---|---|
+| P-U3-D1 | 분류: "신혼희망타운"이 들어간 표기는 항상 newlywed_hope_town, 임대 낱말 + "신혼"은 항상 rental_newlywed_supply, 그 밖 기존 표기(신혼·생애최초 낱말 없음)의 분류는 변경 3 전과 같다 | Invariant |
+| P-U3-D2 | 요건 합치기: 결과는 표준과 공고문 키의 합집합이고, 공고문에 있는 키는 공고문 값 그대로 | Invariant |
+| P-U3-D3 | 어떤 JSON이 와도 추출 검증은 예외 없이 결과 또는 null, `forNewlywed`가 틀려도 나머지 요약은 살아 있다 | Robustness |
+| P-U3-D4 | 다시 분석 실패는 기존 요약·주택형을 바꾸지 않는다 (가짜 저장소) | Invariant |

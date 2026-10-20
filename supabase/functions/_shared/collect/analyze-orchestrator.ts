@@ -39,7 +39,7 @@ export interface AnalyzeOptions {
 }
 
 export type AnalyzeOutcome =
-  | { noticeId: string; status: "done"; units: number; hasSummary: boolean }
+  | { noticeId: string; status: "done"; units: number; hasSummary: boolean; reanalysis?: true }
   | { noticeId: string; status: "failed"; code: AnalyzeFailure }
   | { noticeId: string; status: "deferred" };
 
@@ -51,10 +51,14 @@ export interface AnalyzeSummary {
   recomputeError: string | null;
 }
 
-async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: StandardRequirements): Promise<AnalyzeOutcome> {
+/** 변경 3: 분석 판 — 이 코드로 분석한 공고 (BR-U3-D30) */
+export const ANALYSIS_VERSION = 2;
+
+async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: StandardRequirements, reanalysis = false): Promise<AnalyzeOutcome> {
   const loaded = await deps.repo.loadForAnalysis(noticeId);
   if (!loaded) {
-    await deps.repo.releaseClaim(noticeId, false);
+    if (reanalysis) await deps.repo.releaseReanalysis(noticeId);
+    else await deps.repo.releaseClaim(noticeId, false);
     return { noticeId, status: "deferred" };
   }
   const { base, aiAttempts } = loaded;
@@ -90,6 +94,7 @@ async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: Standa
       ai_attempts: aiAttempts + 1,
       ai_source_url: pdf.url,
       release_claim: true,
+      analysis_version: ANALYSIS_VERSION,
       // 공고문의 공급 위치로 "시도까지만" 지역 고치기 — 고칠 것이 없으면 null (BR-U3-C9, P-U3-C4)
       regions_ai: applyAiRegions(base.regions, extraction.supplySigungu ?? null),
     },
@@ -100,28 +105,35 @@ async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: Standa
   } catch (e) {
     throw new StepError("save_error", errorMessage(e));
   }
-  return { noticeId, status: "done", units: units.length, hasSummary: extraction.summary !== null };
+  return { noticeId, status: "done", units: units.length, hasSummary: extraction.summary !== null, ...(reanalysis ? { reanalysis: true as const } : {}) };
 }
 
 export async function runAnalyze(deps: AnalyzeDeps, opts: AnalyzeOptions): Promise<AnalyzeSummary> {
   const batch = opts.batch ?? ANALYZE_BATCH;
   const cutoff = opts.cutoffMs ?? ANALYZE_CUTOFF_MS;
   const startedAt = deps.clock.now();
-  const ids = await deps.repo.claimForAnalysis(batch, deps.clock.now()); // P-U3-R3
+  const fresh = await deps.repo.claimForAnalysis(batch, deps.clock.now()); // P-U3-R3
+  // 변경 3 BR-U3-D31: 새 공고를 먼저, 남는 몫으로 다시 분석 (하루 5건은 저장소가 지킨다)
+  const again = batch - fresh.length > 0 ? await deps.repo.claimForReanalysis(batch - fresh.length, deps.clock.now()) : [];
+  const ids = [...fresh, ...again];
+  const reanalysisIds = new Set(again);
   const standards = ids.length > 0 ? await deps.repo.loadStandards() : {};
 
   const outcomes: AnalyzeOutcome[] = [];
   for (const [i, noticeId] of ids.entries()) {
+    const reanalysis = reanalysisIds.has(noticeId);
+    // 실패·미룸 처리: 새 공고는 지금처럼, 다시 분석은 요약을 지키고 시도만 +1 (BR-U3-D32)
+    const release = (failed: boolean) => (reanalysis ? deps.repo.releaseReanalysis(noticeId) : deps.repo.releaseClaim(noticeId, failed));
     if (i > 0 && deps.clock.nowMs() - opts.startedAtMs > cutoff) {
-      await deps.repo.releaseClaim(noticeId, false); // 시간 예산 초과 — 실패로 세지 않고 다음 실행으로
+      await release(false); // 시간 예산 초과 — 다음 실행으로
       outcomes.push({ noticeId, status: "deferred" });
       continue;
     }
     try {
-      outcomes.push(await analyzeOne(deps, noticeId, standards));
+      outcomes.push(await analyzeOne(deps, noticeId, standards, reanalysis));
     } catch (e) {
       const code: AnalyzeFailure = e instanceof StepError ? e.code : "gemini_error";
-      await deps.repo.releaseClaim(noticeId, true).catch(() => undefined); // ai_attempts + 1
+      await release(true).catch(() => undefined); // ai_attempts + 1 (다시 분석은 reanalysis_attempts + 1)
       outcomes.push({ noticeId, status: "failed", code });
     }
   }
@@ -144,7 +156,10 @@ export async function runAnalyze(deps: AnalyzeDeps, opts: AnalyzeOptions): Promi
     ok: recomputeError === null && Object.keys(failed).length === 0,
     fetchedCount: ids.length,
     upsertedCount: outcomes.filter((o) => o.status === "done").length,
-    warning: ids.length > 0 ? JSON.stringify({ kind: "analyze", failed, deferred: outcomes.filter((o) => o.status === "deferred").length, recompute }) : null,
+    warning:
+      ids.length > 0
+        ? JSON.stringify({ kind: "analyze", failed, deferred: outcomes.filter((o) => o.status === "deferred").length, reanalysis: again.length, recompute })
+        : null,
     error: recomputeError,
     startedAt,
     finishedAt: deps.clock.now(),

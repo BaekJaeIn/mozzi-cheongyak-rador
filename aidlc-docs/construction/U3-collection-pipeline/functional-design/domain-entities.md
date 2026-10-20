@@ -138,3 +138,37 @@ DB: `notices.regions`(U2 0009). 묶음 저장 RPC(`upsert_notice_bundle`)가 `re
 | 서해구 | 서구 나머지 | (검단 쪽 동이 아니면) |
 
 동 목록은 코드 단계에서 행정안전부 행정구역 자료와 한 번 더 대조한다.
+
+---
+
+## 변경 요청 3 (2026-10-20)
+
+### 추출 형식 (Gemini 응답)
+
+```ts
+interface ExtractedUnitRequirementsFlat {
+  // …기존 그대로
+  marriageMaxYears: number | null;
+  preNewlywedAllowed: boolean | null;
+  firstTimeIncomeTaxYears: number | null;
+  incomePriorityPercent: number | null;
+  incomePriorityDualPercent: number | null;
+  lotteryRealEstateMaxManwon: number | null;
+}
+interface ExtractedSummary {
+  eligibilityPlain: string;
+  forSeniorCouple: string;
+  forNewlywed?: string;   // 선택 (BR-U3-D21)
+}
+```
+
+### 저장 (0013)
+
+| 칸 | 내용 |
+|---|---|
+| `notices.analysis_version` int default 1 | 분석 판 (BR-U3-D30). 0013 적용 때 기존 행은 1 |
+| `notices.reanalysis_attempts` int default 0 | 다시 분석 실패 횟수 (BR-U3-D32) |
+| `notices.reanalyzed_at` timestamptz null | 다시 분석 예약 시각 — 하루 5건 셈 (BR-U3-D31) |
+| `notices.summary` jsonb | `forNewlywed` 키 추가 가능 (형식 그대로) |
+| `supply_type_standards` | `newlywed_special_supply`·`first_time_supply`·`rental_newlywed_supply` 시드 (요건 = U2 신청 방법 표준) |
+| `claim_notices_for_reanalysis(p_limit, p_now)` | 판 1 + done + 관심 지역 안 + 마감 전 + 시도 3회 미만, 오늘 예약한 수를 빼고 최대 5건 |

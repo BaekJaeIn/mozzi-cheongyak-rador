@@ -49,6 +49,13 @@ export function flatToRequirements(flat: unknown): Requirements | null {
     }
     const areaMax = num(flat.incomeAppliesToAreaMaxM2, 1, 1000);
     if (areaMax !== null) income.appliesToAreaMaxM2 = areaMax;
+    // 변경 3 BR-U3-D12: 우선공급·추첨
+    const priority = num(flat.incomePriorityPercent, 1, 500);
+    if (priority !== null) income.priorityPercent = priority;
+    const priorityDual = num(flat.incomePriorityDualPercent, 1, 500);
+    if (priorityDual !== null) income.priorityDualIncomePercent = priorityDual;
+    const lottery = int(flat.lotteryRealEstateMaxManwon, 0, 10_000_000);
+    if (lottery !== null) income.overLottery = { realEstateMaxManwon: lottery };
     out.income = income;
   }
 
@@ -72,6 +79,13 @@ export function flatToRequirements(flat: unknown): Requirements | null {
     if (sidoIn.length > 0) out.residence = { sidoIn };
   }
   if (flat.headRequired === true) out.household = { headRequired: true };
+  // 변경 3 BR-U3-D12: 혼인·예비신혼, 생애최초
+  const marriageYears = int(flat.marriageMaxYears, 1, 30);
+  if (marriageYears !== null) {
+    out.marriage = { maxYears: marriageYears, engagedAllowed: typeof flat.preNewlywedAllowed === "boolean" ? flat.preNewlywedAllowed : "unknown" };
+  }
+  const taxYears = int(flat.firstTimeIncomeTaxYears, 0, 30);
+  if (taxYears !== null) out.firstTime = { neverOwned: true, incomeTaxYears: taxYears, marriedOrChildRequired: true };
   if (Array.isArray(flat.welfareAnyOf)) {
     const anyOf = flat.welfareAnyOf.filter((k) => k === "livelihood_or_medical" || k === "near_poverty" || k === "other_priority");
     if (anyOf.length > 0) out.welfare = { anyOf };
@@ -104,7 +118,10 @@ function parseSummary(v: unknown): NoticeExtraction["summary"] {
   if (!isObject(v)) return null;
   const a = str(v.eligibilityPlain, SUMMARY_MAX_CHARS);
   const b = str(v.forSeniorCouple, SUMMARY_MAX_CHARS);
-  return a && b ? { eligibilityPlain: a, forSeniorCouple: b } : null;
+  if (!a || !b) return null;
+  // 변경 3 BR-U3-D21: 신혼부부가 볼 점은 선택 — 틀리거나 비어도 나머지는 살린다
+  const c = str(v.forNewlywed, SUMMARY_MAX_CHARS);
+  return c ? { eligibilityPlain: a, forSeniorCouple: b, forNewlywed: c } : { eligibilityPlain: a, forSeniorCouple: b };
 }
 
 /** 공급 위치: 문자열 최대 10개, 각 40자 (판별은 regions.ts가 공용 목록으로) */

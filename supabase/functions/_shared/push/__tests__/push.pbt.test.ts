@@ -233,4 +233,4 @@ test.prop([fc.integer({ min: 1, max: 1000 })], { numRuns: 1 })("P-13 1,000대 �
   console.log(`[P-13] 1,000대 발송 ${elapsed}ms (동시 5, 지연 5ms)`);
   expect(s.sent).toBe(1000);
   expect(elapsed).toBeLessThan(45_000);
-});
+}, 60_000); // 테스트 제한 시간은 확인하는 예산(45초)보다 크게 — 기본 5초는 부하가 있으면 예산 안이어도 잘랐다 (2026-10-20)

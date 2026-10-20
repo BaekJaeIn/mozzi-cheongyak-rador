@@ -88,6 +88,29 @@ export const STANDARD_REQUIREMENTS: Readonly<Record<SupplyTypeCode, Requirements
     income: "unknown",
     asset: "unknown",
   },
+  // 변경 3 BR-U2-D50·D52: 신혼·생애최초 물량 줄 — 표준은 신청 방법 표준(아래 STANDARD_ROUTE_REQUIREMENTS)과 같은 값, 공고문 값이 덮어씀
+  newlywed_special_supply: {
+    marriage: { maxYears: 7, engagedAllowed: "unknown" },
+    homeless: HOMELESS,
+    income: { basis: "urban_worker", percent: 140, dualIncomePercent: 160, priorityPercent: 100, priorityDualIncomePercent: 120, overLottery: { realEstateMaxManwon: 33_100 } },
+    savings: { minMonths: 6, minPayments: 6 },
+    residence: CAPITAL_AREA,
+  },
+  first_time_supply: {
+    firstTime: { neverOwned: true, incomeTaxYears: 5, marriedOrChildRequired: true },
+    homeless: HOMELESS,
+    income: "unknown",
+    asset: "unknown",
+    savings: { minMonths: 12, minPayments: 12 },
+    residence: CAPITAL_AREA,
+  },
+  rental_newlywed_supply: {
+    marriage: { maxYears: 7, engagedAllowed: "unknown" },
+    homeless: HOMELESS,
+    income: "unknown",
+    asset: "unknown",
+    car: "unknown",
+  },
   unranked: {
     homeless: HOMELESS,
     residence: "unknown",

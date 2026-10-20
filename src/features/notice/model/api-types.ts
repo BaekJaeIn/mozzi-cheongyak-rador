@@ -55,7 +55,7 @@ export interface NoticeDetail {
   regions: NoticeRegion[];
   units: UnitInfo[];
   /** BR-U5-95 조건을 만족할 때만 */
-  summary: { eligibilityPlain: string; forSeniorCouple: string } | null;
+  summary: { eligibilityPlain: string; forSeniorCouple: string; forNewlywed?: string } | null;
   /** http(s)만, 대표가 맨 앞 (BR-U5-100~102) */
   sources: SourceLink[];
   firstSeenAt: string;

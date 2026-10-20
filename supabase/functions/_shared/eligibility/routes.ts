@@ -26,9 +26,22 @@ export const ROUTE_LABELS: Readonly<Record<ApplyRoute, string>> = {
 /** 신혼 가구가 쓸 수 없는 어르신 대상 공급유형 (BR-U2-D11) */
 const SENIOR_ONLY: ReadonlySet<SupplyTypeCode> = new Set(["senior_welfare", "permanent_rental_senior"]);
 
+/** 공고문에서 따로 뽑은 신혼·생애최초 물량 줄 → 신청 방법 (BR-U2-D50·D51). 노부부 가구는 신청 방법 없음 */
+export const NEWLYWED_ONLY_ROUTE: Readonly<Partial<Record<SupplyTypeCode, ApplyRoute>>> = {
+  newlywed_special_supply: "newlywed_special",
+  first_time_supply: "first_time",
+  rental_newlywed_supply: "rental_newlywed",
+};
+
+export function isNewlywedOnlySupply(supplyType: SupplyTypeCode): boolean {
+  return NEWLYWED_ONLY_ROUTE[supplyType] !== undefined;
+}
+
 /** 가구 종류 × 공급유형 → 신청 방법 (domain-entities 표). 순서 = 같은 판정일 때 앞을 고른다 (BR-U2-D12) */
 export function routesFor(kind: HouseholdKind, supplyType: SupplyTypeCode): ApplyRoute[] {
-  if (kind === "senior") return ["own_type"]; // BR-U2-D2
+  if (kind === "senior") return isNewlywedOnlySupply(supplyType) ? [] : ["own_type"]; // BR-U2-D2·D51
+  const only = NEWLYWED_ONLY_ROUTE[supplyType];
+  if (only) return [only];
   switch (supplyType) {
     case "public_sale_general":
     case "private_sale_general":
@@ -51,6 +64,7 @@ export function routesFor(kind: HouseholdKind, supplyType: SupplyTypeCode): Appl
 export function saleKindOf(supplyType: SupplyTypeCode): SaleKind {
   return supplyType === "private_sale_general" ? "private" : "public";
 }
+// 참고: 신혼·생애최초 물량 줄(newlywed_special_supply 등)은 공공/민영을 줄만으로 알 수 없어 표준은 공공 값 — 공고문 값이 덮어쓴다
 
 /** 신청 방법의 표준 요건. own_type·general은 주택형 요건을 그대로 쓴다 (BR-U2-D13) */
 export function standardRouteRequirements(route: ApplyRoute, supplyType: SupplyTypeCode, unitRequirements: Requirements): Requirements {
@@ -69,12 +83,25 @@ export function standardRouteRequirements(route: ApplyRoute, supplyType: SupplyT
   }
 }
 
-/** 공고문 요건(U3) 우선, 없으면 표준 (BR-U2-D13). fromNotice = 공고문 값인지 (사유 꼬리 BR-U2-D40) */
+/** 표준 ⊕ 공고문 (키 단위 덮어쓰기, BR-U2-D52). 공고문이 분류 불가면 공고문 그대로 */
+export function mergeRequirements(standard: Requirements, notice: Requirements): Requirements {
+  if (notice.unclassified) return notice;
+  return { ...standard, ...notice };
+}
+
+/**
+ * 신청 방법의 요건 (BR-U2-D13·D52). fromNotice = 공고문 값인지 (사유 꼬리 BR-U2-D40).
+ * 신혼·생애최초 물량 줄은 그 줄의 공고 요건이 표준을 덮어쓴다 — 공고문에서 온 키는 noticeKeys로 알려 준다
+ */
 export function routeRequirements(
   route: ApplyRoute,
   unit: { supplyType: SupplyTypeCode; requirements: Requirements; routeRequirements?: Partial<Record<ApplyRoute, Requirements>> },
-): { requirements: Requirements; fromNotice: boolean } {
+): { requirements: Requirements; fromNotice: boolean; noticeKeys?: ReadonlySet<string> } {
   const fromNotice = unit.routeRequirements?.[route];
   if (fromNotice) return { requirements: fromNotice, fromNotice: true };
+  if (NEWLYWED_ONLY_ROUTE[unit.supplyType] === route) {
+    const standard = standardRouteRequirements(route, unit.supplyType, {});
+    return { requirements: mergeRequirements(standard, unit.requirements), fromNotice: false, noticeKeys: new Set(Object.keys(unit.requirements)) };
+  }
   return { requirements: standardRouteRequirements(route, unit.supplyType, unit.requirements), fromNotice: route === "general" || route === "own_type" };
 }

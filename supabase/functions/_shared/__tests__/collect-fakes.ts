@@ -21,6 +21,8 @@ import type { CollectRunRecord, CollectSource, NoticeBundle } from "../collect/t
 import type { RecomputeAllSummary } from "../services/judgement-service.ts";
 
 export const CLAIM_EXPIRE_MS = 10 * 60 * 1000;
+/** 0013 claim_notices_for_reanalysis의 하루 상한과 같다 */
+export const REANALYSIS_PER_DAY = 5;
 
 export interface StoredNotice {
   id: string;
@@ -33,6 +35,10 @@ export interface StoredNotice {
   regionsAi: NoticeBundle["regions_ai"] | null;
   claimedAt: Date | null;
   order: number;
+  /** 변경 3: 분석 판·다시 분석 (0013) */
+  analysisVersion: number;
+  reanalysisAttempts: number;
+  reanalyzedAt: Date | null;
 }
 
 /** 관심 기기들의 관심 지역 (요약 대상 제한 BR-U3-C18의 가짜). 기본: 3기 신도시 지구만 고른 기기 하나 */
@@ -74,7 +80,7 @@ export function createMemoryCollectRepo(interest: InterestPrefs = DEFAULT_INTERE
     async upsertBundle(bundle) {
       let existing = [...notices.values()].find((n) => n.bundle.notice.dedup_key === bundle.notice.dedup_key);
       if (!existing) {
-        existing = { id: `notice-${++seq}`, bundle, summary: null, summaryStatus: "pending", aiAttempts: 0, aiSourceUrl: null, regionsAi: null, claimedAt: null, order: seq };
+        existing = { id: `notice-${++seq}`, bundle, summary: null, summaryStatus: "pending", aiAttempts: 0, aiSourceUrl: null, regionsAi: null, claimedAt: null, order: seq, analysisVersion: 1, reanalysisAttempts: 0, reanalyzedAt: null };
         notices.set(existing.id, existing);
       }
       const previousOwners = new Set<string>();
@@ -94,6 +100,7 @@ export function createMemoryCollectRepo(interest: InterestPrefs = DEFAULT_INTERE
       if (bundle.ai_source_url !== undefined) existing.aiSourceUrl = bundle.ai_source_url;
       if (bundle.regions_ai !== undefined) existing.regionsAi = bundle.regions_ai;
       if (bundle.release_claim) existing.claimedAt = null;
+      if (bundle.analysis_version !== undefined) existing.analysisVersion = bundle.analysis_version;
       // 원천이 모두 다른 공고로 옮겨 간 옛 공고는 지운다 (0007)
       for (const prevId of previousOwners) {
         const prev = notices.get(prevId);
@@ -156,6 +163,29 @@ export function createMemoryCollectRepo(interest: InterestPrefs = DEFAULT_INTERE
         n.aiAttempts += 1;
         n.summaryStatus = "failed";
       }
+    },
+    async claimForReanalysis(limit, now) {
+      const today = toKstDate(now);
+      const used = [...notices.values()].filter((n) => n.reanalyzedAt !== null && toKstDate(n.reanalyzedAt) === today).length;
+      const picked = [...notices.values()]
+        .filter((n) => n.summaryStatus === "done" && n.analysisVersion < 2 && n.reanalysisAttempts < 3)
+        .filter((n) => n.reanalyzedAt === null || toKstDate(n.reanalyzedAt) < today) // 같은 공고는 하루 한 번
+        .filter((n) => n.claimedAt === null || now.getTime() - n.claimedAt.getTime() > CLAIM_EXPIRE_MS)
+        .filter((n) => n.bundle.notice.apply_end === null || diffDays(today, n.bundle.notice.apply_end) >= 0)
+        .filter((n) => interest.some((p) => inInterestArea({ districtIds: n.bundle.district_ids, regions: n.regionsAi ?? n.bundle.notice.regions }, p)))
+        .sort((a, b) => a.order - b.order)
+        .slice(0, Math.max(0, Math.min(limit, REANALYSIS_PER_DAY - used)));
+      for (const n of picked) {
+        n.claimedAt = now;
+        n.reanalyzedAt = now;
+      }
+      return picked.map((n) => n.id);
+    },
+    async releaseReanalysis(noticeId) {
+      const n = notices.get(noticeId);
+      if (!n) return;
+      n.claimedAt = null;
+      n.reanalysisAttempts += 1;
     },
     async recordRun(record) {
       runs.push(record);

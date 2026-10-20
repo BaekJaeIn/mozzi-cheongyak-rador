@@ -63,7 +63,11 @@ test.prop([profileArb(), noticeArb, refArb, noticeDateArb])(
   "모든 값이 '모름'인 프로필은 어떤 조건에서도 미충족이 나오지 않는다",
   (p, notice, ref, asOf) => {
     const j = judge(allUnknown(p), notice, ref, asOf);
-    for (const unit of j.units) for (const c of unit.criteria) expect(c.verdict).not.toBe("ineligible");
+    for (const unit of j.units) {
+      // 변경 3: 신혼·생애최초 전용 물량은 값과 상관없이 노부부 대상이 아니다 (BR-U2-D51) — 모르는 값 때문이 아니므로 뺀다
+      if (unit.criteria.some((c) => c.code === "type_newlywed_only")) continue;
+      for (const c of unit.criteria) expect(c.verdict).not.toBe("ineligible");
+    }
   },
 );
 

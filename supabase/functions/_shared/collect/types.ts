@@ -133,6 +133,8 @@ export interface NoticeBundle {
   ai_attempts?: number;
   ai_source_url?: string | null;
   release_claim?: boolean;
+  /** 분석 판 (변경 3 BR-U3-D30) — 분석 저장만 넣는다 */
+  analysis_version?: number;
   /** 분석이 고친 지역 — 있을 때만 덮어쓴다 (BR-U3-C9, P-U3-C4) */
   regions_ai?: NoticeRegion[] | null;
 }
@@ -151,7 +153,7 @@ export interface NoticeExtraction {
   isNotice: boolean;
   schedule: Schedule;
   units: ExtractedUnit[];
-  summary: { eligibilityPlain: string; forSeniorCouple: string } | null;
+  summary: { eligibilityPlain: string; forSeniorCouple: string; forNewlywed?: string } | null;
   /** 공급 위치 시군구 원문 표기 (변경 2 BR-U3-C9). 없으면 null */
   supplySigungu?: string[] | null;
 }

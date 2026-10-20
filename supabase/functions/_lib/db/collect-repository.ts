@@ -78,6 +78,17 @@ export function createCollectRepository(db: DbClient): CollectRepository {
       if (error) throw new DbError("release_notice_claim", error);
     },
 
+    async claimForReanalysis(limit, now) {
+      const { data, error } = await db.rpc("claim_notices_for_reanalysis", { p_limit: limit, p_now: now.toISOString() });
+      if (error) throw new DbError("claim_notices_for_reanalysis", error);
+      return ((data ?? []) as (string | { id: string })[]).map((r) => (typeof r === "string" ? r : r.id));
+    },
+
+    async releaseReanalysis(noticeId) {
+      const { error } = await db.rpc("release_reanalysis", { p_notice_id: noticeId });
+      if (error) throw new DbError("release_reanalysis", error);
+    },
+
     async recordRun(record) {
       const { error } = await db.from("collect_runs").insert(collectRunRow(record));
       if (error) throw new DbError("collect_runs.insert", error);
