@@ -56,3 +56,4 @@
 ## 운영 반영 (Build and Test에서)
 
 - 0012 → (U3에서 `newlywed_hope_town` 분류를 쓰는 collect 배포) → 앱 push. 0012 전에 collect를 배포하면 외래 키 오류가 날 수 있다
+- **함수 먼저, 앱 나중**: 새 앱(push)이 프로필을 v3로 저장하면, 아직 배포 안 된 Edge Function(`dispatch`·`collect`의 재계산)은 v3를 읽지 못한다(옛 `decodeProfile`). 순서: 0012 → `collect`·`analyze`·`dispatch` 배포 → push
