@@ -150,3 +150,44 @@ services/judgement-service.ts recomputeForDevice, recomputeAll (S2, BR-U2-80~84)
 | P-C2-7 | 프로필 코덱 | 버전 2 프로필 직렬화 → 읽기 = 원래 값 (기존 왕복 속성에 새 칸 포함) | Round-trip |
 
 **예시 테스트로 고정할 시나리오** (PBT-10): 엄마 휴대폰(배우자 명의) vs 아빠 휴대폰(본인 명의) 같은 공고·판정, 버전 1 "통장 없음" → 확인 필요, "경기 전체" 선택 시 수원시 공고 노출, "경기도 일원" 공고 + 성남시만 고름 → 노출, 서울 강서구만 고름 + 부천 대장 공고(지구 미선택) → 숨김.
+
+---
+
+## 7. 변경 요청 3 (2026-10-20) — 신혼 가구 판정 흐름
+
+```text
+judgeUnit(profile, unit)
+  routes = routesFor(profile.householdKind, unit.supplyType)        BR-U2-D10
+  senior → [own_type] → 지금 judgeUnit 그대로 (routes 칸 없음)        BR-U2-D2
+  newlywed →
+    각 route:
+      req = unit.routeRequirements[route] ?? (route = general ? unit.requirements : STANDARD_ROUTE[route][공공|민영])
+      조건: marriage → firstTime → homeless → residence → income(합계·맞벌이·추첨) → asset → car → savings(본인·배우자)
+      verdict = combineUnit(조건)
+    unit.verdict = best(routes)   unit.criteria = best route 조건       BR-U2-D11·D12
+judgeNotice: 지금 그대로 (주택형 하나라도 충족 → 충족), inDistrict·노출 그대로
+score: + 자녀 보너스 (newlywed만)                                    BR-U2-D42
+```
+
+### 7.1 예시 — 예비신혼 맞벌이 (P3)
+
+가구: 예비신혼(2027-03 예정), 본인 월 420만원 + 배우자 380만원 = 800만원(맞벌이), 무주택, 집 가진 적 없음, 소득세 5년 있음, 본인 통장 2년·24회, 배우자 통장 없음. 공고: 민영 84㎡, 예비신혼 받음.
+
+| 신청 방법 | 조건 | 판정 |
+|---|---|---|
+| 신혼부부 특공(민영) | 예비신혼 받음 ✔(입주 전 혼인신고), 무주택 ✔, 소득 800만원 ≤ 2인 160% ✔(우선공급 120% 안이면 안내), 통장 본인 ✔ | 충족 |
+| 생애최초(민영) | 집 가진 적 없음 ✔, 소득세 5년 ✔, 혼인 중(예비) ✔, 소득 ≤ 160% ✔, 통장 ✔ | 충족 |
+| 일반공급 | 통장 12개월 ✔, 예치금 지역·면적 기준(지금 규칙) | 충족 또는 확인 필요 |
+
+→ 주택형 충족, 상세에 세 방법 모두 보임. 같은 공고가 "예비신혼 받지 않음"이면 신혼 특공 미충족, 생애최초·일반으로 충족.
+
+### 7.2 테스트 가능한 속성 (PBT-01)
+
+| # | 대상 | 속성 | 종류 |
+|---|---|---|---|
+| P-C3-1 | 판정 | **노부부 불변**: senior 가구 + 기존 공급유형 공고 → 변경 3 엔진 결과 = 변경 2 엔진 결과 (기존 코드를 테스트용으로 남겨 비교) | Invariant |
+| P-C3-2 | 옮기기 | v1·v2 → v3 멱등, v3 결과는 v3 검증 통과, `householdKind = senior` | Idempotence |
+| P-C3-3 | 판정 | 주택형 판정 = 신청 방법 판정 중 최선 (combine 순서와 일치) | Invariant |
+| P-C3-4 | 소득 | 다른 값이 같을 때 소득을 낮추면 소득 조건이 나빠지지 않는다(미충족 → 확인 필요 → 충족 방향만) | Monotonicity |
+| P-C3-5 | 통장 | 배우자 통장을 더하면 통장 조건이 나빠지지 않는다 | Monotonicity |
+| P-C3-6 | 혼인 | 혼인신고일이 기준일에 가까울수록(기간이 짧을수록) 혼인 조건이 나빠지지 않는다 | Monotonicity |

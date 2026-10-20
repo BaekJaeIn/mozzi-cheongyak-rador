@@ -6,7 +6,10 @@ import { validateRequirements } from "../../domain/requirements.ts";
 import { SUPPLY_TYPE_CODES, SUPPLY_TYPES } from "../../domain/supply-types.ts";
 import { DISTRICTS, INCOME_THRESHOLDS, STANDARD_REQUIREMENTS } from "../reference-data.ts";
 
-const sql = readFileSync(new URL("../../../../migrations/0006_eligibility_reference.sql", import.meta.url), "utf8");
+// 0006 + 0012(변경 3 신혼희망타운)
+const sql = ["0006_eligibility_reference.sql", "0012_household_kind.sql"]
+  .map((name) => readFileSync(new URL(`../../../../migrations/${name}`, import.meta.url), "utf8"))
+  .join("\n");
 const lines = sql.split(/\r?\n/);
 const pgArray = (text: string) =>
   text
@@ -14,8 +17,8 @@ const pgArray = (text: string) =>
     .split(",")
     .map((s) => s.replace(/^"|"$/g, ""));
 
-describe("0006 시드 = reference-data.ts", () => {
-  it("공급유형 표준 요건 9개", () => {
+describe("0006·0012 시드 = reference-data.ts", () => {
+  it("공급유형 표준 요건 10개", () => {
     const rows = lines
       .map((l) => /^\s*\('([a-z_]+)', '([^']+)', '([^']+)', '(sale|rent)', '(\{.*\})'::jsonb, '2026-01-01'\)/.exec(l))
       .filter((m): m is RegExpExecArray => m !== null);

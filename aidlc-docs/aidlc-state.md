@@ -70,7 +70,7 @@
 - 운영 반영 (2026-10-19): 운영 DB 0009·0010, Edge Function collect·analyze·dispatch 배포, push 5759d29
 - [x] U5 Functional Design (2026-10-19 승인)
 - [x] U5 Code Generation (2026-10-20 승인, 커밋 0053566·9e4623d)
-- [ ] Build and Test (변경 2) — 문서·실행 완료, 0011 운영 적용(GH 정상화), 승인 대기
+- [x] Build and Test (변경 2) — 2026-10-20 승인 (0011 운영 적용, GH 정상화)
 - 계획: User Stories(가볍게) → U2(FD·Code) → U3(FD·NFR-R·NFR-D·Code) → U4(FD·Code) → U5(FD·Code) → Build and Test
 
 ## Current Status
@@ -94,5 +94,6 @@
 - [x] Requirements Analysis — requirements.md §10 (2026-10-20 승인)
 - [x] User Stories (가볍게) — P3, US-22~26 (2026-10-20 승인)
 - [x] Workflow Planning — change-3-execution-plan.md (2026-10-20 승인)
-- [ ] U2 Functional Design — 질문 답 기다림 (plans/U2-eligibility-engine-change-3-functional-design-plan.md)
+- [x] U2 Functional Design (2026-10-20 승인)
+- [ ] U2 Code Generation — Step 1~10 완료 (단위 746, pgTAP 156, E2E 71+3), 승인 대기
 - 참고: 변경 2 Build and Test는 05:10 운영 수집 결과 확인 뒤 승인 요청

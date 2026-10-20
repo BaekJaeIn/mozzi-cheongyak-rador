@@ -2,7 +2,7 @@
 import type { Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-/** 변경 2 이후 저장 형식(v2) — 업데이트 안내가 뜨지 않는다 */
+/** 변경 2 이후 저장 형식(v2) — 업데이트 안내가 뜨지 않는다. 변경 3 뒤에도 일부러 v2: 지금 부모님 휴대폰 상태(옮겨 읽기 회귀 확인) */
 export const SAMPLE_PROFILE = {
   schemaVersion: 2,
   self: { birthDate: "1960-03-02" },

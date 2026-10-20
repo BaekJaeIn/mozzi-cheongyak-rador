@@ -3,6 +3,7 @@ import type { IsoDate } from "../domain/dates.ts";
 import type { Tenure } from "../domain/profile.ts";
 import type { CapitalSido } from "../domain/regions.ts";
 import type { Requirements } from "../domain/requirements.ts";
+import type { ApplyRoute } from "./routes.ts";
 
 export type Verdict = "eligible" | "ineligible" | "unknown";
 export type CriterionKey =
@@ -15,7 +16,9 @@ export type CriterionKey =
   | "savings"
   | "residence"
   | "household"
-  | "welfare";
+  | "welfare"
+  | "marriage" // 변경 3
+  | "firstTime"; // 변경 3
 
 /** 화면이 기기 프로필에서 붙여 보여줄 내 금액 (NFR-U2-10) */
 export type UserValueKey = "monthlyIncome" | "totalAsset" | "carValue";
@@ -31,11 +34,24 @@ export interface CriterionResult {
   userValue?: UserValueKey;
 }
 
+/** 신청 방법 하나의 판정 (변경 3 Q1=A) */
+export interface RouteJudgement {
+  route: ApplyRoute;
+  verdict: Verdict;
+  criteria: CriterionResult[];
+  /** 통장 조건을 채운 통장 (BR-U2-D30) */
+  savingsBy?: "self" | "spouse";
+}
+
 export interface UnitJudgement {
   unitId: string;
   supplyType: string;
+  /** 신청 방법 중 가장 좋은 판정 (BR-U2-D11) */
   verdict: Verdict;
+  /** 가장 좋은 신청 방법의 조건 (BR-U2-D12) — 지금 화면과 호환 */
   criteria: CriterionResult[];
+  /** 신혼 가구만 — 노부부는 없음 (저장 형식이 변경 3 전과 같다, BR-U2-D2) */
+  routes?: RouteJudgement[];
 }
 
 export interface NoticeJudgement {
@@ -53,6 +69,8 @@ export interface UnitForJudgement {
   supplyType: string;
   exclusiveAreaM2: number | null;
   requirements: Requirements;
+  /** 공고문에서 뽑은 신청 방법별 요건 (U3). 없으면 표준 요건 (BR-U2-D13) */
+  routeRequirements?: Partial<Record<ApplyRoute, Requirements>>;
 }
 
 export interface NoticeForJudgement {

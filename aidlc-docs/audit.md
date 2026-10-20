@@ -1560,3 +1560,35 @@
 **Context**: CONSTRUCTION - Build and Test (변경 요청 2), 운영 반영
 
 ---
+
+## 변경 요청 3 — U2 기능 설계 답
+**Timestamp**: 2026-10-20T09:57:53Z
+**User Input**: "완료"
+**AI Response**: "U2 질문 Q1~Q7 모두 A. 기준값 확인: 주택공급에 관한 규칙 제41조(2026-06-15 시행, 법령정보센터) 신혼 특공 140%/160%·우선 100%/120%·추첨 부동산 기준, 찾기쉬운 생활법령(2026-09-15), 2026-03 민영 입주자모집공고문(생애최초 130%/160%, 부동산 3억3,100만원). 신혼희망타운·신혼 임대·국민 생애최초는 원문 미확인 → 확인 필요(unknown)로 둠. U2 문서 변경 3 절(domain-entities, business-rules §11 BR-U2-D1~D43, business-logic-model §7 P-C3-1~6) 작성. 승인 요청. (변경 2 Build and Test 승인은 아직 받지 않음 — 이번 '완료'는 U2 질문 파일 답으로 봄)"
+**Context**: CONSTRUCTION - U2 Functional Design (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U2 기능 설계 승인 (+ 변경 2 Build and Test 승인)
+**Timestamp**: 2026-10-20T09:59:26Z
+**User Input**: "진행"
+**AI Response**: "U2 기능 설계 승인, 변경 2 Build and Test 승인(앞 메시지에서 함께 '진행'으로 요청)으로 기록. U2 코드 생성 계획(10단계, 0012 포함) 작성, 승인 요청."
+**Context**: CONSTRUCTION - U2 Code Generation Part 1 (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U2 코드 생성 계획 승인
+**Timestamp**: 2026-10-20T10:00:37Z
+**User Input**: "승인"
+**AI Response**: "U2 코드 생성 시작 (Step 1부터)."
+**Context**: CONSTRUCTION - U2 Code Generation Part 2 (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U2 코드 생성 완료
+**Timestamp**: 2026-10-20T10:28:53Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U2 Step 1~10 완료: 변경 3 전 엔진 고정본(legacy), 프로필 v3·옮기기, 요건 marriage·firstTime·추첨·우선, newlywed_hope_town, routes.ts·표준 요건(원문 확인 값만), 혼인·생애최초·맞벌이·부부 통장 판정, 신혼 신청 방법별 엔진, 자녀 보너스(신혼 특공 가능 공고에만 — 설계 고침), 0012. 발견·수정: decodeProfile이 v2를 거부(부모님 서버 프로필) → 1·2·3 읽기. 배우자 소득 암호문은 data 안에(칸 추가 대신). 검증: 단위 746(seed 3333에서 P-13 흔들림 1건, 단독 통과), P-C3-1 노부부 불변 통과, pgTAP 156, E2E 71+3. 로컬 커밋, 승인 요청."
+**Context**: CONSTRUCTION - U2 Code Generation (변경 요청 3)
+
+---

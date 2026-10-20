@@ -30,6 +30,7 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
 
   return {
     schemaVersion: PROFILE_SCHEMA_VERSION,
+    householdKind: "senior", // 신혼 가구 입력 화면은 U4 변경 3에서
     self: { birthDate: a.selfBirth! },
     spouse: spouse ? { birthDate: known(a.spouseBirth) } : null,
     householdType: a.householdType!,
@@ -64,6 +65,7 @@ export function toProfile(answers: WizardAnswers): HouseholdProfile {
       spouseEarns: spouse ? known(a.spouseEarns) : null,
     },
     welfare: known(a.welfare),
+    newlywed: null,
     prefs: {
       districtIds: [...a.districtIds!],
       regions: normalizeRegionPicks(a.regions ?? []),

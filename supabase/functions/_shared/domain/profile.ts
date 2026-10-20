@@ -1,9 +1,10 @@
-// 가구 프로필 v2 (U2 domain-entities §1 + 변경 2) — 만 나이, 면적 구간, 형식 검증
-// v2: 청약통장 명의(savings.owner), 관심 시군구(prefs.regions). v1은 profile-migrate.ts로 옮겨 읽는다
+// 가구 프로필 v3 (U2 domain-entities §1 + 변경 2·3) — 만 나이, 면적 구간, 형식 검증
+// v2: 청약통장 명의(savings.owner), 관심 시군구(prefs.regions)
+// v3: 가구 종류(householdKind), 신혼 가구 정보(newlywed), 배우자 월소득(money.spouseMonthlyIncome). v1·v2는 profile-migrate.ts로 옮겨 읽는다
 import { type IsoDate, isIsoDate } from "./dates.ts";
 import { type CapitalSido, CAPITAL_SIGUNGU, isCapitalSido, isCapitalSigungu } from "./regions.ts";
 
-export const PROFILE_SCHEMA_VERSION = 2 as const;
+export const PROFILE_SCHEMA_VERSION = 3 as const;
 /** 금액 상한(만원) — 100억원 (BR-U2-72) */
 export const MAX_AMOUNT_MANWON = 1_000_000;
 export const MAX_HOUSEHOLD_SIZE = 8;
@@ -26,10 +27,43 @@ export const MAX_REGION_PICKS = 60;
 export type HouseholdType = "couple" | "single" | "other";
 export type HouseholdHead = "self" | "spouse" | "other";
 export type Tenure = "sale" | "rent";
+/** 가구 종류 (변경 3 BR-U2-D1) — 질문·판정·요약 "볼 점"이 달라진다 */
+export type HouseholdKind = "senior" | "newlywed";
+export const HOUSEHOLD_KINDS: readonly HouseholdKind[] = ["senior", "newlywed"];
+export type MarriageStatus = "engaged" | "married";
+export const MAX_CHILDREN = 10;
+
+/** 청약통장 한 개 */
+export interface SavingsInfo {
+  has: boolean | null;
+  /** has가 true일 때만 값이 있다. 혼자 사는 가구는 "self" */
+  owner: SavingsOwner | null;
+  kind: SavingsKind | null;
+  months: number | null;
+  paymentCount: number | null;
+  depositManwon: number | null;
+}
+
+/** 신혼 가구 정보 (변경 3 domain-entities) — senior 가구는 null */
+export interface NewlywedInfo {
+  /** 예비신혼 / 혼인신고 함 / 모름 */
+  marriage: MarriageStatus | null;
+  /** 혼인신고일, 예비신혼은 예정일 */
+  marriageDate: IsoDate | null;
+  /** 태아 포함 — 판정에는 쓰지 않는다 (BR-U2-D42) */
+  children: number | null;
+  /** 세대원 모두 지금까지 집을 가진 적 없음 (생애최초) */
+  neverOwnedHome: boolean | null;
+  /** 5년 이상 소득세를 낸 분이 있음 (생애최초) */
+  incomeTax5y: boolean | null;
+  /** 배우자 통장 (Q4=A). 본인 통장은 profile.savings */
+  spouseSavings: SavingsInfo | null;
+}
 export type TenurePref = Tenure | "both";
 
 export interface HouseholdProfile {
   schemaVersion: typeof PROFILE_SCHEMA_VERSION;
+  householdKind: HouseholdKind;
   self: { birthDate: IsoDate | null };
   spouse: { birthDate: IsoDate | null } | null;
   householdType: HouseholdType;
@@ -37,22 +71,18 @@ export interface HouseholdProfile {
   householdHead: HouseholdHead | null;
   residence: { sido: string | null; sigungu: string | null; years: number | null };
   housing: { homeless: boolean | null; homelessYears: number | null; ownedCount: number | null };
-  savings: {
-    has: boolean | null;
-    /** has가 true일 때만 값이 있다. 혼자 사는 가구는 "self" */
-    owner: SavingsOwner | null;
-    kind: SavingsKind | null;
-    months: number | null;
-    paymentCount: number | null;
-    depositManwon: number | null;
-  };
+  savings: SavingsInfo;
   money: {
+    /** 부부 합계. 신혼 가구는 본인 + 배우자 (BR-U2-D23) */
     monthlyIncome: number | null;
+    /** 신혼 가구만 — 배우자 월소득 (서버 암호화) */
+    spouseMonthlyIncome?: number | null;
     totalAsset: number | null;
     carValue: number | null;
     spouseEarns: boolean | null;
   };
   welfare: WelfareStatus | null;
+  newlywed: NewlywedInfo | null;
   prefs: {
     /** 3기 신도시 지구 */
     districtIds: string[];
@@ -141,6 +171,32 @@ export function normalizeRegionPicks(picks: readonly RegionPick[]): RegionPick[]
   return out;
 }
 
+function isSavingsInfo(s: unknown, spousePresent: boolean): s is SavingsInfo {
+  return (
+    isObject(s) &&
+    isNullableBool(s.has) &&
+    (s.owner === null || SAVINGS_OWNERS.includes(s.owner as SavingsOwner)) &&
+    (s.has === true || s.owner === null) &&
+    (spousePresent || s.owner === null || s.owner === "self") &&
+    (s.kind === null || SAVINGS_KINDS.includes(s.kind as SavingsKind)) &&
+    isNullableInt(s.months, 0, 1200) &&
+    isNullableInt(s.paymentCount, 0, 1200) &&
+    isNullableInt(s.depositManwon, 0, MAX_AMOUNT_MANWON)
+  );
+}
+
+function isNewlywedInfo(n: unknown): n is NewlywedInfo {
+  return (
+    isObject(n) &&
+    (n.marriage === null || n.marriage === "engaged" || n.marriage === "married") &&
+    isNullableDate(n.marriageDate) &&
+    isNullableInt(n.children, 0, MAX_CHILDREN) &&
+    isNullableBool(n.neverOwnedHome) &&
+    isNullableBool(n.incomeTax5y) &&
+    (n.spouseSavings === null || (isSavingsInfo(n.spouseSavings, true) && n.spouseSavings.owner !== "self"))
+  );
+}
+
 export function validateProfile(input: unknown): ValidationResult<HouseholdProfile> {
   const errors: string[] = [];
   const check = (condition: boolean, path: string) => {
@@ -166,29 +222,24 @@ export function validateProfile(input: unknown): ValidationResult<HouseholdProfi
     isObject(h) && isNullableBool(h.homeless) && isNullableInt(h.homelessYears, 0, 120) && isNullableInt(h.ownedCount, 0, 100),
     "housing",
   );
-  const s = p.savings;
   const spousePresent = p.spouse !== null && p.spouse !== undefined;
-  check(
-    isObject(s) &&
-      isNullableBool(s.has) &&
-      (s.owner === null || SAVINGS_OWNERS.includes(s.owner as SavingsOwner)) &&
-      (s.has === true || s.owner === null) &&
-      (spousePresent || s.owner === null || s.owner === "self") &&
-      (s.kind === null || SAVINGS_KINDS.includes(s.kind as SavingsKind)) &&
-      isNullableInt(s.months, 0, 1200) &&
-      isNullableInt(s.paymentCount, 0, 1200) &&
-      isNullableInt(s.depositManwon, 0, MAX_AMOUNT_MANWON),
-    "savings",
-  );
+  const newlywedKind = p.householdKind === "newlywed";
+  check(HOUSEHOLD_KINDS.includes(p.householdKind as HouseholdKind), "householdKind");
+  // 신혼 가구는 본인 통장만 본인 명의 (배우자 통장은 newlywed.spouseSavings, BR-U2-D30)
+  check(isSavingsInfo(p.savings, spousePresent) && (!newlywedKind || (p.savings as SavingsInfo).owner !== "spouse" && (p.savings as SavingsInfo).owner !== "both"), "savings");
   const m = p.money;
   check(
     isObject(m) &&
       isNullableInt(m.monthlyIncome, 0, MAX_AMOUNT_MANWON) &&
+      (m.spouseMonthlyIncome === undefined || isNullableInt(m.spouseMonthlyIncome, 0, MAX_AMOUNT_MANWON)) &&
+      (newlywedKind || m.spouseMonthlyIncome === undefined || m.spouseMonthlyIncome === null) &&
       isNullableInt(m.totalAsset, 0, MAX_AMOUNT_MANWON) &&
       isNullableInt(m.carValue, 0, MAX_AMOUNT_MANWON) &&
       isNullableBool(m.spouseEarns),
     "money",
   );
+  // BR-U2-D3: 신혼 가구는 배우자(또는 예정 배우자)와 신혼 정보가 있어야 하고, senior는 신혼 정보가 없다
+  check(newlywedKind ? spousePresent && isNewlywedInfo(p.newlywed) : p.newlywed === null, "newlywed");
   check(p.welfare === null || WELFARE_STATUSES.includes(p.welfare as WelfareStatus), "welfare");
   const pr = p.prefs;
   check(

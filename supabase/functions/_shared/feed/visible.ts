@@ -5,7 +5,8 @@ import { noticeStatus } from "../domain/retention.ts";
 import type { Tenure } from "../db/types.ts";
 import { compareFeedItems } from "../eligibility/scoring.ts";
 import type { RegionPick } from "../domain/profile.ts";
-import type { CriterionKey, CriterionResult, NoticeRegion, UnitJudgement, UserValueKey, Verdict } from "../eligibility/types.ts";
+import type { CriterionKey, CriterionResult, NoticeRegion, RouteJudgement, UnitJudgement, UserValueKey, Verdict } from "../eligibility/types.ts";
+import { APPLY_ROUTES, type ApplyRoute } from "../eligibility/routes.ts";
 import { isVisible } from "../eligibility/visibility.ts";
 import { orderRegions } from "./place.ts";
 
@@ -76,7 +77,7 @@ export const labelOf = (labels: TypeLabels, code: string): TypeLabel => labels.g
 // ---------- 판정 상세 읽기 ----------
 
 const VERDICTS: readonly Verdict[] = ["eligible", "ineligible", "unknown"];
-const CRITERION_KEYS: readonly CriterionKey[] = ["type", "age", "homeless", "income", "asset", "car", "savings", "residence", "household", "welfare"];
+const CRITERION_KEYS: readonly CriterionKey[] = ["type", "age", "homeless", "income", "asset", "car", "savings", "residence", "household", "welfare", "marriage", "firstTime"];
 const USER_VALUE_KEYS: readonly UserValueKey[] = ["monthlyIncome", "totalAsset", "carValue"];
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
@@ -90,6 +91,14 @@ function toCriterion(v: unknown): CriterionResult | null {
   return c;
 }
 
+function toRoute(v: unknown): RouteJudgement | null {
+  if (!isObject(v) || !APPLY_ROUTES.includes(v.route as ApplyRoute) || !VERDICTS.includes(v.verdict as Verdict)) return null;
+  const criteria = (Array.isArray(v.criteria) ? v.criteria : []).map(toCriterion).filter((c): c is CriterionResult => c !== null);
+  const r: RouteJudgement = { route: v.route as ApplyRoute, verdict: v.verdict as Verdict, criteria };
+  if (v.savingsBy === "self" || v.savingsBy === "spouse") r.savingsBy = v.savingsBy;
+  return r;
+}
+
 /** 저장된 `detail = { baseDate, units }`. 형식이 틀린 주택형·조건은 버린다 */
 export function parseJudgementDetail(detail: unknown): { baseDate: IsoDate | null; units: UnitJudgement[] } {
   if (!isObject(detail)) return { baseDate: null, units: [] };
@@ -98,7 +107,9 @@ export function parseJudgementDetail(detail: unknown): { baseDate: IsoDate | nul
     if (!isObject(u) || typeof u.unitId !== "string" || typeof u.supplyType !== "string") continue;
     if (!VERDICTS.includes(u.verdict as Verdict)) continue;
     const criteria = (Array.isArray(u.criteria) ? u.criteria : []).map(toCriterion).filter((c): c is CriterionResult => c !== null);
-    units.push({ unitId: u.unitId, supplyType: u.supplyType, verdict: u.verdict as Verdict, criteria });
+    const unit: UnitJudgement = { unitId: u.unitId, supplyType: u.supplyType, verdict: u.verdict as Verdict, criteria };
+    if (Array.isArray(u.routes)) unit.routes = u.routes.map(toRoute).filter((r): r is RouteJudgement => r !== null); // 변경 3 신혼 가구
+    units.push(unit);
   }
   return { baseDate: typeof detail.baseDate === "string" ? detail.baseDate : null, units };
 }

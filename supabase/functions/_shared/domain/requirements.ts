@@ -12,6 +12,25 @@ export interface IncomeRequirement {
   dualIncomePercent?: number;
   amountsWon?: Record<number, number>;
   appliesToAreaMaxM2?: number;
+  /** 기준을 넘어도 부동산 가액이 이하면 추첨 — 넘으면 미충족 대신 확인 필요 (변경 3 BR-U2-D24) */
+  overLottery?: { realEstateMaxManwon: number };
+  /** 우선공급 기준 (안내만, BR-U2-D25) — 예: 100%, 배우자 소득 있으면 120% */
+  priorityPercent?: number;
+  priorityDualIncomePercent?: number;
+}
+
+/** 혼인 (변경 3 BR-U2-D20~22) */
+export interface MarriageRequirement {
+  maxYears: number;
+  /** 예비신혼부부를 받는지. "unknown" = 공고문에서 확인 */
+  engagedAllowed: boolean | Unknown;
+}
+
+/** 생애최초 (변경 3 BR-U2-D35) */
+export interface FirstTimeRequirement {
+  neverOwned: true;
+  incomeTaxYears: number;
+  marriedOrChildRequired: boolean;
 }
 
 export interface SavingsRequirement {
@@ -37,6 +56,8 @@ export interface Requirements {
   residence?: { sidoIn: string[] } | Unknown;
   household?: { headRequired: boolean } | Unknown;
   welfare?: WelfareRequirement | Unknown;
+  marriage?: MarriageRequirement | Unknown;
+  firstTime?: FirstTimeRequirement | Unknown;
 }
 
 export type RequirementKey = Exclude<keyof Requirements, "unclassified">;
@@ -50,9 +71,11 @@ export const REQUIREMENT_KEYS: readonly RequirementKey[] = [
   "residence",
   "household",
   "welfare",
+  "marriage",
+  "firstTime",
 ];
 /** 구조 조건 (BR-U2-23·24) — 그 밖은 금액·기간 조건 (BR-U2-25) */
-export const STRUCTURAL_KEYS: ReadonlySet<RequirementKey> = new Set(["age", "homeless", "residence", "household", "welfare"]);
+export const STRUCTURAL_KEYS: ReadonlySet<RequirementKey> = new Set(["age", "homeless", "residence", "household", "welfare", "marriage", "firstTime"]);
 
 // ---------- 형식 검증 (AI 추출 결과 등 바깥 JSON) ----------
 
@@ -76,7 +99,10 @@ function isIncome(v: unknown): v is IncomeRequirement {
     (v.percentBySize === undefined || isSizeMap(v.percentBySize, 1, 500, false)) &&
     (v.dualIncomePercent === undefined || isNum(v.dualIncomePercent, 1, 500)) &&
     (v.amountsWon === undefined || isSizeMap(v.amountsWon, 1, 1_000_000_000, true)) &&
-    (v.appliesToAreaMaxM2 === undefined || isNum(v.appliesToAreaMaxM2, 1, 1000))
+    (v.appliesToAreaMaxM2 === undefined || isNum(v.appliesToAreaMaxM2, 1, 1000)) &&
+    (v.overLottery === undefined || (isObject(v.overLottery) && isInt(v.overLottery.realEstateMaxManwon, 0, 10_000_000))) &&
+    (v.priorityPercent === undefined || isNum(v.priorityPercent, 1, 500)) &&
+    (v.priorityDualIncomePercent === undefined || isNum(v.priorityDualIncomePercent, 1, 500))
   );
 }
 
@@ -105,6 +131,10 @@ const VALIDATORS: Record<RequirementKey, (v: unknown) => boolean> = {
     Array.isArray(v.anyOf) &&
     v.anyOf.every((k) => WELFARE_KINDS.includes(k as WelfareKind)) &&
     (v.orIncome === undefined || isIncome(v.orIncome)),
+  marriage: (v) =>
+    isObject(v) && isInt(v.maxYears, 1, 30) && (typeof v.engagedAllowed === "boolean" || v.engagedAllowed === "unknown"),
+  firstTime: (v) =>
+    isObject(v) && v.neverOwned === true && isInt(v.incomeTaxYears, 0, 30) && typeof v.marriedOrChildRequired === "boolean",
 };
 
 /**

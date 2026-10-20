@@ -275,3 +275,124 @@ interface NoticeRegion {
 | `savings.has` + `owner` (부부) | "부부 중 청약통장이 있는 분이 있나요?" | 나 / 배우자 / 두 분 다 / 없음 / 잘 모르겠어요 |
 | `savings.has` (혼자) | "청약통장이 있으신가요?" | 예 / 아니오 / 잘 모르겠어요 |
 | `prefs.regions` | 지구 카드 아래 "다른 지역" | 시·도 → (시·도 전체 / 시·군·구 여러 개) |
+
+---
+
+## 변경 요청 3 (2026-10-20) — 가구 종류 · 신청 방법 · 신혼 조건
+
+> 계획: `plans/U2-eligibility-engine-change-3-functional-design-plan.md` (Q1~Q7 모두 A). 앞 절과 다르면 이 절을 따른다.
+
+### 프로필 v3
+
+```ts
+const PROFILE_SCHEMA_VERSION = 3;
+type HouseholdKind = "senior" | "newlywed";
+
+interface HouseholdProfile {
+  schemaVersion: 3;
+  householdKind: HouseholdKind;          // 새 칸 — v2 이하는 "senior"로 옮긴다
+  // …v2 칸 그대로 (self, spouse, householdType, householdSize, householdHead, residence, housing, savings, money, welfare, prefs)
+  money: {
+    monthlyIncome: number | null;        // 부부 합계 (만원, 서버 암호화) — 신혼 가구는 아래 둘의 합
+    spouseMonthlyIncome?: number | null; // 신혼만 — 배우자 월소득 (서버 암호화). spouseEarns = (값 > 0)
+    // totalAsset, carValue, spouseEarns 그대로
+  };
+  newlywed: NewlywedInfo | null;         // senior는 null
+}
+
+interface NewlywedInfo {
+  marriage: "engaged" | "married" | null;   // 예비신혼 / 혼인신고 함 / 모름
+  marriageDate: IsoDate | null;             // 혼인신고일, 예비신혼은 예정일
+  children: number | null;                  // 태아 포함, 0~10 (점수·안내에만, Q7=A)
+  neverOwnedHome: boolean | null;           // 세대원 모두 지금까지 집을 가진 적 없음 (생애최초)
+  incomeTax5y: boolean | null;              // 5년 이상 소득세를 낸 분이 있음 (생애최초)
+  spouseSavings: SavingsInfo | null;        // 배우자 통장 (Q4=A). 본인 통장은 profile.savings (owner "self")
+}
+```
+
+| 규칙 | |
+|---|---|
+| 옮기기 | v1 → v2(변경 2) → v3: `householdKind = "senior"`, `newlywed = null`, `spouseMonthlyIncome` 없음. 멱등 (P-C3-2) |
+| 검증 | newlywed 가구는 배우자(또는 예정 배우자) 있음, `newlywed` 필수, `savings.owner`는 null 또는 "self". senior 가구는 `newlywed = null` |
+| 서버 저장 | `spouseMonthlyIncome`도 다른 금액처럼 암호화 (U1·U4 코드 단계에서 칸 추가) |
+
+### 신청 방법 (Q1=A)
+
+```ts
+type ApplyRoute =
+  | "own_type"          // 노부부: 주택형 공급유형 그대로 (지금 판정)
+  | "newlywed_special"  // 신혼부부 특별공급
+  | "first_time"        // 생애최초 특별공급
+  | "general"           // 일반공급 (주택형 공급유형의 표준 요건)
+  | "newlywed_hope"     // 신혼희망타운
+  | "rental_newlywed";  // 신혼부부용 임대 (행복주택 신혼부부 계층, 국민임대 신혼부부 우선 등)
+
+/** 가구 종류 × 주택형 공급유형 → 판정할 신청 방법 (BR-U2-D10) */
+function routesFor(kind: HouseholdKind, supplyType: SupplyTypeCode): ApplyRoute[];
+```
+
+| 공급유형 | senior | newlywed |
+|---|---|---|
+| public_sale_general (공공분양) | own_type | newlywed_special(국민), first_time(국민), general |
+| private_sale_general (민영) | own_type | newlywed_special(민영), first_time(민영), general |
+| newlywed_hope_town (**새 코드**, "신혼희망타운") | own_type → 혼인 조건 미충족 | newlywed_hope |
+| happy_senior (행복주택) | own_type | rental_newlywed(행복주택) |
+| national_rental_senior (국민임대) | own_type | rental_newlywed(국민임대) |
+| integrated_rental (통합공공임대) | own_type | general |
+| unranked (무순위) | own_type | general |
+| senior_welfare, permanent_rental_senior | own_type | 없음 → 미충족 "어르신 대상 주택이에요" |
+| other | own_type | general(요건 모름 → 확인 필요) |
+
+### 새 요건 키
+
+```ts
+interface Requirements {
+  // …기존 키 그대로
+  marriage?: { maxYears: number; engagedAllowed: boolean | "unknown" } | "unknown";
+  firstTime?: { neverOwned: true; incomeTaxYears: number; marriedOrChildRequired: boolean } | "unknown";
+}
+interface IncomeRequirement {
+  // …기존 그대로 (basis, percent, dualIncomePercent 등)
+  overLottery?: { realEstateMaxManwon: number };  // 기준을 넘어도 부동산 가액이 이하면 추첨 (BR-U2-D24)
+}
+```
+
+### 입력과 결과
+
+```ts
+interface UnitForJudgement {
+  // …기존 그대로
+  /** 공고문에서 뽑은 신청 방법별 요건 (U3). 없으면 표준 요건 */
+  routeRequirements?: Partial<Record<ApplyRoute, Requirements>>;
+}
+
+interface RouteJudgement {
+  route: ApplyRoute;
+  verdict: Verdict;
+  criteria: CriterionResult[];
+  /** 통장 조건을 채운 통장 (Q4=A): "self" | "spouse" */
+  savingsBy?: "self" | "spouse";
+}
+
+interface UnitJudgement {
+  // unitId, supplyType 그대로
+  verdict: Verdict;                 // = 신청 방법 중 가장 좋은 판정 (충족 > 확인 필요 > 미충족)
+  criteria: CriterionResult[];      // = 가장 좋은 신청 방법의 조건 (지금 화면과 호환)
+  routes?: RouteJudgement[];        // newlywed만. senior는 없음 → 저장 형식이 지금과 같다
+}
+```
+
+`CriterionKey`에 `marriage`, `firstTime` 추가.
+
+### 신혼 표준 요건 (기준 데이터, effective_from 2026-06-15)
+
+| 신청 방법 | 요건 | 출처·확인 |
+|---|---|---|
+| newlywed_special (국민·민영 같음) | marriage {7년, 예비신혼 "unknown"}, homeless, income {urban_worker 140%, 배우자 소득 160%, overLottery 부동산 33,100만원}, savings 국민 {6개월·6회} / 민영 {6개월, 지역별 예치금} | 「주택공급에 관한 규칙」 제41조 (2026-06-15 시행) ✅, 부동산 3억 3,100만원은 2026 민영 공고문 ✅ |
+| first_time 민영 | firstTime {neverOwned, 5년, 혼인 또는 미혼 자녀}, homeless, income {130% 우선 · 160%까지 일반 → 160%, overLottery 33,100}, savings {12개월, 예치금} | 2026-03 민영 입주자모집공고문 ✅ |
+| first_time 국민 | firstTime {…}, homeless, income {130%}, asset "unknown", savings {12개월·12회, 선납금 600만원} | 2020 개정 보도(우선 100%·일반 130%) — **⚠ 2026 원문 미확인**: 코드 단계에서 공고문으로 확인, 확인 못 하면 income "unknown" |
+| general | 주택형 공급유형의 지금 표준 요건 그대로 (public/private_sale_general 등) | 기존 |
+| newlywed_hope | marriage {7년, 예비신혼 true}, homeless, income "unknown", asset "unknown" | 소득 130%·자산 3억 6,200만원은 민간 정리 글만 있음 → **확인 필요로 둠** |
+| rental_newlywed | marriage {7년, 예비신혼 "unknown"}, homeless, income "unknown", asset "unknown", car "unknown" | 행복주택·국민임대 신혼 기준 2026 원문 미확인 → **확인 필요로 둠** |
+
+- Q6=A(표준 기준으로 판정)는 **원문으로 확인된 값에만** 적용한다. 확인하지 못한 값은 "확인 필요"로 두고 공고문 추출(U3)이 채운다 — 틀린 숫자로 숨기지 않기(놓치지 않기 원칙)

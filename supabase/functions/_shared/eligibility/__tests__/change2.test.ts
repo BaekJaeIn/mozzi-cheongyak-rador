@@ -21,7 +21,7 @@ function v1Profile(savings: Record<string, unknown>) {
 describe("프로필 옮기기 v1 → v2 (BR-U2-C1~C5)", () => {
   it("통장 있음 → 명의 '나', 나머지 값 유지", () => {
     const out = migrateProfile(v1Profile({ has: true, kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1000 })) as Record<string, unknown>;
-    expect(out.schemaVersion).toBe(2);
+    expect(out.schemaVersion).toBe(3) // 변경 3: v1 → v2 → v3 한 번에;
     expect(out.savings).toEqual({ has: true, owner: "self", kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1000 });
     expect((out.prefs as Record<string, unknown>).regions).toEqual([]);
     expect((out.prefs as Record<string, unknown>).districtIds).toEqual(["gyosan"]);
@@ -41,7 +41,7 @@ describe("프로필 옮기기 v1 → v2 (BR-U2-C1~C5)", () => {
     const p = makeProfile();
     expect(migrateProfile(p)).toBe(p);
     expect(migrateProfile("x")).toBe("x");
-    expect(parseProfile({ schemaVersion: 3 }).ok).toBe(false);
+    expect(parseProfile({ schemaVersion: 4 }).ok).toBe(false);
   });
 });
 

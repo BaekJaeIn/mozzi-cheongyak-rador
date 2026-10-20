@@ -84,7 +84,8 @@ export function profileArb(options: { nullable?: boolean; couple?: boolean } = {
       const couple = r.spouse !== null;
       const householdType = couple ? "couple" : r.otherType ? "other" : "single";
       return {
-        schemaVersion: 2,
+        schemaVersion: 3,
+        householdKind: "senior",
         self: { birthDate: r.selfBirth },
         spouse: r.spouse,
         householdType,
@@ -96,6 +97,7 @@ export function profileArb(options: { nullable?: boolean; couple?: boolean } = {
         savings: { ...r.savings, owner: r.savings.has !== true ? null : couple || r.savings.owner === null ? r.savings.owner : "self" },
         money: r.money,
         welfare: r.welfare,
+        newlywed: null,
         // 관심 지역은 지구 + 시군구 1곳 이상
         prefs: r.prefs.districtIds.length + r.prefs.regions.length === 0 ? { ...r.prefs, districtIds: [DISTRICT_IDS[0]!] } : r.prefs,
       };
@@ -189,3 +191,41 @@ export const incomeThresholdsArb: fc.Arbitrary<IncomeThreshold[]> = fc.oneof<fc.
   fc.constant([...INCOME_THRESHOLDS]),
   fc.subarray([...INCOME_THRESHOLDS]),
 );
+
+// ---------- 변경 3: 신혼 가구 ----------
+
+const savingsInfoArb = (owner: "self" | "spouse") =>
+  fc
+    .record({
+      has: fc.option(fc.boolean(), { nil: null }),
+      kind: fc.option(fc.constantFrom(...SAVINGS_KINDS), { nil: null }),
+      months: fc.option(fc.integer({ min: 0, max: 300 }), { nil: null }),
+      paymentCount: fc.option(fc.integer({ min: 0, max: 300 }), { nil: null }),
+      depositManwon: fc.option(fc.integer({ min: 0, max: 3000 }), { nil: null }),
+    })
+    .map((s) => ({ ...s, owner: s.has === true ? owner : null }));
+
+export const newlywedInfoArb = fc.record({
+  marriage: fc.constantFrom("engaged" as const, "married" as const, null),
+  marriageDate: fc.option(dateBetween("2015-01-01", "2027-12-31"), { nil: null }),
+  children: fc.option(fc.integer({ min: 0, max: 4 }), { nil: null }),
+  neverOwnedHome: fc.option(fc.boolean(), { nil: null }),
+  incomeTax5y: fc.option(fc.boolean(), { nil: null }),
+  spouseSavings: fc.option(savingsInfoArb("spouse"), { nil: null }),
+});
+
+/** 신혼 가구 프로필: 배우자 있음, 본인 통장은 본인 명의, 월소득 = 본인 + 배우자 (BR-U2-D3·D23) */
+export const newlywedProfileArb: fc.Arbitrary<HouseholdProfile> = fc
+  .tuple(profileArb({ couple: true }), newlywedInfoArb, savingsInfoArb("self"), fc.option(fc.integer({ min: 0, max: 1000 }), { nil: null }), fc.option(fc.integer({ min: 0, max: 1000 }), { nil: null }))
+  .map(([p, newlywed, savings, selfIncome, spouseIncome]) => ({
+    ...p,
+    householdKind: "newlywed" as const,
+    savings,
+    newlywed,
+    money: {
+      ...p.money,
+      monthlyIncome: selfIncome === null || spouseIncome === null ? null : selfIncome + spouseIncome,
+      spouseMonthlyIncome: spouseIncome,
+      spouseEarns: spouseIncome === null ? null : spouseIncome > 0,
+    },
+  }));

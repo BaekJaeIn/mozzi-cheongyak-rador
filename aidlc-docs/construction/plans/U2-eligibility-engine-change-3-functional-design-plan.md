@@ -22,12 +22,12 @@
 ## 단계
 
 - [x] Step 1 — 기존 U2 판정 구조·기준 데이터 확인
-- [ ] Step 2 — 아래 질문 답 받기
-- [ ] Step 3 — 신혼 기준값 출처 확인 (마이홈포털·청약홈·국토부 공고, 2026년 적용 값)
-- [ ] Step 4 — domain-entities.md 갱신 (프로필 v3, 신청 방법, 새 조건 키, 판정 결과 형식)
-- [ ] Step 5 — business-rules.md 갱신 (가구 종류별 신청 방법, 신혼 조건 규칙, 옮기기)
-- [ ] Step 6 — business-logic-model.md 갱신 (판정 흐름, 예시: 예비신혼 맞벌이 가구)
-- [ ] Step 7 — PBT 속성 정의 (노부부 불변, v2→v3 멱등, 단조성)
+- [x] Step 2 — 아래 질문 답 받기 (Q1~Q7 = A)
+- [x] Step 3 — 신혼 기준값 출처 확인 (마이홈포털·청약홈·국토부 공고, 2026년 적용 값)
+- [x] Step 4 — domain-entities.md 갱신 (프로필 v3, 신청 방법, 새 조건 키, 판정 결과 형식)
+- [x] Step 5 — business-rules.md 갱신 (가구 종류별 신청 방법, 신혼 조건 규칙, 옮기기)
+- [x] Step 6 — business-logic-model.md 갱신 (판정 흐름, 예시: 예비신혼 맞벌이 가구)
+- [x] Step 7 — PBT 속성 정의 (노부부 불변, v2→v3 멱등, 단조성)
 
 ---
 
@@ -39,7 +39,7 @@ B) 주택형의 공급유형 하나만 판정한다 (신혼 특별공급 물량�
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 2 — "신혼부부"를 어떻게 정할까요?
 
@@ -49,7 +49,7 @@ B) A + 한부모 가족(6세 이하 자녀)도 신혼부부 특공 대상으로 
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 3 — 신혼 가구 소득은 어떻게 받을까요?
 
@@ -59,7 +59,7 @@ B) 부부 합산 월소득 하나와 "맞벌이인가요?"를 묻는다 (노부�
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 4 — 신혼 가구 청약통장은?
 
@@ -69,7 +69,7 @@ B) 변경 2처럼 신청에 쓸 통장 하나(가장 오래된 것)만 넣는다
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 5 — 생애최초 특별공급 조건은 어디까지 물을까요?
 
@@ -79,7 +79,7 @@ B) 주택 소유 이력만 묻고 소득세 납부는 공고 확인으로 남긴
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 6 — 공고문에 신혼 기준값(소득 %·자산)이 없을 때는?
 
@@ -89,7 +89,7 @@ B) 기준값이 없으면 그 조건은 "확인 필요"
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A
 
 ## Question 7 — 자녀 수는 어디에 쓸까요?
 
@@ -99,4 +99,4 @@ B) 신혼희망타운·신혼 특공 1순위 조건으로 판정에 넣는다
 
 X) Other (please describe after [Answer]: tag below)
 
-[Answer]: 
+[Answer]: A

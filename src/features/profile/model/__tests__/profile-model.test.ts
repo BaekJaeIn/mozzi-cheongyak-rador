@@ -125,7 +125,9 @@ describe("답 → 프로필 (business-logic-model §6)", () => {
   it("어머니 기기 예시", () => {
     const p = toProfile(MOTHER_ANSWERS);
     expect(p).toEqual({
-      schemaVersion: 2,
+      schemaVersion: 3,
+      householdKind: "senior",
+      newlywed: null,
       self: { birthDate: "1963-07-01" },
       spouse: { birthDate: "1960-03-02" },
       householdType: "couple",

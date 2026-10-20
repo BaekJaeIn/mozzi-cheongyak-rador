@@ -10,6 +10,7 @@ export type SupplyTypeCode =
   | "permanent_rental_senior"
   | "happy_senior"
   | "integrated_rental"
+  | "newlywed_hope_town"
   | "unranked"
   | "other";
 
@@ -27,6 +28,7 @@ export const SUPPLY_TYPES: Readonly<Record<SupplyTypeCode, SupplyTypeLabel>> = {
   permanent_rental_senior: { formal: "영구임대 고령자 대상", plain: "아주 저렴한 임대 — 어르신 대상", tenure: "rent" },
   happy_senior: { formal: "행복주택 고령자 계층", plain: "행복주택 — 어르신 몫", tenure: "rent" },
   integrated_rental: { formal: "통합공공임대", plain: "소득 맞춤형 공공임대", tenure: "rent" },
+  newlywed_hope_town: { formal: "신혼희망타운", plain: "신혼부부 전용 공공주택", tenure: "sale" }, // 변경 3 BR-U2-D14
   unranked: { formal: "무순위·잔여세대", plain: "남은 집 추가 모집", tenure: "sale" },
   other: { formal: "기타 공급", plain: "기타", tenure: "rent" },
 };
@@ -37,6 +39,7 @@ export const SUPPLY_TYPE_CODES = Object.keys(SUPPLY_TYPES) as SupplyTypeCode[];
 const RULES: readonly [readonly string[], SupplyTypeCode][] = [
   [["무순위", "잔여세대", "계약취소", "취소후재공급"], "unranked"], // BR-U2-10
   [["고령자복지주택"], "senior_welfare"], // BR-U2-11
+  [["신혼희망타운"], "newlywed_hope_town"], // 변경 3 BR-U2-D14 — 공공분양·행복주택 낱말보다 먼저
   [["영구임대"], "permanent_rental_senior"], // BR-U2-12
   [["국민임대"], "national_rental_senior"], // BR-U2-13
   [["행복주택"], "happy_senior"], // BR-U2-14, 19a

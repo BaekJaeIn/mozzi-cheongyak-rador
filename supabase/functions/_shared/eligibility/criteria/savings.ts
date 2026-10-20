@@ -1,24 +1,53 @@
 // 청약통장 (BR-U2-46~48)
-import type { Requirements } from "../../domain/requirements.ts";
+import type { SavingsInfo } from "../../domain/profile.ts";
+import type { Requirements, SavingsRequirement } from "../../domain/requirements.ts";
 import { depositFor, depositTiers } from "../income-table.ts";
-import { ACTION, MSG } from "../messages.ts";
+import { ACTION, MSG, MSG_NEWLYWED } from "../messages.ts";
 import type { CriterionResult, Verdict } from "../types.ts";
 import { type CriterionContext, result, unknownRequirement, worst } from "./common.ts";
 
-export function evaluateSavings(req: Requirements["savings"], ctx: CriterionContext): CriterionResult | null {
-  if (req === undefined) return null;
-  if (req === "unknown") return unknownRequirement("savings");
-
-  // 사유는 요건만으로 만든다 (프로필과 무관)
+/** 요건만으로 만드는 사유 (프로필과 무관) */
+function requirementText(req: SavingsRequirement): string {
   const parts = [MSG.savingsMonths(req.minMonths)];
   if (req.minPayments) parts.push(MSG.savingsPayments(req.minPayments));
   if (req.minDepositManwon) parts.push(MSG.savingsDeposit(req.minDepositManwon));
   if (req.depositRule) parts.push(MSG.savingsDepositByArea);
+  return parts.join(", ");
+}
+
+export function evaluateSavings(req: Requirements["savings"], ctx: CriterionContext): CriterionResult | null {
+  if (req === undefined) return null;
+  if (req === "unknown") return unknownRequirement("savings");
   // 배우자 명의 통장이면 신청 명의를 알려 준다 (변경 2 BR-U2-C8). 판정은 명의와 상관없다 (C7)
   const owner = ctx.profile.savings.has === true ? ctx.profile.savings.owner : null;
-  const reason = owner === "spouse" ? `${parts.join(", ")}. ${MSG.savingsSpouseOwner}` : parts.join(", ");
+  const reason = owner === "spouse" ? `${requirementText(req)}. ${MSG.savingsSpouseOwner}` : requirementText(req);
+  return judgeAccount(req, ctx.profile.savings, reason, ctx);
+}
 
-  const s = ctx.profile.savings;
+const RANK = { eligible: 2, unknown: 1, ineligible: 0 } as const;
+
+/**
+ * 신혼 가구: 본인·배우자 통장을 각각 판정해 더 좋은 쪽 (변경 3 BR-U2-D30·D31). 같으면 본인 통장.
+ * 배우자 통장이 없으면 본인 통장만.
+ */
+export function evaluateCoupleSavings(
+  req: Requirements["savings"],
+  ctx: CriterionContext,
+): { criterion: CriterionResult | null; by?: "self" | "spouse" } {
+  if (req === undefined) return { criterion: null };
+  if (req === "unknown") return { criterion: unknownRequirement("savings") };
+  const reason = requirementText(req);
+  const self = judgeAccount(req, ctx.profile.savings, reason, ctx);
+  const spouseAccount = ctx.profile.newlywed?.spouseSavings ?? null;
+  if (spouseAccount === null) return { criterion: self, by: "self" };
+  const spouse = judgeAccount(req, spouseAccount, reason, ctx);
+  if (RANK[spouse.verdict] > RANK[self.verdict]) {
+    return { criterion: { ...spouse, reason: `${spouse.reason}. ${MSG_NEWLYWED.savingsBySpouse}` }, by: "spouse" };
+  }
+  return { criterion: self, by: "self" };
+}
+
+function judgeAccount(req: SavingsRequirement, s: SavingsInfo, reason: string, ctx: CriterionContext): CriterionResult {
   const enter = (item: string) => ({ action: ACTION.enterInSettings(item) });
   if (s.has === null) return result("savings", "unknown", "savings_unknown", reason, enter("청약통장"));
   if (!s.has) return result("savings", "ineligible", "savings_none", reason);

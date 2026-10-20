@@ -13,10 +13,10 @@ import { answersArb, regionsArb, regionTapArb } from "./arbitraries";
 
 const itemsArb = fc.subarray([...UPDATE_ITEMS]);
 
-test.prop([answersArb])("P-U4-C1 통장 명의·다른 지역이 든 모든 답에서 프로필 v2 검증 통과", (a) => {
+test.prop([answersArb])("P-U4-C1 통장 명의·다른 지역이 든 모든 답에서 프로필 검증 통과 (변경 3부터 v3)", (a) => {
   const p = toProfile(a);
   expect(validateProfile(p).ok).toBe(true);
-  expect(p.schemaVersion).toBe(2);
+  expect(p.schemaVersion).toBe(3);
 });
 
 test.prop([answersArb])("P-U4-C2 프로필 → 답 → 프로필 왕복 (명의·다른 지역 포함)", (a) => {

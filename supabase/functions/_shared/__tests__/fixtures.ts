@@ -13,7 +13,8 @@ type DeepPartial<T> = { [K in keyof T]?: T[K] extends object | null ? DeepPartia
 /** business-logic-model §4의 예시 가구 */
 export function makeProfile(overrides: DeepPartial<HouseholdProfile> = {}): HouseholdProfile {
   const base: HouseholdProfile = {
-    schemaVersion: 2,
+    schemaVersion: 3,
+    householdKind: "senior",
     self: { birthDate: "1960-03-02" },
     spouse: { birthDate: "1963-07-01" },
     householdType: "couple",
@@ -24,6 +25,7 @@ export function makeProfile(overrides: DeepPartial<HouseholdProfile> = {}): Hous
     savings: { has: true, owner: "self", kind: "comprehensive", months: 120, paymentCount: 120, depositManwon: 1000 },
     money: { monthlyIncome: 450, totalAsset: 20_000, carValue: 1_500, spouseEarns: false },
     welfare: "none",
+    newlywed: null,
     prefs: { districtIds: ["gyosan"], regions: [], areaBands: [], tenure: "both", lowFloor: false },
   };
   const merge = (a: unknown, b: unknown): unknown => {

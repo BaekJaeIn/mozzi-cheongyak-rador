@@ -1,7 +1,7 @@
 // 소득 (BR-U2-42~45a, Q4=A 공고 금액 우선)
 import type { IncomeRequirement, Requirements } from "../../domain/requirements.ts";
 import { incomeLimitWon } from "../income-table.ts";
-import { ACTION, MSG } from "../messages.ts";
+import { ACTION, MSG, MSG_NEWLYWED } from "../messages.ts";
 import type { CriterionResult, Verdict } from "../types.ts";
 import { type CriterionContext, result, unknownRequirement } from "./common.ts";
 
@@ -33,21 +33,33 @@ export function judgeIncome(req: IncomeRequirement, ctx: CriterionContext): Inco
     return { verdict: "unknown", code: "income_unknown", reason, action: ACTION.enterInSettings("월 소득") };
   }
   const incomeWon = income * 10_000; // BR-U2-45
-  if (incomeWon <= limit) return { verdict: "eligible", code: "income_ok", reason };
+  // 변경 3: 기준을 넘어도 추첨이 있으면 확인 필요 (BR-U2-D24) — 이 칸이 없는 요건(노부부 표준)은 지금과 같다
+  const over = (): IncomeOutcome =>
+    req.overLottery
+      ? { verdict: "unknown", code: "income_over_lottery", reason: MSG_NEWLYWED.incomeLottery(req.overLottery.realEstateMaxManwon), action: ACTION.checkRealEstate }
+      : { verdict: "ineligible", code: "income_over", reason };
+  // 변경 3: 우선공급 기준 안이면 안내만 붙인다 (BR-U2-D25)
+  const withPriority = (outcome: IncomeOutcome): IncomeOutcome => {
+    if (req.priorityPercent === undefined) return outcome;
+    const dual = ctx.profile.money.spouseEarns === true && req.priorityDualIncomePercent !== undefined;
+    const p = incomeLimitWon(ctx.incomeTable, ctx.year, req.basis, size, dual ? req.priorityDualIncomePercent! : req.priorityPercent);
+    return p !== null && incomeWon <= p ? { ...outcome, reason: `${outcome.reason}. ${MSG_NEWLYWED.incomePriority}` } : outcome;
+  };
+  if (incomeWon <= limit) return withPriority({ verdict: "eligible", code: "income_ok", reason });
 
   if (req.dualIncomePercent !== undefined) {
     const spouseEarns = ctx.profile.money.spouseEarns;
-    if (spouseEarns === false) return { verdict: "ineligible", code: "income_over", reason };
+    if (spouseEarns === false) return over();
     if (dualLimit === null) {
       return { verdict: "unknown", code: "income_table_missing", reason, action: ACTION.tableMissing };
     }
     if (incomeWon <= dualLimit) {
       return spouseEarns === true
-        ? { verdict: "eligible", code: "income_ok_dual", reason }
+        ? withPriority({ verdict: "eligible", code: "income_ok_dual", reason })
         : { verdict: "unknown", code: "income_spouse_unknown", reason, action: ACTION.enterInSettings("배우자 소득 여부") };
     }
   }
-  return { verdict: "ineligible", code: "income_over", reason };
+  return over();
 }
 
 export function evaluateIncome(req: Requirements["income"], ctx: CriterionContext): CriterionResult | null {

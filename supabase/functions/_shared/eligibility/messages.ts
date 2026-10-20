@@ -27,6 +27,30 @@ export const ACTION = {
   tableMissing: "올해 소득 기준표가 아직 준비되지 않았어요. 공고문의 소득 기준을 확인해 주세요",
   areaDependent: "주택형 면적에 따라 소득 기준이 달라요. 공고문을 확인해 주세요",
   otherPriority: "국가유공자·장애인 등 우선 대상 자격은 공고문에서 확인해 주세요",
+  // 변경 3
+  engagedRegister: "입주 전까지 혼인신고를 해야 해요",
+  checkEngaged: "예비신혼부부를 받는지 공고문을 확인해 주세요",
+  checkRealEstate: "부동산(집·땅) 가액이 기준 이하인지 공고문에서 확인해 주세요",
+} as const;
+
+/** 변경 3 신혼 가구 사유 (BR-U2-D20~D42) — 금액은 기준 값만 */
+export const MSG_NEWLYWED = {
+  marriage: (years: number) => `혼인 ${years}년 이내 신혼부부`,
+  marriageOk: (years: number) => `혼인 ${years}년 이내 신혼부부예요`,
+  marriageOver: (years: number) => `혼인 ${years}년이 지났어요`,
+  notNewlywed: "신혼부부 대상 주택이에요",
+  engagedOk: "예비신혼부부도 신청할 수 있어요",
+  engagedNo: "이 공고는 예비신혼부부를 받지 않아요",
+  engagedUnknown: "예비신혼부부도 받는지 확인이 필요해요",
+  seniorOnly: "어르신 대상 주택이에요",
+  firstTime: (years: number) => `세대원 모두 집을 가진 적이 없고, ${years}년 이상 소득세를 낸 분이 있어야 해요`,
+  firstTimeOwned: "집을 가진 적이 있으면 생애최초로 신청할 수 없어요",
+  firstTimeNoTax: (years: number) => `${years}년 이상 소득세를 낸 분이 있어야 해요`,
+  firstTimeMarriage: "혼인 중이거나 미혼 자녀가 있어야 해요",
+  incomeLottery: (manwon: number) => `소득 기준을 넘지만 부동산이 ${formatManwon(manwon)} 이하면 추첨으로 신청할 수 있어요`,
+  incomePriority: "우선공급 소득 기준 안이에요",
+  savingsBySpouse: "배우자 통장으로 신청하면 돼요",
+  standardNote: "일반적인 기준이에요. 공고문에서 확인해 주세요",
 } as const;
 
 export const MSG = {

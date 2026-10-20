@@ -81,9 +81,60 @@ export const STANDARD_REQUIREMENTS: Readonly<Record<SupplyTypeCode, Requirements
     asset: { maxManwon: 34_500 },
     car: { maxManwon: 4_542 },
   },
+  // 변경 3 BR-U2-D14: 신혼부부 대상 — 노부부 가구는 혼인 조건 미충족. 소득·자산 2026 원문 미확인 → 확인 필요 (BR-U2-D41)
+  newlywed_hope_town: {
+    marriage: { maxYears: 7, engagedAllowed: true },
+    homeless: HOMELESS,
+    income: "unknown",
+    asset: "unknown",
+  },
   unranked: {
     homeless: HOMELESS,
     residence: "unknown",
   },
   other: { unclassified: true },
+};
+
+// ---------- 신청 방법별 표준 요건 (변경 3 domain-entities "신혼 표준 요건", effective_from 2026-06-15) ----------
+// 원문으로 확인한 값만 숫자로 둔다. 확인하지 못한 값은 "unknown" (BR-U2-D41)
+// - 신혼 특공: 「주택공급에 관한 규칙」 제41조 (국토교통부령 제1592호, 2026-06-15 시행) — 140%, 배우자 소득 160%, 우선 100%·120%, 추첨(부동산)
+// - 민영 생애최초: 2026-03 민영 입주자모집공고문 — 우선 130%, 일반 160%까지, 추첨 부동산 3억 3,100만원
+const REAL_ESTATE_LOTTERY = { realEstateMaxManwon: 33_100 } as const;
+const NEWLYWED_INCOME = {
+  basis: "urban_worker",
+  percent: 140,
+  dualIncomePercent: 160,
+  priorityPercent: 100,
+  priorityDualIncomePercent: 120,
+  overLottery: REAL_ESTATE_LOTTERY,
+} as const;
+const MARRIAGE_7Y = { maxYears: 7, engagedAllowed: "unknown" } as const;
+const FIRST_TIME = { neverOwned: true, incomeTaxYears: 5, marriedOrChildRequired: true } as const;
+
+export type SaleKind = "public" | "private";
+
+export const STANDARD_ROUTE_REQUIREMENTS = {
+  newlywed_special: {
+    public: { marriage: MARRIAGE_7Y, homeless: HOMELESS, income: NEWLYWED_INCOME, savings: { minMonths: 6, minPayments: 6 }, residence: CAPITAL_AREA },
+    private: { marriage: MARRIAGE_7Y, homeless: HOMELESS, income: NEWLYWED_INCOME, savings: { minMonths: 6, depositRule: "private_by_region_area" }, residence: CAPITAL_AREA },
+  },
+  first_time: {
+    // 국민주택 생애최초 소득·자산: 2026 원문 미확인 → 확인 필요
+    public: { firstTime: FIRST_TIME, homeless: HOMELESS, income: "unknown", asset: "unknown", savings: { minMonths: 12, minPayments: 12, minDepositManwon: 600 }, residence: CAPITAL_AREA },
+    private: {
+      firstTime: FIRST_TIME,
+      homeless: HOMELESS,
+      income: { basis: "urban_worker", percent: 160, priorityPercent: 130, overLottery: REAL_ESTATE_LOTTERY },
+      savings: { minMonths: 12, depositRule: "private_by_region_area" },
+      residence: CAPITAL_AREA,
+    },
+  },
+  // 신혼희망타운·신혼부부용 임대: 소득·자산 2026 원문 미확인 → 확인 필요
+  newlywed_hope: { marriage: { maxYears: 7, engagedAllowed: true }, homeless: HOMELESS, income: "unknown", asset: "unknown" },
+  rental_newlywed: { marriage: MARRIAGE_7Y, homeless: HOMELESS, income: "unknown", asset: "unknown", car: "unknown" },
+} as const satisfies {
+  newlywed_special: Record<SaleKind, Requirements>;
+  first_time: Record<SaleKind, Requirements>;
+  newlywed_hope: Requirements;
+  rental_newlywed: Requirements;
 };

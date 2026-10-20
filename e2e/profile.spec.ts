@@ -99,7 +99,7 @@ test("처음 실행 → 마법사 → 저장하면 서버에 저장되고 홈으
   const stored = JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!);
   expect(stored.sync.state).toBe("synced");
   expect(stored.profile).toMatchObject({ householdHead: "self", spouse: { birthDate: null }, money: { monthlyIncome: 450, carValue: 0 } });
-  expect(stored.profile).toMatchObject({ schemaVersion: 2, savings: { has: false, owner: null }, prefs: { regions: [{ sido: "경기", sigungu: "하남시" }] } });
+  expect(stored.profile).toMatchObject({ schemaVersion: 3, householdKind: "senior", newlywed: null, savings: { has: false, owner: null }, prefs: { regions: [{ sido: "경기", sigungu: "하남시" }] } });
   expect(await page.evaluate(() => window.localStorage.getItem("mz.profile.draft"))).toBeNull();
   // 처음 설치한 사람에게는 업데이트 안내 창·띠가 없다 (FR-C2-18)
   await expect(page.getByRole("heading", { level: 1, name: "맞춤 공고" })).toBeVisible({ timeout: 15_000 });
@@ -307,7 +307,8 @@ test("업데이트 안내: 예전 정보가 있는 휴대폰 → 창 → 새 항
 
   const stored = JSON.parse((await page.evaluate(() => window.localStorage.getItem("mz.profile")))!);
   expect(stored.profile).toMatchObject({
-    schemaVersion: 2,
+    schemaVersion: 3,
+    householdKind: "senior",
     savings: { has: true, owner: "spouse", kind: "comprehensive" },
     prefs: { districtIds: SAMPLE_PROFILE_V1.prefs.districtIds, regions: [{ sido: "서울", sigungu: "강서구" }, { sido: "경기", sigungu: "하남시" }] },
   });

@@ -68,7 +68,7 @@ describe("profile-codec", () => {
 
   it("모르는 스키마 버전은 오류", async () => {
     const ring = await createKeyring({ 1: testKey(1) }, 1);
-    const stored = { ...(await encodeProfile(makeProfile(), ring)), schemaVersion: 3 };
+    const stored = { ...(await encodeProfile(makeProfile(), ring)), schemaVersion: 4 };
     await expect(decodeProfile(stored, ring)).rejects.toBeInstanceOf(ProfileCodecError);
   });
 
@@ -80,7 +80,7 @@ describe("profile-codec", () => {
     const savingsV1 = { has: false, kind: null, months: null, paymentCount: null, depositManwon: null };
     const stored = { ...v2, schemaVersion: 1, data: { ...v2.data, savings: savingsV1, prefs: prefsV1 } as unknown as typeof v2.data };
     const p = await decodeProfile(stored, ring);
-    expect(p.schemaVersion).toBe(2);
+    expect(p.schemaVersion).toBe(3);
     expect(p.savings).toEqual({ has: null, owner: null, kind: null, months: null, paymentCount: null, depositManwon: null });
     expect(p.prefs.regions).toEqual([]);
     expect(p.money.monthlyIncome).toBe(makeProfile().money.monthlyIncome);
