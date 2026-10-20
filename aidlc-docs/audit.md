@@ -1487,3 +1487,76 @@
 **Context**: CONSTRUCTION - Build and Test (변경 요청 2)
 
 ---
+
+## 변경 요청 2 — U5 운영 반영
+**Timestamp**: 2026-10-19T19:42:46Z
+**User Input**: "푸시해줘"
+**AI Response**: "git push 5759d29..25f8959, Edge Function dispatch 다시 배포(공용 피드 코드). 운영 화면 번들에 '관심 지역 밖의 공고예요' 확인. 0011은 저장소에만 있고 운영 DB에는 적용하지 않음(05:10 결과 확인 뒤 승인)."
+**Context**: CONSTRUCTION - Build and Test (변경 요청 2), 운영 반영
+
+---
+
+## 새 요청 (변경 요청 3 후보) — 접수만
+**Timestamp**: 2026-10-19T19:49:51Z
+**User Input**: "그거 확인하고 나서 하고 싶은게 있어.
+기존 청약레이더를 여기에 합치고 싶어. 부모님이 설치한 앱은 유지하고 거기 데이터도 유지하면서 나(예비신혼부부)용 데이터도 넣어서 같은 어플에서 활용하고 싶어."
+**AI Response**: "접수. 05:10 수집 결과 확인·변경 2 Build and Test 마무리 뒤 변경 요청 3으로 시작(요구사항 분석부터). 기존 저장소 위치 확인: D:/백재인/스터디/cheongYak-radar (GitHub BaekJaeIn/cheongYak-radar, Next 14, Supabase 프로젝트 cheongYak-radar ap-southeast-1, v10)."
+**Context**: 새 요청 접수 (변경 요청 3, 아직 시작 안 함)
+
+---
+
+## 변경 요청 3 — 요구사항 분석 시작
+**Timestamp**: 2026-10-19T19:59:58Z
+**User Input**: "일단 시간이 안됐으니까 이거 먼저 진행하고 있자"
+**AI Response**: "변경 요청 3 시작 (변경 2 Build and Test는 05:10 결과 확인 대기로 열어 둠). 기존 청약레이더 분석(SPEC·README·0004 프로필·0012 회원제): 로그인 회원제, 회원당 가구 프로필(싱가포르 Supabase), 추천 점수, 공고분석(PDF)·마감 임박 알림·민간임대. 질문 파일 change-3-requirements-questions.md (Q1~Q10) 작성."
+**Context**: INCEPTION - Requirements Analysis (변경 요청 3)
+
+---
+
+## 변경 요청 3 — 요구사항 답
+**Timestamp**: 2026-10-19T20:02:55Z
+**User Input**: "완료"
+**AI Response**: "답 확인 (Q1~Q10 모두 A, 모호한 답 없음). requirements.md §10 작성: C3-D1~D9, FR-C3-1~16, NFR-C3-1~5, 범위 밖, 영향 Unit(U1~U6). 승인 요청."
+**Context**: INCEPTION - Requirements Analysis (변경 요청 3)
+
+---
+
+## 변경 요청 3 — 요구사항 승인, 사용자 스토리
+**Timestamp**: 2026-10-19T20:04:13Z
+**User Input**: "진행"
+**AI Response**: "요구사항 승인으로 기록. 사용자 스토리(가볍게, 질문 없이 — 변경 2와 같은 방식): personas.md P3 예비신혼부부 추가·매핑, stories.md US-22 가구 종류, US-23 신혼 입력, US-24 신혼 판정·이유, US-25 신혼부부가 볼 점·마감 임박 알림, US-26 부모님 앱 그대로, 추적표. 승인 요청."
+**Context**: INCEPTION - User Stories (변경 요청 3)
+
+---
+
+## 변경 요청 3 — 스토리 승인, 실행 계획
+**Timestamp**: 2026-10-19T20:07:50Z
+**User Input**: "진행"
+**AI Response**: "사용자 스토리 승인으로 기록. change-3-execution-plan.md: AD·Units 생략, U2→U3→U4→U5→U6 각 기능 설계+코드(NFR·인프라 생략), Build and Test(노부부 회귀, 운영 반영, 기존 앱 정지). 승인 요청."
+**Context**: INCEPTION - Workflow Planning (변경 요청 3)
+
+---
+
+## 변경 요청 3 — 실행 계획 승인
+**Timestamp**: 2026-10-19T20:08:19Z
+**User Input**: "진행"
+**AI Response**: "실행 계획 승인으로 기록. U2 기능 설계 시작."
+**Context**: CONSTRUCTION - U2 Functional Design (변경 요청 3)
+
+---
+
+## 변경 요청 3 — U2 기능 설계 질문
+**Timestamp**: 2026-10-19T20:09:43Z
+**User Input**: "(없음 — 진행 중)"
+**AI Response**: "U2 판정 구조 확인(주택형 = 공급유형 1개 + 요건, 노부부 기준 코드). 질문 Q1 신청 방법별 판정, Q2 신혼 정의(7년·예비신혼), Q3 맞벌이 소득, Q4 부부 각자 통장, Q5 생애최초 조건, Q6 기준값 없을 때, Q7 자녀 수 용도."
+**Context**: CONSTRUCTION - U2 Functional Design (변경 요청 3)
+
+---
+
+## 변경 요청 2 — 05:10 결과, 0011 운영 반영
+**Timestamp**: 2026-10-20T09:51:30Z
+**User Input**: "(질문 도구 답) 적용하고 지금 시험 (추천)"
+**AI Response**: "05:00 api 정상(청약홈 5·LH 8건 저장), 05:10 SH 정상·GH 또 시간 상한 초과 → GH 해외 접속 문제로 판단. 사용자 승인 후 0011 운영 db push, cron collect-crawl 명령 확인, invoke_edge_function(crawl, ap-northeast-2) 직접 1회: pg_net 200, x-sb-edge-region ap-northeast-2, GH 2.0초 12건(6 저장), SH 27초 11건(9 저장), 재계산 3대 성공. build-and-test-summary.md 변경 2 절 작성."
+**Context**: CONSTRUCTION - Build and Test (변경 요청 2), 운영 반영
+
+---

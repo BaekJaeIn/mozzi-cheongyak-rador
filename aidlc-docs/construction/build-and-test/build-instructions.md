@@ -65,7 +65,7 @@ npm run build
 | 1 | `npx supabase db push --linked` (0009·0010) → `npx supabase migration list --linked`로 확인 | ✅ 2026-10-19 |
 | 2 | `npx supabase functions deploy collect analyze dispatch --project-ref <ref>` | ✅ 2026-10-19 (U3·U4 코드) |
 | 3 | `git push` (Vercel) — U2~U4 | ✅ 2026-10-19 `5759d29` |
-| 4 | U5: `git push` + `dispatch` 다시 배포(공용 피드 코드) | ⏳ 사용자 확인 뒤 |
+| 4 | U5: `git push` + `dispatch` 다시 배포(공용 피드 코드) | ✅ 2026-10-20 `25f8959` |
 | 5 | 다음 날 05:00(api)·05:10(crawl) `collect_runs` 확인 | 아래 요약 |
 | 6 | 부모님 휴대폰: 새로 바뀐 점 → 새 항목 입력 | 사용자 |
 

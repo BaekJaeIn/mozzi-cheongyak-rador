@@ -70,7 +70,7 @@
 - 운영 반영 (2026-10-19): 운영 DB 0009·0010, Edge Function collect·analyze·dispatch 배포, push 5759d29
 - [x] U5 Functional Design (2026-10-19 승인)
 - [x] U5 Code Generation (2026-10-20 승인, 커밋 0053566·9e4623d)
-- [ ] Build and Test (변경 2) — 진행 중
+- [ ] Build and Test (변경 2) — 문서·실행 완료, 0011 운영 적용(GH 정상화), 승인 대기
 - 계획: User Stories(가볍게) → U2(FD·Code) → U3(FD·NFR-R·NFR-D·Code) → U4(FD·Code) → U5(FD·Code) → Build and Test
 
 ## Current Status
@@ -88,3 +88,11 @@
 | U5 feed-detail | ✅ | – | – | – | ✅ | FD 완료 (2026-10-16 승인). Code 생성 Step 1~17 완료 (테스트 520, pgTAP 89, 로컬 Supabase E2E 42/42). 완료 (2026-10-16 승인, push f48a26f) |
 | U6 pwa-push | ✅ | ✅ | ✅ | ✅ | ✅ | FD 완료 (2026-10-16 승인). NFR-R 완료 (2026-10-16 승인). NFR-D 완료 (2026-10-16 승인). Infra 완료 (2026-10-16 승인). Code 생성 Step 1~17 완료 (테스트 611, pgTAP 120, 로컬 E2E 53+3 건너뜀, dispatch 로컬 실행). 완료 (2026-10-17 승인, push). 운영 반영은 setup-guide-u6 |
 (✅ = 실행 예정, – = 생략)
+
+## 변경 요청 3 (2026-10-20~)
+- 내용: 기존 청약레이더(예비신혼부부)를 이 앱에 합치기 — 부모님 앱·데이터 유지
+- [x] Requirements Analysis — requirements.md §10 (2026-10-20 승인)
+- [x] User Stories (가볍게) — P3, US-22~26 (2026-10-20 승인)
+- [x] Workflow Planning — change-3-execution-plan.md (2026-10-20 승인)
+- [ ] U2 Functional Design — 질문 답 기다림 (plans/U2-eligibility-engine-change-3-functional-design-plan.md)
+- 참고: 변경 2 Build and Test는 05:10 운영 수집 결과 확인 뒤 승인 요청
