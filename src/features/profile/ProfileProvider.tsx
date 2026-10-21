@@ -73,7 +73,9 @@ function readState(): ProfileState {
     loaded: true,
     stored,
     updates: readUpdates(storage),
-    notify: notifyStored ? { hour: notifyStored.hour, enabled: notifyStored.enabled } : DEFAULT_NOTIFY,
+    notify: notifyStored
+      ? { hour: notifyStored.hour, enabled: notifyStored.enabled, ...(notifyStored.deadlineEnabled === undefined ? {} : { deadlineEnabled: notifyStored.deadlineEnabled }) } // 변경 3
+      : DEFAULT_NOTIFY,
     notifyStored,
     hasDraft: loadDraft(storage) !== null,
   };

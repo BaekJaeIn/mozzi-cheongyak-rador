@@ -57,20 +57,23 @@ export function createNotifySettingsHandler(devices: () => DeviceRepository) {
   return async ({ deviceId, requestId, body }: DeviceContext): Promise<Response> => {
     if (typeof body !== "object" || body === null || Array.isArray(body)) return errorResponse("BAD_REQUEST", 400, requestId);
     const keys = Object.keys(body);
-    const { hour, enabled } = body as Record<string, unknown>;
+    const { hour, enabled, deadlineEnabled } = body as Record<string, unknown>;
+    // 변경 3: deadlineEnabled는 선택 (옛 앱은 보내지 않는다, BR-U6-D41)
     const valid =
-      keys.length === 2 &&
+      keys.every((k) => k === "hour" || k === "enabled" || k === "deadlineEnabled") &&
       keys.includes("hour") &&
       keys.includes("enabled") &&
       typeof hour === "number" &&
       Number.isInteger(hour) &&
       hour >= 0 &&
       hour <= 23 &&
-      typeof enabled === "boolean";
+      typeof enabled === "boolean" &&
+      (deadlineEnabled === undefined || typeof deadlineEnabled === "boolean");
     if (!valid) return errorResponse("BAD_REQUEST", 400, requestId);
 
-    await devices().updateNotifySettings(deviceId, { hour: hour as number, enabled: enabled as boolean });
-    return json({ hour, enabled }, 200, requestId);
+    const settings = { hour: hour as number, enabled: enabled as boolean, ...(deadlineEnabled === undefined ? {} : { deadlineEnabled: deadlineEnabled as boolean }) };
+    await devices().updateNotifySettings(deviceId, settings);
+    return json(settings, 200, requestId);
   };
 }
 

@@ -1,4 +1,4 @@
-// DispatchStore — DB 함수(0008) 호출 구현. Deno(dispatch)·Node(구독·시험 API)가 함께 쓴다.
+// DispatchStore — DB 함수(0008·0014) 호출 구현. Deno(dispatch)·Node(구독·시험 API)가 함께 쓴다.
 // 클라이언트는 supabase-js의 rpc 모양만 받는다 (런타임별 import를 여기서 하지 않는다).
 import type { IsoDate } from "../domain/dates.ts";
 import type { Tenure, Verdict } from "../db/types.ts";
@@ -79,9 +79,19 @@ export function createRpcDispatchStore(db: RpcClient, countNotices: () => Promis
         string,
         { rows: RowJson[]; notified: string[]; count: number; min_version: number | null }
       >;
+      // 마감 임박 관심 공고 (변경 3, 0014)
+      const deadlines = (await call(db, "dispatch_deadlines", { p_device_ids: deviceIds, p_today: today })) as Record<
+        string,
+        { id: string; title: string; complex_name: string | null }[]
+      >;
       const out = new Map<string, DeviceRows>();
       for (const [id, v] of Object.entries(data ?? {})) {
-        out.set(id, { rows: v.rows.map(toFeedRow), notified: v.notified, stats: { count: v.count, minProfileVersion: v.min_version } });
+        out.set(id, {
+          rows: v.rows.map(toFeedRow),
+          notified: v.notified,
+          stats: { count: v.count, minProfileVersion: v.min_version },
+          deadlines: (deadlines?.[id] ?? []).map((d) => ({ id: d.id, name: d.complex_name ?? d.title })),
+        });
       }
       return out;
     },
@@ -105,6 +115,9 @@ export function createRpcDispatchStore(db: RpcClient, countNotices: () => Promis
         p_failed: input.failed,
         p_gone: input.gone,
       });
+      if (input.deadlineIds && input.deadlineIds.length > 0) {
+        await call(db, "record_deadline_push", { p_device: deviceId, p_notice_ids: input.deadlineIds });
+      }
     },
   };
 }
@@ -126,4 +139,9 @@ export async function savePushSubscription(
 
 export async function tryTestPush(db: RpcClient, deviceId: string): Promise<boolean> {
   return (await call(db, "try_test_push", { p_device: deviceId })) === true;
+}
+
+/** 관심 공고 목록 바꾸기 (변경 3 BR-U6-D1·D5). 저장된 개수 */
+export async function replaceDeviceBookmarks(db: RpcClient, deviceId: string, ids: readonly string[]): Promise<number> {
+  return Number(await call(db, "replace_device_bookmarks", { p_device: deviceId, p_ids: ids }));
 }

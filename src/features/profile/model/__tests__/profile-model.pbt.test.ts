@@ -130,6 +130,7 @@ test.prop([answersArb, fc.array(opArb, { maxLength: 20 })])(
           return outcome;
         },
         putNotify: async () => ({ ok: true }),
+        putBookmarks: async () => ({ ok: true }),
       },
     });
     let clock = 0;

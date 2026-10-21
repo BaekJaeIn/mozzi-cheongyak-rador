@@ -104,3 +104,81 @@ interface SubscriptionInput { endpoint: string; keys: { p256dh: string; auth: st
 | P-U6-10 | 클릭 주소: 결과는 항상 `/`로 시작하는 같은 사이트 경로(`//`·스킴·다른 호스트는 `/`로) | `safeClickUrl` | 불변식 |
 
 예시 기반 테스트(PBT-10): 고정 날짜 2026-10-20, 3기기(9시·9시 이미 보냄·10시), 공고 4건(충족·확인 필요·미충족·마감)으로 문구·대상·기록.
+
+
+---
+
+## 8. 변경 요청 3 (2026-10-20) — 마감 임박 알림
+
+> 계획: `plans/U6-pwa-push-change-3-functional-design-plan.md` (Q1~Q4 = A). 마이그레이션 `0014_bookmark_deadline.sql`(Code Generation).
+
+### 8.1 저장 데이터
+
+| 테이블 | 칸 | 상태 | 용도 |
+|---|---|---|---|
+| `device_bookmarks` | `device_id`(→ devices, cascade), `notice_id`(→ notices, cascade), `created_at` — 함께 기본키 | 새 테이블 | 관심 공고 ID (FR-C3-15). 기기당 최대 100(U5 `MAX_BOOKMARKS`) |
+| `devices` | **`deadline_enabled`** boolean not null default true | 추가 | 마감 알림 스위치 (Q4=A) |
+| `deadline_notification_log` | `device_id`, `notice_id`(함께 기본키, cascade), `notified_at` | 새 테이블 | 마감 알림을 공고마다 한 번 (BR-U6-D22). **코드 생성에서 바꿈(2026-10-20)**: 처음에는 `notification_log` 기본키에 `kind`를 넣으려 했으나, 기존 새 공고 기록·기준선 규칙(0008의 `on conflict (device_id, notice_id)`)을 건드리지 않으려고 따로 둔다 |
+
+- RLS: `device_bookmarks`도 anon·authenticated 전면 차단, 서버 키(기기 인증 API·dispatch)로만 (NFR-C3-5). 다른 기기 것은 API가 기기 ID로만 거르므로 읽을 수 없다
+- 새 공고 "이미 알린 공고"(`notified`)는 지금처럼 `notification_log`만 본다 — 마감 기록은 다른 표라 새 공고 알림을 막지 않는다
+- 공고가 지워지면(보관 기간 정리) 관심 공고 행도 함께 지워진다
+
+### 8.2 발송 계획
+
+```ts
+interface DeviceRows {
+  // …기존 그대로
+  /** 마감 임박 관심 공고 (마감 = 내일, 마감 알림 기록 없음, 스위치 켜짐) — DB가 고른다 */
+  deadlines: { id: string; name: string }[];
+}
+
+interface DispatchItem {
+  deviceId: string;
+  notices: PlannedNotice[];                 // 새 공고 (지금과 같음, 비어도 됨)
+  counts: { eligible: number; unknown: number };
+  deadlines: { id: string; name: string }[]; // 마감 임박 (변경 3)
+}
+```
+
+- `planDevice(deviceId, rows, notified, today, deadlines = [])`: 새 공고와 마감 임박이 **둘 다 0건이면** `null`(BR-U6-05 그대로)
+- 마감 임박 고르기 `deadlineNotices(bookmarks, today)`(순수 함수, DB 함수와 같은 규칙 — 테스트 비교용): `applyEnd = today + 1`, 이름은 단지명 없으면 공고명, 이름 순 → ID 순
+
+### 8.3 알림 내용
+
+| 경우 | 본문 | 누르면 |
+|---|---|---|
+| 새 공고만 | 지금과 같음 (BR-U6-31·32) | 지금과 같음 |
+| 마감만 1건 | "관심 공고 {이름} 접수 마감이 내일이에요" | `/notice/{id}` |
+| 마감만 2건 이상 | "관심 공고 {N}건 접수 마감이 내일이에요" | `/bookmarks` |
+| 둘 다 | 새 공고 문구 + 줄바꿈 + "관심 공고 {이름} 마감이 내일이에요" / "관심 공고 {N}건 마감이 내일이에요" | 새 공고 규칙 그대로 |
+
+이름은 BR-U6-32처럼 24글자 줄임. 태그는 그대로 `daily-{오늘}`.
+
+### 8.4 API
+
+| API | 형식 |
+|---|---|
+| `PUT /api/bookmarks` (새) | 기기 인증. 본문 `{ ids: string[] }`(uuid, 중복 없음, 최대 100). 서버 목록을 이 값으로 **통째로 바꾼다**. 없는 공고 ID는 조용히 뺀다. 200 `{ saved: number }` |
+| `PUT /api/notify-settings` | 본문에 `deadlineEnabled?: boolean` 추가 (없으면 그대로) |
+
+### 8.5 기기 쪽 상태
+
+```ts
+interface StoredBookmarkSync { version: 1; state: "synced" | "pending"; since?: string }  // mz.bookmarks.sync
+interface StoredNotify { /* 기존 */ deadlineEnabled?: boolean }                          // 없으면 true
+```
+
+- 별표·해제 → 기기 저장(`mz.bookmarks`) → `pending` → `PUT /api/bookmarks` → 성공하면 `synced`. 실패하면 `pending`으로 남고 앱을 열 때 다시 보낸다
+- 처음(업데이트 뒤) 앱을 열 때 `mz.bookmarks.sync`가 없으면 `pending`으로 보고 한 번 보낸다 — 기존 별표가 서버로 간다
+- 모두 지우기: `mz.bookmarks.sync`도 지운다(서버 쪽은 기기 삭제로 cascade)
+
+### 8.6 속성 기반 테스트 대상 추가 (PBT-01)
+
+| # | 속성 | 대상 | 종류 |
+|---|---|---|---|
+| P-U6-D1 | **기존 알림 불변**: 마감 임박이 없으면 `planDevice`·`buildPayload` 결과가 변경 3 전과 같다 | 계획·문구 | 불변식 (NFR-C3-1) |
+| P-U6-D2 | 마감 임박 대상 = 관심 공고 ∩ 마감 내일 − 마감 알림 기록 (스위치 꺼지면 빈 목록) | `deadlineNotices` | 불변식 |
+| P-U6-D3 | 하루 1번 그대로: 같은 날 몇 번 실행해도 기기당 알림 1번, 같은 공고 마감 알림 1번 | dispatch 시뮬레이션 | 멱등 |
+| P-U6-D4 | 알림 내용은 2KB 이하, 공고 이름·건수만(마감 임박 포함) | `buildPayload` | 불변식 |
+| P-U6-D5 | 관심 공고 동기화: 어떤 별표·해제 순서와 실패 뒤에도, 마지막 성공 보내기 뒤 서버 목록 = 기기 목록 | 동기화 | 수렴 |

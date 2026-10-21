@@ -14,6 +14,8 @@ import { districtsCache, supplyTypeLabelsCache } from "./cache/reference-cache";
 import { createFeedRepository } from "./db/feed-repository";
 import { createPushRepository } from "./db/push-repository";
 import { getVapidEnv } from "./env";
+import { replaceDeviceBookmarks, type RpcClient } from "@shared/push/store-rpc.ts";
+import { BOOKMARKS_MAX_BODY_BYTES, createBookmarksHandler } from "./handlers/bookmarks";
 import { createPushKeyHandler, createSubscribeHandler, createTestPushHandler, type PushDeps, SUBSCRIBE_MAX_BODY_BYTES } from "./handlers/push";
 import type { TypeLabels } from "./feed/build";
 import { createCalendarHandler, createFeedHandler, createNoticeDetailHandler, createNoticeSummariesHandler } from "./handlers/feed";
@@ -64,6 +66,12 @@ export const notifySettingsRoute = withDevice(createNotifySettingsHandler(device
   route: "PUT /api/notify-settings",
   maxBodyBytes: NOTIFY_MAX_BODY_BYTES,
 });
+
+// ---------- 변경 3: 관심 공고 ID (BR-U6-D1~D5) ----------
+export const bookmarksRoute = withDevice(
+  createBookmarksHandler((deviceId, ids) => replaceDeviceBookmarks(getDb() as unknown as RpcClient, deviceId, ids)),
+  { route: "PUT /api/bookmarks", maxBodyBytes: BOOKMARKS_MAX_BODY_BYTES },
+);
 
 export const deleteDeviceRoute = withDevice(createDeleteDeviceHandler(deviceRepository), { route: "DELETE /api/device" });
 

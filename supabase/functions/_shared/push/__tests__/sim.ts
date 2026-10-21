@@ -5,6 +5,7 @@ import type { FeedRow } from "../../feed/visible.ts";
 import type { Logger } from "../../log/logger.ts";
 import type { ClaimResult, DeviceRows, DispatchCandidate, DispatchStore, RecordInput } from "../dispatch.ts";
 import type { PushTransport } from "../send.ts";
+import { type BookmarkedNotice, deadlineNotices } from "../plan.ts";
 
 export interface SimDevice {
   notifyHour: number;
@@ -30,6 +31,10 @@ export class MemoryDispatchStore implements DispatchStore {
   records: { deviceId: string; today: IsoDate | null; input: RecordInput }[] = [];
   currentToday: IsoDate | null = null;
   failRecord = false;
+  /** 변경 3: 기기 → 관심 공고 (0014 device_bookmarks), 마감 알림 기록, 마감 알림 끈 기기 */
+  bookmarks = new Map<string, BookmarkedNotice[]>();
+  deadlineLog = new Set<string>();
+  deadlineOff = new Set<string>();
 
   async candidates(hour: number, today: IsoDate): Promise<DispatchCandidate[]> {
     this.currentToday = today;
@@ -42,13 +47,15 @@ export class MemoryDispatchStore implements DispatchStore {
     return out.sort((a, b) => (a.deviceId < b.deviceId ? -1 : 1));
   }
 
-  async deviceRows(ids: readonly string[]): Promise<Map<string, DeviceRows>> {
+  async deviceRows(ids: readonly string[], today: IsoDate): Promise<Map<string, DeviceRows>> {
     const out = new Map<string, DeviceRows>();
     for (const id of ids) {
       const d = this.devices.get(id);
       if (!d) continue;
       const notified = [...this.log.keys()].filter((k) => k.startsWith(`${id}|`)).map((k) => k.slice(id.length + 1));
-      out.set(id, { rows: d.rows, notified, stats: { count: d.rows.length, minProfileVersion: d.rows.length ? d.profileVersion : null } });
+      const recorded = new Set([...this.deadlineLog].filter((k) => k.startsWith(`${id}|`)).map((k) => k.slice(id.length + 1)));
+      const deadlines = deadlineNotices(this.bookmarks.get(id) ?? [], recorded, today, !this.deadlineOff.has(id)); // DB dispatch_deadlines와 같은 규칙
+      out.set(id, { rows: d.rows, notified, stats: { count: d.rows.length, minProfileVersion: d.rows.length ? d.profileVersion : null }, deadlines });
     }
     return out;
   }
@@ -75,6 +82,7 @@ export class MemoryDispatchStore implements DispatchStore {
     if (this.failRecord) throw new Error("db down");
     this.records.push({ deviceId, today: this.currentToday, input });
     for (const n of input.noticeIds) if (!this.log.has(`${deviceId}|${n}`)) this.log.set(`${deviceId}|${n}`, "sent");
+    for (const n of input.deadlineIds ?? []) this.deadlineLog.add(`${deviceId}|${n}`);
     for (const e of input.success) {
       const s = this.subscriptions.get(e);
       if (s) s.failingSince = null;

@@ -174,7 +174,8 @@ function NotifySettings() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pushResult, setPushResult] = useState<PushSubscribeResult | null>(null);
 
-  const change = async (next: { hour: number; enabled: boolean }) => {
+  const deadlineOn = notify.deadlineEnabled ?? true; // 변경 3: 없으면 켜짐 (BR-U6-D40)
+  const change = async (next: { hour: number; enabled: boolean; deadlineEnabled?: boolean }) => {
     const result = await saveNotify(next);
     setToast(result === "offline" ? "바꿨어요. 인터넷이 연결되면 서버에도 보낼게요." : "바꿨어요.");
     if (timer.current) clearTimeout(timer.current);
@@ -221,6 +222,28 @@ function NotifySettings() {
           ))}
         </select>
       </label>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={deadlineOn}
+        aria-describedby="deadline-help"
+        disabled={!notify.enabled}
+        onClick={() => void change({ ...notify, deadlineEnabled: !deadlineOn })}
+        className={`${card} flex min-h-touch flex-col gap-1 px-5 py-4 text-left disabled:opacity-50`}
+      >
+        <span className="flex w-full items-center justify-between gap-3 text-body font-bold">
+          <span>관심 공고 마감 알림</span>
+          <span aria-hidden className="flex items-center gap-2">
+            <span className={deadlineOn ? "text-primary" : "text-muted"}>{deadlineOn ? "켜짐" : "꺼짐"}</span>
+            <span className={["relative h-8 w-14 rounded-full", deadlineOn ? "bg-primary" : "bg-field"].join(" ")}>
+              <span className={["absolute top-1 h-6 w-6 rounded-full bg-surface shadow-card", deadlineOn ? "left-7" : "left-1"].join(" ")} />
+            </span>
+          </span>
+        </span>
+        <span id="deadline-help" className="text-caption text-muted">
+          별표한 공고의 접수 마감 전날 알려 드려요
+        </span>
+      </button>
       <p aria-live="polite" className="min-h-6 px-1 text-body font-bold text-primary">
         {toast ?? (pushResult ? PUSH_TEXT[pushResult] : "")}
       </p>

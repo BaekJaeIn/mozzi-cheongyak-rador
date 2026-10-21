@@ -22,8 +22,8 @@ export interface DeviceRepository {
   touch(deviceId: string, now: Date): Promise<void>;
   /** U1 — 기기와 연결된 모든 데이터 삭제. 삭제했으면 true, 원래 없었으면 false */
   deleteAll(deviceId: string): Promise<boolean>;
-  /** U4 — 알림 시각(0~23)·켜기/끄기 (BR-U4-101) */
-  updateNotifySettings(deviceId: string, settings: { hour: number; enabled: boolean }): Promise<void>;
+  /** U4 — 알림 시각(0~23)·켜기/끄기 (BR-U4-101). 변경 3: 관심 공고 마감 알림 (없으면 그대로, BR-U6-D41) */
+  updateNotifySettings(deviceId: string, settings: { hour: number; enabled: boolean; deadlineEnabled?: boolean }): Promise<void>;
 }
 
 export interface ProfileRepository {

@@ -330,3 +330,14 @@ export async function seedNewlywedNotice(tag: string): Promise<SeededNotice> {
   });
   return { id, name, url };
 }
+
+// ---------- 변경 3 U6: 서버의 관심 공고 ID (로컬 Supabase 전용) ----------
+export async function serverBookmarks(deviceId: string): Promise<string[]> {
+  const rows = (await rest(`device_bookmarks?select=notice_id&device_id=eq.${deviceId}`, { method: "GET", prefer: "return=representation" })) as { notice_id: string }[];
+  return rows.map((r) => r.notice_id).sort();
+}
+
+export async function deadlineSetting(deviceId: string): Promise<boolean | null> {
+  const rows = (await rest(`devices?select=deadline_enabled&id=eq.${deviceId}`, { method: "GET", prefer: "return=representation" })) as { deadline_enabled: boolean }[];
+  return rows[0]?.deadline_enabled ?? null;
+}

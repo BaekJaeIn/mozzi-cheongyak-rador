@@ -15,6 +15,8 @@ export const NOTIFY_KEY = "mz.notify";
 export const DISPLAY_KEY = "mz.display";
 /** U5 관심 공고 — 모두 지우기에서 함께 지운다 (BR-U4-94) */
 export const BOOKMARKS_KEY = "mz.bookmarks";
+/** 관심 공고 ID 서버 동기화 상태 (변경 3 U6 BR-U6-D1~D3) */
+export const BOOKMARKS_SYNC_KEY = "mz.bookmarks.sync";
 /** U5 열어 본 공고·피드 저장본 — 모두 지우기에서 함께 지운다 (U5 BR-U5-42·53) */
 export const SEEN_KEY = "mz.seen";
 export const FEED_CACHE_KEY = "mz.feed";
@@ -41,6 +43,8 @@ export interface WizardDraft {
 export interface NotifySettings {
   hour: number;
   enabled: boolean;
+  /** 관심 공고 마감 알림 (변경 3 BR-U6-D40). 없으면 켜짐 — 옛 저장본 */
+  deadlineEnabled?: boolean;
 }
 
 export interface StoredNotify extends NotifySettings {
@@ -172,7 +176,8 @@ export function loadStoredNotify(storage: KeyValueStorage): StoredNotify | null 
   const v = readJson(storage, NOTIFY_KEY);
   if (!isObject(v) || v.version !== 1 || !isValidHour(v.hour) || typeof v.enabled !== "boolean") return null;
   if (typeof v.updatedAt !== "string" || !isSyncState(v.sync)) return null;
-  return { version: 1, hour: v.hour, enabled: v.enabled, updatedAt: v.updatedAt, sync: v.sync };
+  const deadline = typeof v.deadlineEnabled === "boolean" ? { deadlineEnabled: v.deadlineEnabled } : {};
+  return { version: 1, hour: v.hour, enabled: v.enabled, ...deadline, updatedAt: v.updatedAt, sync: v.sync };
 }
 
 export function saveStoredNotify(storage: KeyValueStorage, value: StoredNotify): void {
@@ -206,9 +211,9 @@ export function saveDisplayMode(storage: KeyValueStorage, mode: DisplayMode): vo
 
 // ---------- 모두 지우기 (BR-U4-94) ----------
 
-/** 프로필·초안·알림 설정·업데이트 기록·관심 공고·열어 본 공고·피드 저장본·기기 ID를 지운다. 화면 모드는 남긴다 */
+/** 프로필·초안·알림 설정·업데이트 기록·관심 공고(동기화 상태 포함)·열어 본 공고·피드 저장본·기기 ID를 지운다. 화면 모드는 남긴다 */
 export function clearAllPersonal(storage: KeyValueStorage): void {
-  for (const key of [PROFILE_KEY, DRAFT_KEY, NOTIFY_KEY, UPDATES_KEY, BOOKMARKS_KEY, SEEN_KEY, FEED_CACHE_KEY, DEVICE_STORAGE_KEY]) {
+  for (const key of [PROFILE_KEY, DRAFT_KEY, NOTIFY_KEY, UPDATES_KEY, BOOKMARKS_KEY, BOOKMARKS_SYNC_KEY, SEEN_KEY, FEED_CACHE_KEY, DEVICE_STORAGE_KEY]) {
     storage.removeItem(key);
   }
 }

@@ -4,11 +4,13 @@
 // - 기기(localStorage)에만 저장. 다른 탭에서 바꾸면 storage 이벤트로 다시 읽는다
 // - 모두 지우기(U4) 뒤에는 프로필 상태가 바뀌므로 다시 읽는다
 // - 짧은 안내("저장했어요")는 role="status" 한 곳에서 읽어 준다
+// - 변경 3: 별표·해제하면 공고 ID 목록을 서버에 보낸다(마감 임박 알림, BR-U6-D1). 실패는 조용히 — 앱을 열 때 다시
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { NoticeSummary } from "@/features/notice/model/api-types";
 import { useProfile } from "@/features/profile/ProfileProvider";
 import { BOOKMARKS_KEY, LocalSaveError } from "@/features/profile/model/storage";
 import { type Bookmark, type BookmarkSnapshot, createBookmarkStore, type ToggleResult } from "./model/store";
+import { markBookmarksPending } from "./model/sync";
 
 const TOAST_MS = 3000;
 
@@ -33,7 +35,7 @@ interface BookmarksValue {
 const BookmarksContext = createContext<BookmarksValue | null>(null);
 
 export function BookmarksProvider({ children }: { children: ReactNode }) {
-  const { stored } = useProfile();
+  const { stored, flushNow } = useProfile();
   const [items, setItems] = useState<Bookmark[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [toast, setToast] = useState("");
@@ -67,6 +69,12 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     timer.current = setTimeout(() => setToast(""), TOAST_MS);
   }, []);
 
+  /** 바뀐 목록을 서버로 (기기 저장 뒤) */
+  const pushIds = useCallback(() => {
+    markBookmarksPending(window.localStorage, new Date());
+    void flushNow();
+  }, [flushNow]);
+
   const value = useMemo<BookmarksValue>(
     () => ({
       loaded,
@@ -76,6 +84,7 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
         try {
           const result = store().toggle(id, snapshot, new Date());
           reload();
+          if (result !== "full") pushIds();
           announce(TOAST_TEXT[result]);
           return result;
         } catch (error) {
@@ -88,6 +97,7 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
         try {
           store().remove(id);
           reload();
+          pushIds();
           announce(TOAST_TEXT.deleted);
         } catch {
           announce(TOAST_TEXT.saveFailed);
@@ -102,7 +112,7 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       },
       announce,
     }),
-    [loaded, items, store, reload, announce, stored],
+    [loaded, items, store, reload, announce, stored, pushIds],
   );
 
   return (

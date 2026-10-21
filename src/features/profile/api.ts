@@ -18,6 +18,7 @@ export function createSyncApi(client: ApiClient): SyncApi {
   return {
     putProfile: (profile: HouseholdProfile) => outcome(client.request("/api/profile", putJson(profile))),
     putNotify: (settings: NotifySettings) => outcome(client.request("/api/notify-settings", putJson(settings))),
+    putBookmarks: (ids: readonly string[]) => outcome(client.request("/api/bookmarks", putJson({ ids }))), // 변경 3 (BR-U6-D1)
   };
 }
 

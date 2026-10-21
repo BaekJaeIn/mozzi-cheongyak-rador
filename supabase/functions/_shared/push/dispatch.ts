@@ -5,7 +5,7 @@ import { type IsoDate, toKstDate } from "../domain/dates.ts";
 import { type FeedRow, type JudgementStats, needsRecompute } from "../feed/visible.ts";
 import type { Logger } from "../log/logger.ts";
 import { buildPayload } from "./payload.ts";
-import { planDevice } from "./plan.ts";
+import { type DeadlineNotice, planDevice } from "./plan.ts";
 import { DAILY_TTL_SECONDS, type PushTarget, type PushTransport, type SendOutcome, sendPush, settleDevice } from "./send.ts";
 import type { VapidSigner } from "./vapid.ts";
 
@@ -19,12 +19,16 @@ export interface DeviceRows {
   rows: FeedRow[];
   notified: string[];
   stats: JudgementStats;
+  /** 마감 임박 관심 공고 (변경 3, DB dispatch_deadlines) */
+  deadlines?: DeadlineNotice[];
 }
 
 export type ClaimResult = { claimed: true; previous: IsoDate | null } | { claimed: false };
 
 export interface RecordInput {
   noticeIds: string[];
+  /** 보낸 마감 임박 공고 (변경 3 BR-U6-D22) */
+  deadlineIds?: string[];
   success: string[];
   failed: string[];
   gone: string[];
@@ -159,7 +163,7 @@ export async function runDispatch(deps: DispatchDeps, now: Date): Promise<Dispat
       return;
     }
     const r = rows.get(c.deviceId);
-    const item = r ? planDevice(c.deviceId, r.rows, new Set(r.notified), today) : null;
+    const item = r ? planDevice(c.deviceId, r.rows, new Set(r.notified), today, r.deadlines ?? []) : null;
     if (!item) {
       summary.skippedEmpty += 1; // 몫을 잡지 않는다 (BR-U6-05)
       return;
@@ -184,6 +188,7 @@ export async function runDispatch(deps: DispatchDeps, now: Date): Promise<Dispat
       try {
         await deps.store.record(c.deviceId, {
           noticeIds: settled.delivered ? item.notices.map((n) => n.id) : [],
+          deadlineIds: settled.delivered ? item.deadlines.map((n) => n.id) : [],
           success: settled.success,
           failed: settled.failed,
           gone: settled.gone,
@@ -194,7 +199,7 @@ export async function runDispatch(deps: DispatchDeps, now: Date): Promise<Dispat
       }
       if (settled.delivered) summary.sent += 1;
       else summary.failed += 1;
-      deps.log.info("dispatch.device", { deviceId: c.deviceId, delivered: settled.delivered, notices: item.notices.length });
+      deps.log.info("dispatch.device", { deviceId: c.deviceId, delivered: settled.delivered, notices: item.notices.length, deadlines: item.deadlines.length });
     } catch (error) {
       summary.failed += 1;
       deps.log.error("dispatch.device.failed", { deviceId: c.deviceId, error: error instanceof Error ? error.name : "unknown" });

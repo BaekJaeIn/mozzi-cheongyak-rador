@@ -1760,3 +1760,67 @@
 **Context**: CONSTRUCTION, 변경 요청 3, U5 Code Generation Part 2
 
 ---
+
+## U5 Code Generation (변경 3) — 승인
+**Timestamp**: 2026-10-20T13:17:09Z
+**User Input**: "진행"
+**AI Response**: "U5 변경 3 코드 생성 승인으로 기록. U6 알림 기능 설계(변경 3, 마감 임박 알림) 시작"
+**Context**: CONSTRUCTION, 변경 요청 3, U5 Code Generation 승인 → U6 Functional Design
+
+---
+
+## U6 Functional Design (변경 3) — 계획·질문
+**Timestamp**: 2026-10-20T13:17:09Z
+**User Input**: (없음 — 질문 파일 작성)
+**AI Response**: "U6-pwa-push-change-3-functional-design-plan.md 작성: 설계 메모(모든 가구, 판정과 무관, 공고 ID만, 하루 1번 안에서 합침, 마감 알림 한 번, 기존 별표 첫 동기화), 질문 Q1~Q4(알릴 때, 문구 합치기, 동기화 시점, 스위치 기본값). 답 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Functional Design Step 1~2
+
+---
+
+## U6 Functional Design (변경 3) — 답
+**Timestamp**: 2026-10-20T13:18:45Z
+**User Input**: "모두 추천대로"
+**AI Response**: "Q1~Q4 = A로 기록, 기능 설계 문서 작성"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Functional Design Step 2
+
+---
+
+## U6 Functional Design (변경 3) — 완료, 승인 요청
+**Timestamp**: 2026-10-20T13:19:58Z
+**User Input**: (없음)
+**AI Response**: "domain-entities §8, business-rules §14 (BR-U6-D1~D42), business-logic-model §8, frontend-components §9 작성. 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Functional Design Step 3~7
+
+---
+
+## U6 Functional Design (변경 3) — 승인 / Code Generation 계획
+**Timestamp**: 2026-10-20T13:22:27Z
+**User Input**: "진행"
+**AI Response**: "U6 변경 3 기능 설계 승인으로 기록. U6-pwa-push-change-3-code-generation-plan.md 작성(Step 0~6), 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Functional Design 승인 → Code Generation Part 1
+
+---
+
+## U6 Code Generation (변경 3) — 계획 승인
+**Timestamp**: 2026-10-20T13:22:50Z
+**User Input**: "승인"
+**AI Response**: "계획 승인으로 기록, Step 0부터 진행"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Code Generation Part 2
+
+---
+
+## U6 Code Generation (변경 3) — 세션 이어서
+**Timestamp**: 2026-10-21T11:57:04Z
+**User Input**: "이어서 진해해줘"
+**AI Response**: "중단된 전체 검증을 다시 실행 (지난 실행: 단위 seed 1회에서 수집 테스트 시간 초과 1건, E2E가 28분 걸려 일부 실패 — 부하로 보이므로 다시 확인)"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Code Generation Step 6
+
+---
+
+## U6 Code Generation (변경 3) — 완료, 승인 요청
+**Timestamp**: 2026-10-21T12:07:01Z
+**User Input**: "진행"
+**AI Response**: "검증 완료: 단위 839(seed 3회), pgTAP 185, 로컬 E2E 89+3 건너뜀. 마감 기록은 별도 표(설계 문서 고침), 동기화 대기열 다시 돌기(피드 no_profile 복구 문제), 설정 스위치 상태 버그 고침. dispatch 로컬 실행은 생략(시뮬레이터·pgTAP로 대신). code-summary-change-3.md, 로컬 커밋. 승인 요청"
+**Context**: CONSTRUCTION, 변경 요청 3, U6 Code Generation Part 2
+
+---

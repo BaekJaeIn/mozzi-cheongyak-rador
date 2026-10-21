@@ -9,7 +9,7 @@ import { memoryStorage, MINIMAL_ANSWERS, MOTHER_ANSWERS } from "./helpers";
 const T0 = new Date("2026-10-15T00:00:00Z");
 
 function fakeApi(responses: ApiOutcome[] = []) {
-  const sent: { kind: "profile" | "notify"; value: unknown }[] = [];
+  const sent: { kind: "profile" | "notify" | "bookmarks"; value: unknown }[] = [];
   let hook: (() => void) | null = null;
   const next = async (): Promise<ApiOutcome> => {
     hook?.();
@@ -25,6 +25,10 @@ function fakeApi(responses: ApiOutcome[] = []) {
       sent.push({ kind: "notify", value: n });
       return next();
     },
+    putBookmarks: async (ids) => {
+      sent.push({ kind: "bookmarks", value: ids });
+      return next();
+    },
   };
   return { api, sent, onNextSend: (f: () => void) => (hook = f) };
 }
@@ -32,7 +36,7 @@ function fakeApi(responses: ApiOutcome[] = []) {
 describe("ProfileSync", () => {
   it("대기 없음 → 아무것도 보내지 않는다", async () => {
     const { api, sent } = fakeApi();
-    expect(await createProfileSync({ storage: memoryStorage(), api }).flush()).toEqual({ profile: "nothing", notify: "nothing" });
+    expect(await createProfileSync({ storage: memoryStorage(), api }).flush()).toEqual({ profile: "nothing", notify: "nothing", bookmarks: "nothing" });
     expect(sent).toEqual([]);
   });
 

@@ -91,3 +91,20 @@ DeniedHelp           (기기별 다시 켜는 방법, BR-U6-80)
 - 그림만으로 설명하지 않는다 — 단계마다 글로도 쓴다.
 - 권한 창은 버튼을 눌렀을 때만(놀라지 않게), 결과는 `role="status"`로 읽힌다.
 - E2E axe 위반 0 (설정·피드 안내 띠·설치 안내 대화 상자).
+
+
+---
+
+## 9. 변경 요청 3 (2026-10-20) — 마감 임박 알림
+
+> 규칙 business-rules §14, 형식 domain-entities §8.
+
+| 컴포넌트 / 모듈 | 바뀌는 것 |
+|---|---|
+| `BookmarksProvider` (U5) | 별표·해제 뒤 `syncBookmarks()` 호출, 앱 열 때 `pending`·없음이면 한 번 보냄 (BR-U6-D1~D3) |
+| `features/bookmarks/model/sync.ts` (새) | `loadBookmarkSync`·`markPending`·`markSynced`, 보낼 ID 목록(`gone` 포함 그대로 — 서버가 없는 ID를 뺀다) |
+| `SettingsView` 알림 묶음 | "관심 공고 마감 알림" 스위치(`role="switch"`, 터치 크기 ≥ 토큰, 설명 한 줄), 전체 알림 꺼짐이면 흐리게 (BR-U6-D40~D42) |
+| `ProfileProvider` 알림 설정 | `StoredNotify.deadlineEnabled`(없으면 true), 같은 대기열로 보냄 |
+| 서비스워커 `sw.js` | 바꿈 없음(본문 줄바꿈은 휴대폰이 그대로 보여 줌, `/bookmarks` 주소는 같은 사이트 경로 검사 통과) |
+
+API: `PUT /api/bookmarks`(새), `PUT /api/notify-settings`(`deadlineEnabled` 추가).

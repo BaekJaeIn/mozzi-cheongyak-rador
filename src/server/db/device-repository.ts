@@ -37,8 +37,10 @@ export function createDeviceRepository(db: DbClient): DeviceRepository {
       return data === true;
     },
 
-    async updateNotifySettings(deviceId, { hour, enabled }) {
-      const { error } = await db.from("devices").update({ notify_hour: hour, notify_enabled: enabled }).eq("id", deviceId);
+    async updateNotifySettings(deviceId, { hour, enabled, deadlineEnabled }) {
+      const patch: Record<string, unknown> = { notify_hour: hour, notify_enabled: enabled };
+      if (deadlineEnabled !== undefined) patch.deadline_enabled = deadlineEnabled; // 변경 3 (0014)
+      const { error } = await db.from("devices").update(patch).eq("id", deviceId);
       if (error) throw new DbError("devices.updateNotifySettings", error);
     },
   };

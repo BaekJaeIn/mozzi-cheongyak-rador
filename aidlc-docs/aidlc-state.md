@@ -101,5 +101,7 @@
 - [x] U4 Functional Design (2026-10-20 승인)
 - [x] U4 Code Generation (2026-10-20 승인, 커밋 a648655)
 - [x] U5 Functional Design (2026-10-20 승인)
-- [ ] U5 Code Generation — Step 0~5 완료 (단위 815, pgTAP 168, E2E 83+3), 승인 대기
+- [x] U5 Code Generation (2026-10-20 승인, 커밋 568b2d8)
+- [x] U6 Functional Design (2026-10-20 승인)
+- [ ] U6 Code Generation — Step 0~6 완료 (단위 839, pgTAP 185, E2E 89+3), 승인 대기
 - 참고: 변경 2 Build and Test는 05:10 운영 수집 결과 확인 뒤 승인 요청

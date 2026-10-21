@@ -119,7 +119,7 @@ const itemArb = fc
   )
   .map((notices) => {
     const eligible = notices.filter((n) => n.verdict === "eligible").length;
-    return { deviceId: "dev", notices, counts: { eligible, unknown: notices.length - eligible } };
+    return { deviceId: "dev", notices, counts: { eligible, unknown: notices.length - eligible }, deadlines: [] }; // 변경 3: 마감 임박 없음 = 변경 전 문구
   });
 
 test.prop([itemArb, isoDateArb])("P-U6-4 알림 내용: 1건이면 상세·여러 건이면 피드, 건수 일치, 2KB 이하", (item, today) => {

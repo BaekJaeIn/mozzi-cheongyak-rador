@@ -4,6 +4,8 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
   cleanupFeedNotices,
+  deadlineSetting,
+  serverBookmarks,
   type FeedFixture,
   hasLocalDb,
   type RegionFixture,
@@ -284,4 +286,49 @@ test("노부부 가구는 그대로: 카드에 신청 방법 줄이 없고 상�
   await card(page, fx.open.name).getByRole("link").first().click();
   await expect(page.getByRole("heading", { name: "노부부 가구가 볼 점" })).toBeVisible();
   await expect(page.getByText("신청 방법", { exact: true })).toHaveCount(0);
+});
+
+// ---------- 변경 3 U6: 관심 공고 서버 저장·마감 알림 스위치 (BR-U6-D1~D5·D40~D42) ----------
+
+const deviceIdOf = (page: Page) => page.evaluate(() => JSON.parse(window.localStorage.getItem("mz.device")!).deviceId as string);
+
+test("별표하면 서버 관심 공고 목록이 기기와 같아지고, 빼면 서버에서도 빠진다 (BR-U6-D1)", async ({ page }) => {
+  await openFeed(page);
+  const id = await deviceIdOf(page);
+  const saved = page.waitForResponse((r) => r.url().endsWith("/api/bookmarks") && r.request().method() === "PUT");
+  await card(page, fx.open.name).getByRole("button", { name: "관심 공고 저장" }).click();
+  expect((await saved).status()).toBe(200);
+  await expect.poll(() => serverBookmarks(id)).toEqual([fx.open.id]);
+
+  const removed = page.waitForResponse((r) => r.url().endsWith("/api/bookmarks") && r.request().method() === "PUT");
+  await card(page, fx.open.name).getByRole("button", { name: "관심 공고에서 빼기" }).click();
+  expect((await removed).status()).toBe(200);
+  await expect.poll(() => serverBookmarks(id)).toEqual([]);
+});
+
+test("업데이트 전부터 있던 별표는 앱을 열 때 한 번 서버로 간다 (BR-U6-D3)", async ({ page }) => {
+  await page.addInitScript((noticeId) => {
+    if (window.localStorage.getItem("mz.bookmarks") === null) {
+      const snapshot = { title: "옛 별표", complexName: null, districts: [], applyStart: null, applyEnd: null, supplyTypes: [] };
+      window.localStorage.setItem("mz.bookmarks", JSON.stringify({ version: 1, items: [{ id: noticeId, savedAt: "2026-10-15T00:00:00.000Z", snapshot }] }));
+    }
+  }, fx.upcoming.id);
+  await openFeed(page);
+  const id = await deviceIdOf(page);
+  await expect.poll(() => serverBookmarks(id), { timeout: 15_000 }).toEqual([fx.upcoming.id]);
+  expect(await page.evaluate(() => JSON.parse(window.localStorage.getItem("mz.bookmarks.sync")!).sync.state)).toBe("synced");
+});
+
+test("설정: 관심 공고 마감 알림 스위치는 기본 켜짐, 끄면 서버에 저장 (BR-U6-D40·D41)", async ({ page }) => {
+  await openFeed(page);
+  const id = await deviceIdOf(page);
+  await page.goto("/settings");
+  const sw = page.getByRole("switch", { name: /관심 공고 마감 알림/ });
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  const saved = page.waitForResponse((r) => r.url().endsWith("/api/notify-settings"));
+  await sw.click();
+  expect((await saved).status()).toBe(200);
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  await expect.poll(() => deadlineSetting(id)).toBe(false);
+  await axe(page);
 });
