@@ -116,9 +116,9 @@
 
 | 순서 | 작업 | 상태 |
 |---|---|---|
-| 1 | `npx supabase db push --linked` (0012·0013·0014) → `migration list --linked` | ⏳ 확인 대기 |
-| 2 | `npx supabase functions deploy collect analyze dispatch` | ⏳ |
-| 3 | `git push` (커밋 7개, Vercel 배포) → 운영 번들에 새 문구 확인 | ⏳ |
+| 1 | `npx supabase db push --linked` (0012·0013·0014) → `migration list --linked` | ✅ 2026-10-21 (원격 0012·0013·0014 확인) |
+| 2 | `npx supabase functions deploy collect analyze dispatch` | ✅ 2026-10-21 |
+| 3 | `git push` (`25f8959..4852c3f`, Vercel 배포) → 운영 번들에 새 문구 3개 확인, `/api/health` 200, `PUT /api/bookmarks` 인증 없이 401 | ✅ 2026-10-21 |
 | 4 | 부모님 휴대폰: 피드·상세 그대로인지, 설정에 "가구 종류" 줄 | 사용자 |
 | 5 | 내 휴대폰: 설치 → 신혼부부·예비신혼부부 → 입력 → 알림 켜기 → 별표 | 사용자 |
 | 6 | 다음 날 05:20 analyze의 다시 분석(하루 5건)·`forNewlywed` 확인, 알림 시각 dispatch 기록 | 운영 확인 |

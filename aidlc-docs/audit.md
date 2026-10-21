@@ -1840,3 +1840,19 @@
 **Context**: CONSTRUCTION, 변경 요청 3, Build and Test
 
 ---
+
+## Build and Test (변경 3) — 운영 반영 답
+**Timestamp**: 2026-10-21T12:11:44Z
+**User Input**: "지금 순서대로 반영 (추천)"
+**AI Response**: "운영 반영 시작: 1) db push 0012~0014 2) 함수 배포 3) push"
+**Context**: CONSTRUCTION, 변경 요청 3, Build and Test 운영 반영
+
+---
+
+## Build and Test (변경 3) — 운영 반영 완료
+**Timestamp**: 2026-10-21T12:14:07Z
+**User Input**: (없음)
+**AI Response**: "운영 DB 0012·0013·0014 적용(migration list 확인), collect·analyze·dispatch 배포, push 25f8959..4852c3f, Vercel 운영 번들에 새 문구 확인, /api/health 200, /api/bookmarks 인증 없이 401"
+**Context**: CONSTRUCTION, 변경 요청 3, Build and Test 운영 반영
+
+---
