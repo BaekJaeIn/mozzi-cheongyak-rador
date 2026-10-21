@@ -53,3 +53,10 @@ APP_URL=http://localhost:3123 CRON_SECRET=<함수 env와 같은 값> node script
 | SH 실제 1회 (로컬, U3) | 요청 17번·33.1초(예산 35초), 모집공고 14건, 고덕강일 분양 포함 |
 
 - `collect-regions.test.sql`은 관심 기기 판정 앞에서 다른 기기 프로필을 트랜잭션 안에서만 지운다(로컬 DB에 E2E가 남긴 기기가 섞이지 않게, rollback으로 되돌림).
+
+## 변경 요청 3 결과 (2026-10-21)
+
+| 층 | 결과 |
+|---|---|
+| 스모크 | ✅ **13/13**. dispatch 결과 `{"devices":1,"failed":1,"removedSubscriptions":1}` — 새 `dispatch_deadlines` RPC를 거쳐 정상(가짜 구독 만료 처리) |
+| 한계 | 스모크 프로필은 노부부. 신혼 가구 흐름(입력 → 판정 → 피드·상세)은 E2E `profile.spec.ts`·`feed.spec.ts`가, 마감 임박 발송은 메모리 시뮬레이터(`push/__tests__/change3*.ts`)와 pgTAP(`bookmark-deadline.test.sql`)가 확인 |
