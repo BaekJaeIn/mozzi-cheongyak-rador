@@ -8,7 +8,7 @@ export type JsonObject = { [key: string]: JsonValue };
 
 export type SourceCode = "applyhome" | "lh_rental" | "myhome_complex" | "sh" | "gh";
 export type Tenure = "sale" | "rent";
-export type SummaryStatus = "pending" | "done" | "failed";
+export type SummaryStatus = "pending" | "done" | "failed" | "skipped"; // skipped: 공고문 PDF 없음 (변경 4 BR-U3-E31)
 export type Verdict = "eligible" | "ineligible" | "unknown";
 export type ThresholdKind = "monthly_income" | "total_asset" | "car_value";
 

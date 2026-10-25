@@ -3,7 +3,7 @@
 import { addDays, type IsoDate } from "../domain/dates.ts";
 import { MOCK_PDF_PREFIX, mockExtractionFor, mockRawNotices } from "./mock-data.ts";
 import { APPLYHOME_ENDPOINT, APPLYHOME_MAX_PAGES, APPLYHOME_PER_PAGE, parseApplyhomePage } from "./parsers/applyhome.ts";
-import { ghCardToRaw, ghNetFunnelActive, GH_MAIN_URL, parseGhAttachments, parseGhCards } from "./parsers/gh.ts";
+import { ghCardToRaw, ghNetFunnelActive, GH_MAIN_URL, parseGhAttachments, parseGhCards, parseGhDetailInfo } from "./parsers/gh.ts";
 import {
   isShExcluded,
   isShListPage,
@@ -177,6 +177,7 @@ export function lhCollector(apiKey: string, deps: CollectorDeps): Collector {
           c.notice.dates.applyStart = detail.applyStart ?? c.notice.dates.applyStart;
           c.notice.dates.resultAt = detail.resultAt ?? c.notice.dates.resultAt;
           c.notice.attachments = detail.attachments;
+          c.notice.locationTexts = detail.locationTexts;
         } catch {
           detailFailed += 1;
         }
@@ -208,8 +209,12 @@ export function ghCollector(deps: CollectorDeps): Collector {
         }
         try {
           const detail = await deps.http.getText(n.originalUrl, t);
-          if (!ghNetFunnelActive(detail)) n.attachments = parseGhAttachments(detail, n.originalUrl);
-          else detailFailed += 1;
+          if (!ghNetFunnelActive(detail)) {
+            n.attachments = parseGhAttachments(detail, n.originalUrl);
+            const info = parseGhDetailInfo(detail);
+            n.locationTexts = info.locationTexts;
+            n.hintTexts = info.hintTexts;
+          } else detailFailed += 1;
         } catch {
           detailFailed += 1;
         }

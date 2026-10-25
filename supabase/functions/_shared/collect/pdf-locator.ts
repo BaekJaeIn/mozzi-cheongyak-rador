@@ -2,7 +2,8 @@
 // 실제 GH 첨부(Step 12)는 공고문·포스터·팸플릿·주택내역이 모두 "모집"을 담는다 → 공고문 > 공고 > 모집, 부속 자료는 뒤로.
 import type { Attachment } from "./types.ts";
 
-const isPdf = (a: Attachment) => /\.pdf($|\?)/i.test(a.url) || /\.pdf\s*$/i.test(a.name) || /pdf/i.test(a.name);
+/** 파일 이름 확장자나 주소 경로가 .pdf — "공고문(PDF) …xlsx" 같은 구분 라벨만으로는 고르지 않는다 (변경 4 BR-U3-E30) */
+const isPdf = (a: Attachment) => /\.pdf($|\?)/i.test(a.url) || /\.pdf\s*$/i.test(a.name);
 const SUPPLEMENT = /포스터|팸플릿|팜플렛|리플릿|리플렛|홍보|안내문|주택내역|주택목록|연락처|신청서|서식|배치도|평면도|카탈로그/;
 
 function noticeScore(a: Attachment): number {

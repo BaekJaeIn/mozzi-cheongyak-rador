@@ -102,3 +102,25 @@ export function parseGhAttachments(html: string, pageUrl: string): Attachment[] 
   }
   return out;
 }
+
+/**
+ * 상세 페이지의 공급 위치·주택형 (변경 4 BR-U3-E2·E3·E20).
+ * 소재지는 "…공급정보" 표에서만 읽는다 — "접수처" 표와 페이지 아래 본사 주소는 쓰지 않는다
+ */
+export function parseGhDetailInfo(html: string): { locationTexts: string[]; hintTexts: string[] } {
+  const locationTexts: string[] = [];
+  for (const table of html.matchAll(/<table\b[\s\S]*?<\/table>/gi)) {
+    const caption = htmlToText(table[0].match(/<caption>([\s\S]*?)<\/caption>/i)?.[1] ?? "");
+    if (!caption.includes("공급정보") || caption.includes("접수처")) continue;
+    for (const m of table[0].matchAll(/<th\b[^>]*>\s*소재지\s*<\/th>\s*<td\b[^>]*>([\s\S]*?)<\/td>/gi)) {
+      const text = htmlToText(m[1]!);
+      if (text && !locationTexts.includes(text)) locationTexts.push(text);
+    }
+  }
+  const hintTexts: string[] = [];
+  for (const m of html.matchAll(/<tr\b[^>]*class="[^"]*tb_house_con[^"]*"[^>]*>\s*<td\b[^>]*>([\s\S]*?)<\/td>/gi)) {
+    const text = htmlToText(m[1]!);
+    if (text && !hintTexts.includes(text)) hintTexts.push(text);
+  }
+  return { locationTexts, hintTexts };
+}

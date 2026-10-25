@@ -14,6 +14,7 @@ import { groupNotices } from "../grouping.ts";
 import { inScope } from "../scope.ts";
 import { runAnalyze } from "../analyze-orchestrator.ts";
 import { runCollect } from "../collect-orchestrator.ts";
+import { pickNoticePdfFromSources } from "../pdf-locator.ts";
 import { mockExtractionFor } from "../mock-data.ts";
 import type { NormalizedNotice } from "../types.ts";
 import { blockKeyArb, blockStyleArb, normalizedArb, sourceDateArb } from "../../__tests__/arbitraries/collect.ts";
@@ -138,7 +139,7 @@ test.prop([sourceSubsetArb, sourceSubsetArb])(
 // ---------- 상태 기반 (PBT-06): collect·analyze 반복 ----------
 interface Model {
   /** dedupKey → 상태 */
-  notices: Map<string, { status: "pending" | "done" | "failed"; attempts: number }>;
+  notices: Map<string, { status: "pending" | "done" | "failed" | "skipped"; attempts: number }>;
   ghVariant: number | null;
 }
 interface Real {
@@ -174,7 +175,8 @@ class CollectCmd implements Cmd {
       const key = n.bundle.notice.dedup_key;
       const isGh = n.bundle.notice.primary_source === "gh";
       if (!before.has(n.id) || (isGh && m.ghVariant !== null && m.ghVariant !== this.ghVariant)) {
-        m.notices.set(key, { status: "pending", attempts: 0 });
+        // 공고문 PDF가 없으면 분석 대상 아님 (변경 4 BR-U3-E31) — 첨부는 입력이라 실제 묶음에서 읽는다
+        m.notices.set(key, { status: pickNoticePdfFromSources(n.bundle.sources) ? "pending" : "skipped", attempts: 0 });
       }
     }
     m.ghVariant = this.ghVariant;

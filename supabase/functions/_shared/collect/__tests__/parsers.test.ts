@@ -60,6 +60,7 @@ describe("LH", () => {
         { name: "공고문 고양창릉S3_공고문.pdf", url: "https://apply.lh.or.kr/lhapply/lhFile.do?fileid=111" },
         { name: "기타 평면도.pdf", url: "https://apply.lh.or.kr/lhapply/lhFile.do?fileid=222" },
       ],
+      locationTexts: [], // 단지 블록(dsSbd)이 없는 응답 (변경 4)
     });
   });
 

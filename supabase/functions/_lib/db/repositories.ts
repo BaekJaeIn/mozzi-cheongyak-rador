@@ -8,7 +8,7 @@ import type {
 } from "../../_shared/db/repositories.ts";
 import type { DistrictRow, StoredProfileRow, SupplyTypeLabel, Tenure } from "../../_shared/db/types.ts";
 import type { IncomeBasis } from "../../_shared/domain/requirements.ts";
-import { parseAudiences } from "../../_shared/domain/audiences.ts";
+import { judgementAudiences } from "../../_shared/domain/audiences.ts";
 import { validateRequirements } from "../../_shared/domain/requirements.ts";
 import type { IncomeThreshold } from "../../_shared/eligibility/income-table.ts";
 import { parseNoticeRegions } from "../../_shared/eligibility/area.ts";
@@ -55,6 +55,7 @@ interface NoticeBundleRow {
   regions_ai?: unknown;
   /** 변경 4 — 칸이 없는 옛 DB면 undefined → 빈 배열 */
   audiences?: unknown;
+  audiences_ai?: unknown;
 }
 
 function toNoticeForJudgement(row: NoticeBundleRow): NoticeForJudgement {
@@ -66,7 +67,7 @@ function toNoticeForJudgement(row: NoticeBundleRow): NoticeForJudgement {
     applyEnd: row.apply_end,
     districtIds: (row.notice_districts ?? []).map((d) => d.district_id),
     regions: parseNoticeRegions(row.regions_ai ?? row.regions), // AI가 고친 지역 우선 (변경 2 P-U3-C4)
-    audiences: parseAudiences(row.audiences), // 변경 4 BR-U2-E10
+    audiences: judgementAudiences(row.audiences_ai, row.audiences), // 변경 4 BR-U2-E10, AI 값 우선 (BR-U3-E23)
     units: (row.housing_units ?? []).map((u) => ({
       id: u.id,
       supplyType: u.supply_type,
@@ -84,7 +85,7 @@ export function createNoticeRepository(db: DbClient): Pick<NoticeRepository, "li
         const { data, error } = await db
           .from("notices")
           .select(
-            "id, tenure, announced_at, apply_start, apply_end, regions, regions_ai, audiences, housing_units(id, supply_type, exclusive_area_m2, requirements), notice_districts(district_id)",
+            "id, tenure, announced_at, apply_start, apply_end, regions, regions_ai, audiences, audiences_ai, housing_units(id, supply_type, exclusive_area_m2, requirements), notice_districts(district_id)",
           )
           .order("id")
           .range(from, from + PAGE - 1);

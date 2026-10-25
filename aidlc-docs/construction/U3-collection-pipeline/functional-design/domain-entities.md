@@ -172,3 +172,63 @@ interface ExtractedSummary {
 | `notices.summary` jsonb | `forNewlywed` 키 추가 가능 (형식 그대로) |
 | `supply_type_standards` | `newlywed_special_supply`·`first_time_supply`·`rental_newlywed_supply` 시드 (요건 = U2 신청 방법 표준) |
 | `claim_notices_for_reanalysis(p_limit, p_now)` | 판 1 + done + 관심 지역 안 + 마감 전 + 시도 3회 미만, 오늘 예약한 수를 빼고 최대 5건 |
+
+---
+
+## 변경 요청 4 (2026-10-25) — 위치·대상 찾기, AI 분석 실패
+
+> 근거: requirements §11 (FR-C4-1~4·6~11), 계획 답 Q1~Q4 = A, U2 변경 4(audiences·계층 모름)
+
+### 정규화 공고에 위치 글·단서 글
+
+```ts
+interface NormalizedNotice {
+  // …기존 (sido, sigungu, location, title, attachments …)
+  /** 원천의 "공급 위치" 칸 값들 — 청약홈 HSSPLY_ADRES, LH dsSbd[].LCT_ARA_ADR, GH 공급정보 표의 소재지. 접수처·본사 주소는 넣지 않는다 */
+  locationTexts: string[];
+  /** 지구 이름·대상 낱말을 찾을 글 — 제목, 공고문 첨부 이름(서식·양식 제외), GH 주택형 칸 */
+  hintTexts: string[];
+  /** 제목·단서 글에서 찾은 신청 대상 (BR-U3-E20) */
+  audiences: NoticeAudience[];
+}
+```
+
+| 원천 | `locationTexts` | `hintTexts`에 더하는 것 |
+|---|---|---|
+| 청약홈 | `HSSPLY_ADRES` | — |
+| LH | 상세 `dsSbd[].LCT_ARA_ADR` 모두 (⚠ `dsCtrtPlc` 접수처 제외) | 공고문 첨부 이름 |
+| GH 행복주택(sr7150) | 상세 "사업지구별 공급정보" 표의 **소재지** 칸 (⚠ 페이지 아래 본사 주소 제외) | 공고문 첨부 이름, 주택형 칸 (예: "25A 기업체기숙사") |
+| GH 매입임대(sr7155) | 없음 | 공고문 첨부 이름 (예: "…(일반) 부천. 김포 …") |
+| SH | 지금 그대로 | 공고문 첨부 이름 |
+
+### Gemini 추출에 `audiences`
+
+```ts
+interface Extraction {
+  // …기존 (isNotice, units, summary, supplySigungu …)
+  /** 공고가 특정 대상만 받으면 그 대상들(U2 NoticeAudience 값), 누구나 받으면 [], 모르면 null */
+  audiences: NoticeAudience[] | null;
+}
+```
+
+- 응답 스키마: 문자열 배열(값은 U2 대상 9개 중), null 허용. 형식이 틀린 값은 버린다
+
+### 저장 (0016)
+
+| 칸 | 뜻 |
+|---|---|
+| `notices.audiences` (0015) | 제목·단서 글에서 찾은 대상 — 수집이 채움 |
+| `notices.audiences_ai text[] null` | 공고문 AI가 읽은 대상. null = 분석 전·실패 또는 AI가 비움 |
+| `notices.ai_last_error text null` | 마지막 분석 실패 이유 `코드: 짧은 설명`(200자 이내, 키·주소 쿼리 없음). 성공하면 null |
+| `summary_status`에 `skipped` 추가 | 분석할 공고문이 어느 원천에도 없음(청약홈 단독) — 예약하지 않고 실패로 세지 않음 |
+
+- 판정 입력의 대상 = `audiences_ai`가 비어 있지 않으면 그것, 아니면 `audiences` (Q4=A). U2 저장소 읽기(`toNoticeForJudgement`)가 이 규칙을 쓴다
+- `upsert_notice_bundle`이 `audiences`·`audiences_ai`·`ai_last_error`를 받는다(키가 없으면 그대로)
+
+### Gemini 모델
+
+- 함수 환경 변수 `GEMINI_MODEL`, 없으면 **`gemini-3.5-flash`**, 출력 한도 16,384토큰 (코드 단계에서 고침, 2026-10-25). 새 프로젝트 키는 `gemini-2.5-flash`를 쓸 수 없다. 큰 공고문(경기행복주택 추가모집 PDF 1.7MB·5.8만 토큰)으로 재 보니: 3.8-flash는 503(수요 폭주)·2~4분 → 호출 60초·함수 150초 한도에 안 맞음, 3.5-flash-lite는 35초지만 주택형을 1개로 뭉침, **3.5-flash는 31초에 주택형 5개·대상·공급 위치 15곳 정확**(8,192토큰에서는 한 번 JSON이 잘림 → 16,384)
+
+### 정규화 판
+
+- `NORMALIZE_VERSION = 4`를 변경 감지 해시 입력에 넣는다 → 배포 뒤 첫 수집에서 모든 공고가 "바뀜"으로 다시 저장된다(지역·대상·제목 분류 주택형 다시 계산, 분석 다시 대기 — BR-U3-E40)

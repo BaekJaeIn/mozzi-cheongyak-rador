@@ -1,5 +1,6 @@
 // Gemini 추출 지시문·응답 스키마 (BR-U3-62·63, P-U3-S3)
 // 프로필·가족 정보는 넣지 않는다 (FR-4.5). PDF 내용은 지시가 아니라 분석할 자료다.
+import { NOTICE_AUDIENCES } from "../domain/audiences.ts";
 
 export const SYSTEM_INSTRUCTION = [
   "너는 한국 공공주택·분양 입주자 모집공고문에서 사실만 뽑아 JSON으로 돌려주는 도구다.",
@@ -33,6 +34,7 @@ export function buildUserPrompt(input: { title: string; supplyTypeHint: string }
     "- lotteryRealEstateMaxManwon: 소득 기준을 넘어도 추첨으로 신청할 수 있는 부동산 가액 상한(만원)",
     "- summary.eligibilityPlain: 신청 자격을 어르신도 이해할 쉬운 말로 3~5문장",
     "- summary.forSeniorCouple: 만 60세 이상 부부 2인 가구가 특히 볼 점을 2~3문장 (가족 정보는 모르니 일반적으로)",
+    "- audiences: 이 공고가 특정 대상만 신청할 수 있으면 그 대상들. 값: dormitory(기업체 기숙사 — 회사가 신청), startup(창업자), artist(예술인), student(대학생·공공기숙사), youth(청년 전용), disabled(장애인 전용), low_income(수급자·차상위·한부모 등 소득 계층 전용), senior(고령자·어르신), newlywed(신혼부부·신생아·예비신혼). 계층이 여럿이면(예: 행복주택 청년·신혼부부·고령자) 모두. 일반 무주택자 누구나 신청할 수 있으면 [], 알 수 없으면 null",
     "- summary.forNewlywed: 신혼부부·예비신혼부부가 특히 볼 점을 2~3문장 (예비신혼 신청 가능 여부, 맞벌이 소득 기준, 생애최초 여부 — 가족 정보는 모르니 일반적으로)",
   ].join("\n");
 }
@@ -111,6 +113,8 @@ export const RESPONSE_SCHEMA = {
       },
     },
     supplySigungu: nullableStringArray,
+    // 변경 4 BR-U3-E22: 값은 U2 NoticeAudience
+    audiences: { type: "array", items: { type: "string", enum: [...NOTICE_AUDIENCES] }, nullable: true },
     summary: {
       type: "object",
       nullable: true,

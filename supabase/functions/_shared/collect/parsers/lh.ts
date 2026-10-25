@@ -97,6 +97,8 @@ export interface LhDetail {
   applyStart: string | null;
   resultAt: string | null;
   attachments: Attachment[];
+  /** 단지 주소 dsSbd[].LCT_ARA_ADR (변경 4 BR-U3-E2). 접수처 dsCtrtPlc는 쓰지 않는다 (E3) */
+  locationTexts: string[];
 }
 
 /** 상세 응답 → 접수 시작(공급일정 중 가장 이른 시작), 발표일, 첨부 */
@@ -125,5 +127,6 @@ export function parseLhDetail(json: unknown): LhDetail {
       }
     }
   }
-  return { applyStart: starts[0] ?? null, resultAt: results[0] ?? null, attachments };
+  const locationTexts = [...new Set(lhRows(json, "dsSbd").map((r) => String(r.LCT_ARA_ADR ?? "").trim()).filter(Boolean))];
+  return { applyStart: starts[0] ?? null, resultAt: results[0] ?? null, attachments, locationTexts };
 }

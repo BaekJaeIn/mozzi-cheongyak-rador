@@ -3,6 +3,7 @@
 import type { IsoDate } from "../domain/dates.ts";
 import type { RecomputeAllSummary } from "../services/judgement-service.ts";
 import { baseFromGroup, buildBundle, buildUnits } from "./bundle.ts";
+import { pickNoticePdfFromSources } from "./pdf-locator.ts";
 import { groupNotices } from "./grouping.ts";
 import { isDistrictCandidate, normalizeNotice } from "./normalize.ts";
 import { type Clock, type Collector, type CollectRepository, errorMessage, type Recomputer } from "./ports.ts";
@@ -145,7 +146,9 @@ export async function runCollect(deps: CollectDeps, opts: CollectOptions): Promi
     if (!isGroupChanged(group, stored)) continue; // BR-U3-51
     changed += 1;
     const base = baseFromGroup(group);
-    const bundle = buildBundle(base, buildUnits(base, null, standards), { summary_status: "pending", ai_attempts: 0 }); // P-U3-R4
+    // P-U3-R4. 공고문 PDF가 어느 원천에도 없으면 분석 대상 아님 (변경 4 BR-U3-E31)
+    const summaryStatus = pickNoticePdfFromSources(base.sources) ? "pending" : "skipped";
+    const bundle = buildBundle(base, buildUnits(base, null, standards), { summary_status: summaryStatus, ai_attempts: 0 });
     try {
       await repo.upsertBundle(bundle);
       saved += 1;

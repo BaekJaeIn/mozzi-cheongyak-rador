@@ -31,7 +31,7 @@ export interface StoredSourceState {
   noticeId: string;
   dedupKey: string;
   contentHash: string;
-  summaryStatus: "pending" | "done" | "failed";
+  summaryStatus: "pending" | "done" | "failed" | "skipped";
   aiAttempts: number;
 }
 
@@ -45,11 +45,12 @@ export interface CollectRepository {
   upsertBundle(bundle: NoticeBundle): Promise<string>;
   claimForAnalysis(limit: number, now: Date): Promise<string[]>;
   loadForAnalysis(noticeId: string): Promise<{ base: BundleBase; aiAttempts: number } | null>;
-  releaseClaim(noticeId: string, failed: boolean): Promise<void>;
+  /** error: 실패 이유 "코드: 설명" (변경 4 BR-U3-E32) */
+  releaseClaim(noticeId: string, failed: boolean, error?: string | null): Promise<void>;
   /** 다시 분석 대상 (변경 3 BR-U3-D31): 판 1·요약 완료·관심 지역 안·마감 전, 하루 5건 상한은 저장소가 지킨다 */
   claimForReanalysis(limit: number, now: Date): Promise<string[]>;
   /** 다시 분석 실패: 요약·주택형·판은 그대로, 시도 +1 (BR-U3-D32) */
-  releaseReanalysis(noticeId: string): Promise<void>;
+  releaseReanalysis(noticeId: string, error?: string | null): Promise<void>;
   recordRun(record: CollectRunRecord): Promise<void>;
 }
 
@@ -87,6 +88,12 @@ export class StepError extends Error {
 /** 오류 문구에서 URL 쿼리(API 키)를 지운다 (BR-U3-72, P-U3-S2) */
 export function redactUrls(text: string): string {
   return text.replace(/(https?:\/\/[^\s?#"']+)\?[^\s"']*/g, "$1?[redacted]");
+}
+
+/** 공고별 실패 이유: "코드: 설명" 200자, URL 쿼리는 지운다 (변경 4 BR-U3-E32) */
+export function failureReason(code: AnalyzeFailure, e: unknown): string {
+  const detail = e instanceof Error && e.message !== code ? redactUrls(e.message) : "";
+  return (detail ? `${code}: ${detail}` : code).slice(0, 200);
 }
 
 export function errorMessage(e: unknown): string {

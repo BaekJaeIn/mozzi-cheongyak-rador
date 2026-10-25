@@ -113,5 +113,7 @@
 - [-] User Stories — 생략 (기존 스토리 결함 수정)
 - [x] Workflow Planning — change-4-execution-plan.md (2026-10-25 승인)
 - [x] U2 Functional Design (2026-10-25 승인)
-- [ ] U2 Code Generation — 완료, 승인 대기 (로컬 커밋)
+- [x] U2 Code Generation (2026-10-25 승인, 커밋 14fc544)
+- [x] U3 Functional Design (2026-10-25 승인)
+- [ ] U3 Code Generation — 완료, 승인 대기 (로컬 커밋)
 - 계획: U2(FD·Code) → U3(FD·Code) → U5(FD 작게·Code) → Build and Test

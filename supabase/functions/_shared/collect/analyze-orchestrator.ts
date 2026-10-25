@@ -12,6 +12,7 @@ import {
   type Clock,
   type CollectRepository,
   errorMessage,
+  failureReason,
   type Extractor,
   type PdfFetcher,
   type Recomputer,
@@ -52,7 +53,7 @@ export interface AnalyzeSummary {
 }
 
 /** 변경 3: 분석 판 — 이 코드로 분석한 공고 (BR-U3-D30) */
-export const ANALYSIS_VERSION = 2;
+export const ANALYSIS_VERSION = 3; // 변경 4 BR-U3-E34: 신청 대상 추출
 
 async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: StandardRequirements, reanalysis = false): Promise<AnalyzeOutcome> {
   const loaded = await deps.repo.loadForAnalysis(noticeId);
@@ -97,6 +98,8 @@ async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: Standa
       analysis_version: ANALYSIS_VERSION,
       // 공고문의 공급 위치로 "시도까지만" 지역 고치기 — 고칠 것이 없으면 null (BR-U3-C9, P-U3-C4)
       regions_ai: applyAiRegions(base.regions, extraction.supplySigungu ?? null),
+      audiences_ai: extraction.audiences ?? null, // 변경 4 BR-U3-E22 — 판정은 비어 있지 않을 때만 쓴다 (E23)
+      ai_last_error: null,
     },
     fillSchedule(base.schedule, extraction.schedule), // BR-U3-66
   );
@@ -123,7 +126,8 @@ export async function runAnalyze(deps: AnalyzeDeps, opts: AnalyzeOptions): Promi
   for (const [i, noticeId] of ids.entries()) {
     const reanalysis = reanalysisIds.has(noticeId);
     // 실패·미룸 처리: 새 공고는 지금처럼, 다시 분석은 요약을 지키고 시도만 +1 (BR-U3-D32)
-    const release = (failed: boolean) => (reanalysis ? deps.repo.releaseReanalysis(noticeId) : deps.repo.releaseClaim(noticeId, failed));
+    const release = (failed: boolean, reason: string | null = null) =>
+      reanalysis ? deps.repo.releaseReanalysis(noticeId, reason) : deps.repo.releaseClaim(noticeId, failed, reason);
     if (i > 0 && deps.clock.nowMs() - opts.startedAtMs > cutoff) {
       await release(false); // 시간 예산 초과 — 다음 실행으로
       outcomes.push({ noticeId, status: "deferred" });
@@ -133,7 +137,7 @@ export async function runAnalyze(deps: AnalyzeDeps, opts: AnalyzeOptions): Promi
       outcomes.push(await analyzeOne(deps, noticeId, standards, reanalysis));
     } catch (e) {
       const code: AnalyzeFailure = e instanceof StepError ? e.code : "gemini_error";
-      await release(true).catch(() => undefined); // ai_attempts + 1 (다시 분석은 reanalysis_attempts + 1)
+      await release(true, failureReason(code, e)).catch(() => undefined); // ai_attempts + 1 (다시 분석은 reanalysis_attempts + 1), 실패 이유 (E32)
       outcomes.push({ noticeId, status: "failed", code });
     }
   }

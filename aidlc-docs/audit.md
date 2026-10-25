@@ -1977,3 +1977,60 @@
 **Context**: 변경 요청 4, U2 Code Generation
 
 ---
+
+## U2 Code Generation (변경 4) — 승인 / U3 Functional Design 시작
+**Timestamp**: 2026-10-25T08:50:00Z
+**User Input**: "진행"
+**AI Response**: "U2 코드 승인 기록(14fc544). U3 기능 설계 시작 — 먼저 AI 분석 실패 원인 재현(PDF 내려받기 단계)"
+**Context**: 변경 요청 4, U3 Functional Design
+
+---
+
+## U3 Functional Design (변경 4) — 조사·계획·질문
+**Timestamp**: 2026-10-25T09:20:00Z
+**User Input**: (없음)
+**AI Response**: "AI 분석 실패 원인 확인: gemini_error = Gemini 402 RESOURCE_EXHAUSTED(선불 크레딧 소진, 재현 1회), no_pdf = 청약홈 첨부 미수집, pdf_fetch = '(PDF)' 라벨 엑셀을 PDF로 고르는 버그. 원천 위치 칸 확인(LH dsSbd.LCT_ARA_ADR, GH 소재지, 청약홈 HSSPLY_ADRES; 접수처·본사 주소 제외). U3-collection-pipeline-change-4-functional-design-plan.md 작성, 질문 Q1(Gemini 키)·Q2(청약홈 PDF)·Q3(대상 낱말 표)·Q4(AI vs 제목 우선)"
+**Context**: 변경 요청 4, U3 Functional Design
+
+---
+
+## U3 Functional Design (변경 4) — 답 / 완료, 승인 요청
+**Timestamp**: 2026-10-25T09:50:00Z
+**User Input**: "1. 바꿔서 env.local에 넣었어.
+나머지는 추천대로 해줘"
+**AI Response**: "Q1=A(새 무료 키, .env.local). 새 키 확인: gemini-2.5-flash 404(새 사용자 제공 안 함), gemini-3.8-flash로 같은 요청 200·JSON 정상. Q2~Q4=A. U3 domain-entities·business-rules 12절(BR-U3-E1~E42)·business-logic-model 변경 4 작성(모델 GEMINI_MODEL 기본 gemini-3.8-flash 포함). 승인 요청"
+**Context**: 변경 요청 4, U3 Functional Design
+
+---
+
+## U3 Functional Design (변경 4) — 승인 / Code Generation 계획
+**Timestamp**: 2026-10-25T10:00:00Z
+**User Input**: "진행"
+**AI Response**: "U3 기능 설계 승인 기록. U3-collection-pipeline-change-4-code-generation-plan.md 작성(Step 1~11), 계획 승인 요청"
+**Context**: 변경 요청 4, U3 Code Generation Part 1
+
+---
+
+## U3 Code Generation (변경 4) — 계획 승인
+**Timestamp**: 2026-10-25T10:05:00Z
+**User Input**: "승인"
+**AI Response**: "계획 승인 기록, Step 1부터 코드 생성"
+**Context**: 변경 요청 4, U3 Code Generation Part 2
+
+---
+
+## U3 Code Generation (변경 4) — 모델 측정으로 설계 고침
+**Timestamp**: 2026-10-25T11:30:00Z
+**User Input**: (없음)
+**AI Response**: "로컬 analyze에서 큰 공고문이 gemini-3.8-flash 60초 초과(ai_last_error로 기록 확인). 같은 PDF 측정: 3.8-flash 503·130~225초, 3.5-flash-lite 35초(주택형 1개로 뭉침), 3.5-flash 출력 16384로 31초·정확. 기본 모델 gemini-3.5-flash, 출력 한도 16384로 바꾸고 BR-U3-E33·domain-entities 고침"
+**Context**: 변경 요청 4, U3 Code Generation (설계 보완)
+
+---
+
+## U3 Code Generation (변경 4) — 완료, 승인 요청
+**Timestamp**: 2026-10-25T12:20:00Z
+**User Input**: (없음)
+**AI Response**: "Step 1~11 완료. 로컬 실제 collect로 신고 9건 지역·대상 확인, 로컬 analyze로 실패 이유 기록·새 모델 성공 확인. 기본 모델 gemini-3.5-flash(측정), 목록 대상 규칙 보완(BR-U3-E24). 검증: typecheck·lint·deno check, 단위 914(3회), pgTAP 202, 로컬 E2E 89 통과·3 건너뜀. 로컬 커밋, 승인 요청"
+**Context**: 변경 요청 4, U3 Code Generation
+
+---

@@ -73,8 +73,8 @@ export function createCollectRepository(db: DbClient): CollectRepository {
       return data ? baseFromStoredNotice(data as StoredNoticeRow) : null;
     },
 
-    async releaseClaim(noticeId, failed) {
-      const { error } = await db.rpc("release_notice_claim", { p_notice_id: noticeId, p_failed: failed });
+    async releaseClaim(noticeId, failed, reason = null) {
+      const { error } = await db.rpc("release_notice_claim", { p_notice_id: noticeId, p_failed: failed, p_error: reason });
       if (error) throw new DbError("release_notice_claim", error);
     },
 
@@ -84,8 +84,8 @@ export function createCollectRepository(db: DbClient): CollectRepository {
       return ((data ?? []) as (string | { id: string })[]).map((r) => (typeof r === "string" ? r : r.id));
     },
 
-    async releaseReanalysis(noticeId) {
-      const { error } = await db.rpc("release_reanalysis", { p_notice_id: noticeId });
+    async releaseReanalysis(noticeId, reason = null) {
+      const { error } = await db.rpc("release_reanalysis", { p_notice_id: noticeId, p_error: reason });
       if (error) throw new DbError("release_reanalysis", error);
     },
 

@@ -142,15 +142,25 @@ describe("runAnalyze", () => {
     expect(recomputer.calls).toBe(1);
   });
 
-  it("PDF가 없으면 실패로 세고, 3번 실패하면 더 고르지 않는다 (BR-U3-55)", async () => {
+  it("공고문 PDF가 어느 원천에도 없으면 분석 대상 아님 — 고르지 않고 실패로 세지 않는다 (변경 4 BR-U3-E31)", async () => {
     const box = await collectOnce();
     const clock = fakeClock();
     for (let i = 0; i < 6; i++) await analyzeOnce(box, { clock });
     const gyeyang = [...box.notices.values()].find((n) => n.bundle.notice.title.startsWith("인천계양"))!;
-    expect(gyeyang).toMatchObject({ summaryStatus: "failed", aiAttempts: 3 });
-    const before = gyeyang.aiAttempts;
-    await analyzeOnce(box, { clock });
-    expect(gyeyang.aiAttempts).toBe(before);
+    expect(gyeyang).toMatchObject({ summaryStatus: "skipped", aiAttempts: 0, lastError: null });
+  });
+
+  it("분석이 실패하면 공고별 실패 이유를 남기고, 3번 실패하면 더 고르지 않는다 (BR-U3-55, 변경 4 BR-U3-E32)", async () => {
+    const box = await collectOnce();
+    const clock = fakeClock();
+    const extractor = fakeExtractor(() => "{broken");
+    for (let i = 0; i < 12; i++) await analyzeOnce(box, { clock, extractor });
+    const failed = [...box.notices.values()].filter((n) => n.summaryStatus === "failed");
+    expect(failed.length).toBeGreaterThan(0);
+    for (const n of failed) expect(n).toMatchObject({ aiAttempts: 3, lastError: expect.stringMatching(/^invalid_json/) });
+    const before = failed.map((n) => n.aiAttempts);
+    await analyzeOnce(box, { clock, extractor });
+    expect(failed.map((n) => n.aiAttempts)).toEqual(before);
   });
 
   it("처리할 공고가 없으면 Gemini·재계산을 부르지 않는다", async () => {

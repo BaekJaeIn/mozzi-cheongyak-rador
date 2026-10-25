@@ -22,6 +22,11 @@ export function incheonNewGu(oldGu: string, text: string): string | null {
   return null;
 }
 
+/** 특례시 이름 → 목록 이름: "화성특례시" → "화성시" (변경 4 BR-U3-E1). 멱등 */
+export function withoutSpecialCity(name: string): string {
+  return name.replace(/특례시$/, "시");
+}
+
 /**
  * 시군구 문자열을 공용 목록 값으로 (BR-U3-C4): 그대로 / "고양시 덕양구" → 고양시 / 인천 옛 구 → 새 구 / 못 맞추면 null.
  * `text`는 인천 옛 구를 가를 때 쓰는 주소·제목
@@ -29,8 +34,8 @@ export function incheonNewGu(oldGu: string, text: string): string | null {
 export function matchCapitalSigungu(sido: CapitalSido, sigungu: string | null, text = ""): string | null {
   if (!sigungu) return null;
   const list = CAPITAL_SIGUNGU[sido];
-  const parts = sigungu.trim().split(/\s+/);
-  for (const p of parts) if (list.includes(p)) return p; // "고양시 덕양구" → 고양시, "강서구" → 강서구
+  const parts = sigungu.trim().split(/\s+/).map(withoutSpecialCity);
+  for (const p of parts) if (list.includes(p)) return p; // "고양시 덕양구" → 고양시, "강서구" → 강서구, "화성특례시" → 화성시
   if (sido === "인천") {
     const gu = parts.find((p) => ["중구", "동구", "서구"].includes(p));
     if (gu) {

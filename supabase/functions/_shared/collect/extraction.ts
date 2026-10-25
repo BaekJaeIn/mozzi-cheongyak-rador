@@ -1,6 +1,7 @@
 // Gemini 응답 검증 (BR-U3-63·64): 어떤 JSON이 와도 예외 없이 검증 결과 또는 null
 import { type Requirements, validateRequirements } from "../domain/requirements.ts";
 import { parseSourceDate } from "./dates.ts";
+import { type NoticeAudience, parseAudiences } from "../domain/audiences.ts";
 import { SCHEDULE_KEYS, type ExtractedUnit, type NoticeExtraction, type Schedule } from "./types.ts";
 
 export const SUMMARY_MAX_CHARS = 600;
@@ -131,6 +132,11 @@ function parseSupplySigungu(v: unknown): string[] | null {
   return out.length > 0 ? out : null;
 }
 
+/** 신청 대상 (변경 4 BR-U3-E22): 배열이 아니면 null(모름), 형식이 틀린 값은 버린다 */
+function parseAudienceList(v: unknown): NoticeAudience[] | null {
+  return Array.isArray(v) ? parseAudiences(v) : null;
+}
+
 /** 응답 전체 검증. 최상위 형식이 틀리면 null (실패로 셈) */
 export function parseExtraction(json: unknown): NoticeExtraction | null {
   if (!isObject(json) || typeof json.isNotice !== "boolean") return null;
@@ -138,5 +144,8 @@ export function parseExtraction(json: unknown): NoticeExtraction | null {
   const units = Array.isArray(json.units)
     ? json.units.slice(0, MAX_UNITS).map(parseUnit).filter((u): u is ExtractedUnit => u !== null)
     : [];
-  return { isNotice: true, schedule: parseSchedule(json.schedule), units, summary: parseSummary(json.summary), supplySigungu: parseSupplySigungu(json.supplySigungu) };
+  return { isNotice: true, schedule: parseSchedule(json.schedule), units, summary: parseSummary(json.summary),
+    supplySigungu: parseSupplySigungu(json.supplySigungu),
+    audiences: parseAudienceList(json.audiences),
+  };
 }

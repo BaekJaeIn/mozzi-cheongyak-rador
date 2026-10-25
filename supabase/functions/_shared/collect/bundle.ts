@@ -6,6 +6,7 @@ import { resolveRequirements } from "../domain/requirement-resolver.ts";
 import { classifySupplyType, type SupplyTypeCode } from "../domain/supply-types.ts";
 import type { JsonObject } from "../db/types.ts";
 import type { NoticeRegion } from "../eligibility/types.ts";
+import { NOTICE_AUDIENCES, type NoticeAudience } from "../domain/audiences.ts";
 import { mergedSchedule } from "./grouping.ts";
 import { mergeRegions } from "./regions.ts";
 import {
@@ -34,6 +35,8 @@ export interface BundleBase {
   schedule: Schedule;
   districtIds: string[];
   regions: NoticeRegion[];
+  /** 묶음의 신청 대상 = 합집합 (변경 4). 저장된 공고에서 만든 base(analyze)는 없음 → 저장 값 그대로 */
+  audiences?: NoticeAudience[];
   sources: NoticeBundle["sources"];
 }
 
@@ -53,6 +56,7 @@ export function baseFromGroup(group: NoticeGroup): BundleBase {
     schedule: mergedSchedule(group),
     districtIds: [...new Set(group.members.flatMap((m) => m.districtIds))].sort(),
     regions: mergeRegions(...group.members.map((m) => m.regions)), // 묶음 지역 = 합집합 (BR-U3-C7)
+    audiences: NOTICE_AUDIENCES.filter((a) => group.members.some((m) => m.audiences.includes(a))),
     sources: group.members.map((m) => ({
       source: m.source,
       source_notice_no: m.sourceNoticeNo,
@@ -112,7 +116,10 @@ export function fillSchedule(source: Schedule, extracted: Schedule | null): Sche
 export function buildBundle(
   base: BundleBase,
   units: NoticeBundle["units"],
-  extra: Pick<NoticeBundle, "summary" | "summary_status" | "ai_attempts" | "ai_source_url" | "release_claim" | "regions_ai" | "analysis_version"> = {},
+  extra: Pick<
+    NoticeBundle,
+    "summary" | "summary_status" | "ai_attempts" | "ai_source_url" | "release_claim" | "regions_ai" | "analysis_version" | "audiences_ai" | "ai_last_error"
+  > = {},
   schedule: Schedule = base.schedule,
 ): NoticeBundle {
   const d = (k: keyof Schedule): IsoDate | null => schedule[k];
@@ -134,6 +141,7 @@ export function buildBundle(
       contract_start: d("contractStart"),
       contract_end: d("contractEnd"),
       regions: base.regions,
+      ...(base.audiences ? { audiences: base.audiences } : {}),
     },
     sources: base.sources,
     units,

@@ -36,3 +36,9 @@ export function parseAudiences(value: unknown): NoticeAudience[] {
   if (!Array.isArray(value)) return [];
   return NOTICE_AUDIENCES.filter((a) => value.includes(a));
 }
+
+/** 판정에 쓰는 대상: 공고문 AI 값이 비어 있지 않으면 그것, 아니면 제목·상세 값 (U3 변경 4 BR-U3-E23, Q4=A) */
+export function judgementAudiences(ai: unknown, own: unknown): NoticeAudience[] {
+  const fromAi = parseAudiences(ai);
+  return fromAi.length > 0 ? fromAi : parseAudiences(own);
+}

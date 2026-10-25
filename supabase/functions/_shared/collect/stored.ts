@@ -113,7 +113,7 @@ export interface CollectStateRow {
   notice_id: string;
   dedup_key: string;
   content_hash: string;
-  summary_status: "pending" | "done" | "failed";
+  summary_status: "pending" | "done" | "failed" | "skipped";
   ai_attempts: number;
 }
 
