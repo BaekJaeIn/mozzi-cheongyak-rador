@@ -183,6 +183,7 @@ export const noticeArb: fc.Arbitrary<NoticeForJudgement> = fc.record({
   applyEnd: fc.option(noticeDateArb, { nil: null }),
   districtIds: fc.subarray(DISTRICT_IDS),
   regions: fc.array(noticeRegionArb, { maxLength: 3 }),
+  audiences: fc.constant([]), // 변경 4 대상은 change4 생성기(noticeWithAudiencesArb)에서
   units: fc.array(unitArb, { maxLength: 4 }),
 });
 

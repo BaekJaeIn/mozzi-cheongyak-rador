@@ -189,8 +189,8 @@ describe("번들 (BR-U3-65)", () => {
     const [g] = groupNotices([await norm("gh", 0)]);
     const units = buildUnits(baseFromGroup(g!), null, STANDARD_REQUIREMENTS);
     expect(units).toHaveLength(1);
-    expect(units[0]!.supply_type).toBe("happy_senior");
-    expect(units[0]!.requirements).toEqual(STANDARD_REQUIREMENTS.happy_senior);
+    expect(units[0]!.supply_type).toBe("happy_unknown"); // 제목에 계층이 없다 (변경 4 BR-U2-E20)
+    expect(units[0]!.requirements).toEqual(STANDARD_REQUIREMENTS.happy_unknown);
   });
 
   it("추출 주택형마다 유형·요건 확정", async () => {
@@ -198,7 +198,7 @@ describe("번들 (BR-U3-65)", () => {
     const units = buildUnits(baseFromGroup(g!), parseExtraction(mockExtractionFor("x/wangsuk-happy.pdf")), STANDARD_REQUIREMENTS);
     expect(units.map((u) => [u.label, u.supply_type])).toEqual([
       ["26㎡", "happy_senior"],
-      ["36㎡", "happy_senior"],
+      ["36㎡", "happy_unknown"], // "행복주택 청년" — 고령자 말이 없으면 계층 모름 (변경 4 BR-U2-E20)
     ]);
     // 청년 주택형: 추출 나이 19 ≠ 표준 65 → 구조 조건 불일치 → unknown (BR-U2-24)
     expect((units[1]!.requirements as { age: unknown }).age).toBe("unknown");

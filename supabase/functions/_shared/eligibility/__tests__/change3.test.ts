@@ -64,7 +64,8 @@ describe("신청 방법 (BR-U2-D10·D11·D14)", () => {
   it("가구 종류 × 공급유형", () => {
     expect(routesFor("senior", "private_sale_general")).toEqual(["own_type"]);
     expect(routesFor("newlywed", "private_sale_general")).toEqual(["newlywed_special", "first_time", "general"]);
-    expect(routesFor("newlywed", "happy_senior")).toEqual(["rental_newlywed"]);
+    expect(routesFor("newlywed", "happy_unknown")).toEqual(["rental_newlywed"]); // 변경 4 BR-U2-E22
+    expect(routesFor("newlywed", "happy_senior")).toEqual([]);
     expect(routesFor("newlywed", "newlywed_hope_town")).toEqual(["newlywed_hope"]);
     expect(routesFor("newlywed", "senior_welfare")).toEqual([]);
   });

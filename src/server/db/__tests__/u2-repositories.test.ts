@@ -84,6 +84,7 @@ describe("NoticeRepository.listRetainedWithUnits", () => {
       applyEnd: "2026-09-30",
       districtIds: ["gyosan"],
       regions: [{ sido: "경기", sigungu: "하남시" }], // 수도권 밖·목록 밖·형식 오류는 버린다
+      audiences: [], // 칸이 없으면 빈 배열 (변경 4)
       units: [
         { id: "u1", supplyType: "happy_senior", exclusiveAreaM2: 36.5, requirements: { homeless: { minYears: null } } },
         { id: "u2", supplyType: "happy_senior", exclusiveAreaM2: null, requirements: { unclassified: true } },

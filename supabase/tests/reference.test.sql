@@ -19,7 +19,7 @@ select is(
   5866270::bigint,
   '2026 도시근로자 2인 100% = 5,866,270원');
 
-select is((select count(*)::int from public.supply_type_standards), 13, '공급유형 13개 (0012 신혼희망타운, 0013 신혼·생애최초 물량 포함)');
+select is((select count(*)::int from public.supply_type_standards), 15, '공급유형 15개 (0012 신혼희망타운, 0013 신혼·생애최초 물량, 0015 계층 모름 포함)');
 select is(
   (select requirements -> 'asset' ->> 'maxManwon' from public.supply_type_standards where code = 'happy_senior'),
   '34500',

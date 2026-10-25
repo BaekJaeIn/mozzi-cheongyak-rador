@@ -166,6 +166,7 @@ const SETTINGS_GROUP: Readonly<Record<CriterionKey, GroupId | null>> = {
   welfare: "money",
   marriage: "marriage", // 변경 3 "결혼·자녀" 그룹 (BR-U5-D30)
   firstTime: "housing",
+  audience: null, // 변경 4 — 공고 대상이라 고칠 설정이 없다
 };
 
 /** "설정에서 …" 행동 문구에 다는 고치기 링크 (BR-U5-89). 그 밖의 행동 문구는 링크 없음 */

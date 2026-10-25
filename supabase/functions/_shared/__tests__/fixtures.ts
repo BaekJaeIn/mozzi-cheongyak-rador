@@ -53,6 +53,7 @@ export function makeNotice(units: UnitForJudgement[], overrides: Partial<NoticeF
     applyEnd: "2026-09-30",
     districtIds: ["gyosan"],
     regions: [],
+    audiences: [],
     units,
     ...overrides,
   };

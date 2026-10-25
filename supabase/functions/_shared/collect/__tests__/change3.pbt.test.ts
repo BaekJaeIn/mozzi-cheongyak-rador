@@ -13,6 +13,9 @@ import { createMemoryCollectRepo, fakeClock, fakeExtractor, fakePdf, fakeRecompu
 
 const WORDS = ["행복주택", "국민임대", "영구임대", "공공분양", "민영", "고령자", "일반공급", "특별공급", "신혼부부", "신혼", "생애최초", "신혼희망타운", "무순위", "통합공공임대", "뉴:홈", " ", "A2"];
 const textArb = fc.array(fc.constantFrom(...WORDS), { minLength: 1, maxLength: 5 }).map((ws) => ws.join(""));
+/** 변경 4 BR-U2-E20: 고령자 말이 없으면 국민임대·행복주택은 계층 모름 */
+const withUnknownTier = (code: string, text: string) =>
+  text.includes("고령자") || text.includes("어르신") ? code : ({ national_rental_senior: "national_rental_unknown", happy_senior: "happy_unknown" }[code] ?? code);
 const EARLY = ["무순위", "잔여세대", "계약취소", "취소후재공급", "고령자복지주택"];
 
 test.prop([textArb, fc.constantFrom("applyhome" as const, "lh_rental" as const, null)])("P-U3-D1 분류 순서: 신혼희망타운·임대+신혼은 항상 그 코드, 신혼·생애최초 낱말이 없으면 변경 3 전과 같다", (text, source) => {
@@ -20,7 +23,7 @@ test.prop([textArb, fc.constantFrom("applyhome" as const, "lh_rental" as const, 
   const early = EARLY.some((w) => text.includes(w));
   if (!early && text.includes("신혼희망타운")) expect(code).toBe("newlywed_hope_town");
   else if (!early && text.includes("신혼") && ["행복주택", "국민임대", "영구임대", "통합공공임대"].some((w) => text.includes(w))) expect(code).toBe("rental_newlywed_supply");
-  if (!text.includes("신혼") && !text.includes("생애최초")) expect(code).toBe(legacyClassify({ text, source }));
+  if (!text.includes("신혼") && !text.includes("생애최초")) expect(code).toBe(withUnknownTier(legacyClassify({ text, source }), text));
 });
 
 test.prop([requirementsArb, fc.constantFrom("newlywed_special_supply" as const, "first_time_supply" as const, "rental_newlywed_supply" as const)])(

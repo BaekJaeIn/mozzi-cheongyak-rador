@@ -1864,3 +1864,116 @@
 **Context**: CONSTRUCTION 완료, 변경 요청 3
 
 ---
+
+## 운영 확인 (변경 3)
+**Timestamp**: 2026-10-21T12:17:49Z
+**User Input**: "운영 확인해줘" / "그럼 이제 할거 없어?"
+**AI Response**: "오늘 아침 수집 정상(GH 서울 12건). 21:30 KST analyze(새 코드 첫 실행) 대기 중. 남은 일 안내: 사용자 휴대폰 확인·U6 ⑤⑥·기존 앱 정지, 내일 아침 수집·다시 분석 확인"
+**Context**: 운영 확인
+
+---
+
+## 변경 요청 4 — 요청
+**Timestamp**: 2026-10-25T04:31:44Z
+**User Input**: "현재 내 모바일 기기 조건
+신혼부부 예비신혼부부
+본인 만 30세, 배우자 만 28세, 세대주 본인
+예비신혼 예정일 확인필요 자녀 없음
+경기 부천시 1년 미만
+집 없음 15년이상 집을 가진 적 없음
+내통장 주택청약종합저축 5-10년 배우자통장 주택청약종합저축 확인필요
+본인 월 500만원 배우자 월 300만원 자산 1억5천만원 자동차 500만원
+3기 신도시 2곳(부천대장, 광명시흥) 경기 과천시 외 5곳 (과천시, 광명시, 군포시, 부천시, 안양시, 의왕시)
+40-60 제곱 미터, 60-85제곱미터, 분양 임대
+
+이렇게 설정을 해놨어.
+
+연천BIX 경기행복주택 기업체 기숙사 추가모집 공고 - 이건 어르신 몫인데 여기에 왜 나와?
+
+아크메르 동탄 95, 99 - 이거 2개는 경기도 화성시 공고인데 왜 나와?
+경기남부지역본부 2026년 일반 매입임대주택 입주자 모집공고 - 이건 취약계층만 신청할 수 있는 것 같은데 왜 나와?
+시흥하중 A1블록 신혼희망타운 - 이건 시흥시인데 왜 나와?
+구리갈매 S1블록 10년공공임대주택 예비입주자 모집공고 - 이건 구리시인데 왜 나와?
+시흥거모 S-1블록 공공분약주택 입주자 모집공고 - 이건 시흥시인데 왜 나와?
+26년 경기도형 창업특화주택 입주자 모집 공고 - 이건 창업한사람만 신청할 수 있는 것 같은데 왜 나와?
+이렇게 맞지않는 공고가 왜 나오는지 확인해주고
+지금 공고상세에서 뒤로가기 누르면 바로 어플이 종료돼. 공고상세에서 뒤로가기 누르면 맞춤공고 화면으로 나오고, 거기서 뒤로가기 누르면 바로 종료되는게 아니고, '종료하시려면 뒤로가기 버튼을 한번 더 클릭해주세요.'가 나오고 3초안에 한번 더 누르면 종료되도록 변경해줘"
+**AI Response**: "운영 DB 읽기 조회로 원인 확인: (1) 문제 공고 지역이 모두 경기(시군구 null) — BR-U2-C11로 경기 관심 시군구 전부에 맞음. 화성특례시 미인식 버그, LH 제목(시흥거모·구리갈매) 시군 미추출, GH 주소 '경기도'뿐 (2) AI 분석 50건 중 done 1·failed 17·pending 32 (3) 기숙사→happy_senior→rental_newlywed 확인 필요, 매입임대·창업특화→other→general 확인 필요 (4) 뒤로 버튼 규칙은 있으나 기기에서 동작 안 함(CloseWatcher 경로 의심). 함께 발견: 매시 dispatch가 Vault 값 없음으로 멈춤. 변경 요청 4 Requirements Analysis 시작, change-4-requirements-questions.md 작성"
+**Context**: 변경 요청 4, Workspace Detection(기존 상태 이어서) → Requirements Analysis 질문
+
+---
+
+## 변경 요청 4 — 요구사항 답
+**Timestamp**: 2026-10-25T04:45:00Z
+**User Input**: "1. 제목을 분석해서 맞는지 확인해줘
+2. 추천대로
+3. 남겨줘
+4. 같이 적용"
+**AI Response**: "Q1=X(제목 분석으로 확인), Q2=A, Q3=A, Q4=A로 기록. Q1에서 제목으로도 시·군을 못 찾는 공고 처리가 모호해 추가 질문"
+**Context**: 변경 요청 4, Requirements Analysis 답 검토
+
+---
+
+## 변경 요청 4 — Q1 추가 질문·고침
+**Timestamp**: 2026-10-25T04:50:00Z
+**User Input**: "(추가 질문: 제목·주소·공고문을 다 봐도 시·군을 못 찾는 공고) 숨김 (Recommended)" / "아니다. 공고상세까지 봐서 내가 원하는 지역이 있는지 봐줘"
+**AI Response**: "Q1 = 제목·주소뿐 아니라 원문 공고 상세(본문·첨부 이름·주택 목록)와 공고문 AI까지 봐서 관심 시·군이 있는지 확인. 그래도 못 찾으면 숨김(추가 질문 답 유지)으로 이해. requirements.md §11 작성, 승인 요청"
+**Context**: 변경 요청 4, Requirements Analysis
+
+---
+
+## 변경 요청 4 — Requirements Analysis 완료, 승인 요청
+**Timestamp**: 2026-10-25T04:55:00Z
+**User Input**: (없음)
+**AI Response**: "requirements.md §11 작성 (C4-D1~D6, FR-C4-1~16, NFR-C4-1~4). 승인 요청"
+**Context**: 변경 요청 4, Requirements Analysis
+
+---
+
+## 변경 요청 4 — Requirements Analysis 승인 / Workflow Planning
+**Timestamp**: 2026-10-25T07:08:31Z
+**User Input**: "진행"
+**AI Response**: "requirements §11 승인 기록. User Stories 생략(기존 스토리 결함 수정). change-4-execution-plan.md 작성: U2(FD·Code) → U3(FD·Code) → U5(FD 작게·Code) → Build and Test, U4·U6 코드 변경 없음. 승인 요청"
+**Context**: 변경 요청 4, Workflow Planning
+
+---
+
+## 변경 요청 4 — Workflow Planning 승인 / U2 Functional Design 계획·질문
+**Timestamp**: 2026-10-25T07:20:00Z
+**User Input**: "승인"
+**AI Response**: "실행 계획 승인 기록. U2 기능 설계 계획 작성(U2-eligibility-engine-change-4-functional-design-plan.md), 질문 Q1(대상 막힘 = 미충족+이유)·Q2(대상 여러 개)·Q3(행복주택·국민임대 계층 모름)·Q4(대상 × 가구 표)"
+**Context**: 변경 요청 4, U2 Functional Design
+
+---
+
+## U2 Functional Design (변경 4) — 답 / 완료, 승인 요청
+**Timestamp**: 2026-10-25T07:35:00Z
+**User Input**: "추천대로"
+**AI Response**: "Q1~Q4 = A 기록. domain-entities(audiences·대상 표·audience 조건·happy_unknown/national_rental_unknown·routesFor 바뀜), business-rules §12(BR-U2-E1~E30), business-logic-model §8(흐름·9건 예시·P-C4-1~6) 작성. 승인 요청"
+**Context**: 변경 요청 4, U2 Functional Design
+
+---
+
+## U2 Functional Design (변경 4) — 승인 / Code Generation 계획
+**Timestamp**: 2026-10-25T07:45:00Z
+**User Input**: "진행"
+**AI Response**: "U2 기능 설계 승인 기록. U2-eligibility-engine-change-4-code-generation-plan.md 작성(Step 1~9), 계획 승인 요청"
+**Context**: 변경 요청 4, U2 Code Generation Part 1
+
+---
+
+## U2 Code Generation (변경 4) — 계획 승인
+**Timestamp**: 2026-10-25T07:50:00Z
+**User Input**: "진행"
+**AI Response**: "계획 승인 기록, Step 1부터 코드 생성"
+**Context**: 변경 요청 4, U2 Code Generation Part 2
+
+---
+
+## U2 Code Generation (변경 4) — 완료, 승인 요청
+**Timestamp**: 2026-10-25T08:40:00Z
+**User Input**: (없음)
+**AI Response**: "Step 1~9 완료. 지역 규칙(시도까지만 → 시도 전체만), 신청 대상·막힘, 계층 모름 공급유형, 0015 마이그레이션, 화면 키. PBT가 주택형 없는 막힌 공고 빈틈을 찾아 수정. 검증: typecheck·lint·deno check, 단위 871(3회), pgTAP 192, 로컬 E2E 89 통과·3 건너뜀. 로컬 커밋, 승인 요청"
+**Context**: 변경 요청 4, U2 Code Generation
+
+---

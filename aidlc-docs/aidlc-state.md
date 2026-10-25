@@ -106,3 +106,12 @@
 - [x] U6 Code Generation (2026-10-21 승인, 커밋 65c3d17)
 - [x] Build and Test (변경 3) — 2026-10-21 승인 (운영 반영 0012~0014·함수·push 4852c3f). 남은 것: 사용자 휴대폰 확인, 다음 날 운영 확인(다시 분석·dispatch), 기존 청약레이더 정지
 - 참고: 변경 2 Build and Test는 05:10 운영 수집 결과 확인 뒤 승인 요청
+
+## 변경 요청 4 (2026-10-25~)
+- 내용: 대상·지역이 맞지 않는 공고 노출(시도까지만 지역, 화성특례시, LH 제목 시군, AI 분석 실패, 대상 분류), 뒤로 버튼(상세→목록, 3초 종료 안내)
+- [x] Requirements Analysis — requirements.md §11 (2026-10-25 승인)
+- [-] User Stories — 생략 (기존 스토리 결함 수정)
+- [x] Workflow Planning — change-4-execution-plan.md (2026-10-25 승인)
+- [x] U2 Functional Design (2026-10-25 승인)
+- [ ] U2 Code Generation — 완료, 승인 대기 (로컬 커밋)
+- 계획: U2(FD·Code) → U3(FD·Code) → U5(FD 작게·Code) → Build and Test

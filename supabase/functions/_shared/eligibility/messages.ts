@@ -1,5 +1,6 @@
 // 판정 사유·행동 문구 (NFR-U2-20, P-U2-S3)
 // 템플릿은 기준 값·나이·가구원수만 받는다. 프로필의 금액을 받는 템플릿은 두지 않는다 (DB에 평문 금액이 남지 않게).
+import type { NoticeAudience } from "../domain/audiences.ts";
 
 /** 원 단위 금액 → "645만 2,897원", "300만원" */
 export function formatWon(won: number): string {
@@ -53,6 +54,19 @@ export const MSG_NEWLYWED = {
   savingsBySpouse: "배우자 통장으로 신청하면 돼요",
   standardNote: "일반적인 기준이에요. 공고문에서 확인해 주세요",
 } as const;
+
+/** 변경 4 신청 대상이 막힌 공고 사유 (U2 domain-entities "변경 요청 4") */
+export const AUDIENCE_MSG: Readonly<Record<NoticeAudience, string>> = {
+  dormitory: "기업체 기숙사 공고예요. 회사가 직원을 위해 신청해요",
+  startup: "창업한 분을 위한 주택이에요",
+  artist: "예술인을 위한 주택이에요",
+  student: "대학생을 위한 주택이에요",
+  youth: "청년을 위한 주택이에요",
+  disabled: "장애인을 위한 주택이에요",
+  low_income: "수급자·차상위 등 소득이 아주 적은 가구를 위한 주택이에요",
+  senior: "어르신을 위한 주택이에요",
+  newlywed: "신혼부부를 위한 주택이에요",
+};
 
 export const MSG = {
   unknownRequirement: "공고마다 기준이 달라요",

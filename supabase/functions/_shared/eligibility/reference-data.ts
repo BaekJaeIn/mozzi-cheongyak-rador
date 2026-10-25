@@ -33,6 +33,21 @@ const HOMELESS = { minYears: null } as const;
 const CAPITAL_AREA = { sidoIn: ["서울", "인천", "경기"] };
 const INCOME_50_ADJ = { basis: "urban_worker", percent: 50, percentBySize: { 1: 70, 2: 60 } } as const;
 
+const NATIONAL_RENTAL_SENIOR: Requirements = {
+  age: SENIOR_AGE,
+  homeless: HOMELESS,
+  income: { basis: "urban_worker", percent: 70, percentBySize: { 1: 90, 2: 80 } },
+  asset: { maxManwon: 34_500 },
+  car: { maxManwon: 4_542 },
+};
+const HAPPY_SENIOR: Requirements = {
+  age: SENIOR_AGE,
+  homeless: HOMELESS,
+  income: { basis: "urban_worker", percent: 100, percentBySize: { 1: 120, 2: 110 } },
+  asset: { maxManwon: 34_500 },
+  car: { maxManwon: 4_542 }, // 출처 3,708 vs 4,542 → 너그러운 값 (BR-U2-34)
+};
+
 /** 공급유형 표준 요건 (U2 domain-entities §5.3, effective_from 2026-01-01) */
 export const STANDARD_REQUIREMENTS: Readonly<Record<SupplyTypeCode, Requirements>> = {
   public_sale_general: {
@@ -54,13 +69,8 @@ export const STANDARD_REQUIREMENTS: Readonly<Record<SupplyTypeCode, Requirements
     car: "unknown",
     welfare: { anyOf: ["livelihood_or_medical"], orIncome: INCOME_50_ADJ },
   },
-  national_rental_senior: {
-    age: SENIOR_AGE,
-    homeless: HOMELESS,
-    income: { basis: "urban_worker", percent: 70, percentBySize: { 1: 90, 2: 80 } },
-    asset: { maxManwon: 34_500 },
-    car: { maxManwon: 4_542 },
-  },
+  national_rental_senior: NATIONAL_RENTAL_SENIOR,
+  national_rental_unknown: NATIONAL_RENTAL_SENIOR, // 변경 4 BR-U2-E21: 계층 모름 = 고령자 줄과 같은 요건 (부모님 판정 그대로)
   permanent_rental_senior: {
     age: SENIOR_AGE,
     homeless: HOMELESS,
@@ -68,13 +78,8 @@ export const STANDARD_REQUIREMENTS: Readonly<Record<SupplyTypeCode, Requirements
     car: "unknown",
     welfare: { anyOf: ["livelihood_or_medical", "near_poverty"], orIncome: INCOME_50_ADJ },
   },
-  happy_senior: {
-    age: SENIOR_AGE,
-    homeless: HOMELESS,
-    income: { basis: "urban_worker", percent: 100, percentBySize: { 1: 120, 2: 110 } },
-    asset: { maxManwon: 34_500 },
-    car: { maxManwon: 4_542 }, // 출처 3,708 vs 4,542 → 너그러운 값 (BR-U2-34)
-  },
+  happy_senior: HAPPY_SENIOR,
+  happy_unknown: HAPPY_SENIOR, // 변경 4 BR-U2-E21
   integrated_rental: {
     homeless: HOMELESS,
     income: { basis: "median", percent: 150, percentBySize: { 1: 170, 2: 160 } },

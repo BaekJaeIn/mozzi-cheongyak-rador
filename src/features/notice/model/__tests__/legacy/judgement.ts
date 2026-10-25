@@ -111,6 +111,7 @@ const SETTINGS_GROUP: Readonly<Record<CriterionKey, GroupId | null>> = {
   welfare: "money",
   marriage: "basic", // 변경 3 — 신혼 정보 그룹은 U4에서 정함
   firstTime: "housing",
+  audience: null, // 변경 4 키 추가로 타입만 맞춤 (고정본 동작 그대로)
 };
 
 /** "설정에서 …" 행동 문구에 다는 고치기 링크 (BR-U5-89). 그 밖의 행동 문구는 링크 없음 */

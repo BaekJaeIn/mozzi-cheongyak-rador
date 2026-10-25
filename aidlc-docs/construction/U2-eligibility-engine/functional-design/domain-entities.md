@@ -396,3 +396,87 @@ interface UnitJudgement {
 | rental_newlywed | marriage {7년, 예비신혼 "unknown"}, homeless, income "unknown", asset "unknown", car "unknown" | 행복주택·국민임대 신혼 기준 2026 원문 미확인 → **확인 필요로 둠** |
 
 - Q6=A(표준 기준으로 판정)는 **원문으로 확인된 값에만** 적용한다. 확인하지 못한 값은 "확인 필요"로 두고 공고문 추출(U3)이 채운다 — 틀린 숫자로 숨기지 않기(놓치지 않기 원칙)
+
+---
+
+## 변경 요청 4 (2026-10-25) — 공고 신청 대상 · 계층 모름 공급유형
+
+> 근거: requirements §11 (FR-C4-5·10~14), 계획 답 Q1~Q4 = A
+
+### 판정 입력 공고에 `audiences` 추가
+
+```ts
+type NoticeAudience =
+  | "dormitory"   // 기업체 기숙사
+  | "startup"     // 창업자·창업특화
+  | "artist"      // 예술인·연극인·문화예술인
+  | "student"     // 대학생·공공기숙사
+  | "youth"       // 청년 전용
+  | "disabled"    // 장애인 전용·자립
+  | "low_income"  // 수급자·차상위·한부모 등 소득 계층 전용
+  | "senior"      // 고령자·어르신
+  | "newlywed";   // 신혼부부·신생아·예비신혼
+
+interface NoticeForJudgement {
+  // …기존
+  audiences: NoticeAudience[];  // 공고 단위 집합, 중복 없음. 빈 배열 = 누구나 또는 모름
+}
+```
+
+- 값은 U3가 제목·원문 상세·공고문(AI)에서 정해 `notices.audiences`(text[], 기본 `{}`)에 저장한다. 형식이 틀린 값은 읽을 때 버린다
+- 주택형마다가 아니라 **공고 단위** — 대상은 보통 공고 전체에 걸린다. 계층이 섞인 공고(행복주택 청년·신혼·고령자)는 여러 값
+
+### 가구 종류 × 대상 (Q4=A)
+
+| 대상 | senior (노부부) | newlywed (신혼) |
+|---|:-:|:-:|
+| dormitory · startup · artist · student · youth · disabled · low_income | ✕ | ✕ |
+| senior | ○ | ✕ |
+| newlywed | ✕ | ○ |
+
+```ts
+const AUDIENCE_ALLOWED: Record<HouseholdKind, ReadonlySet<NoticeAudience>> = {
+  senior: new Set(["senior"]),
+  newlywed: new Set(["newlywed"]),
+};
+/** 대상이 정해졌고 그중 내 가구가 쓸 수 있는 것이 하나도 없으면 막힘 (Q2=A) */
+audienceBlocked(kind, audiences) = audiences.length > 0 && !audiences.some(a => AUDIENCE_ALLOWED[kind].has(a))
+```
+
+### 새 조건 키 `audience`
+
+`CriterionKey`에 `audience` 추가. 막힌 공고의 모든 주택형은 이 조건 하나로 미충족:
+
+```ts
+{ key: "audience", verdict: "ineligible", code: `audience_${a}`, reason: AUDIENCE_MSG[a] }   // a = 막힌 대상 중 위 표 순서로 첫 번째
+```
+
+| 대상 | 사유 (쉬운 말) |
+|---|---|
+| dormitory | 기업체 기숙사 공고예요. 회사가 직원을 위해 신청해요 |
+| startup | 창업한 분을 위한 주택이에요 |
+| artist | 예술인을 위한 주택이에요 |
+| student | 대학생을 위한 주택이에요 |
+| youth | 청년을 위한 주택이에요 |
+| disabled | 장애인을 위한 주택이에요 |
+| low_income | 수급자·차상위 등 소득이 아주 적은 가구를 위한 주택이에요 |
+| senior | 어르신을 위한 주택이에요 |
+| newlywed | 신혼부부를 위한 주택이에요 |
+
+### 공급유형 코드 추가 — 계층 모름 (Q3=A)
+
+| 코드 | formal | plain | tenure | 표준 요건 |
+|---|---|---|---|---|
+| `happy_unknown` | 행복주택 | 행복주택 (계층은 공고문 확인) | rent | `happy_senior`와 같은 값 (부모님 판정 그대로) |
+| `national_rental_unknown` | 국민임대 | 국민임대 (계층은 공고문 확인) | rent | `national_rental_senior`와 같은 값 |
+
+- `supply_type_standards`에 두 줄 추가(U1 마이그레이션, 기존 두 줄 값 복사, 같은 effective_from)
+- `happy_senior`·`national_rental_senior`는 **고령자 계층으로 확인된** 주택형만 (공고문 AI 또는 제목에 고령자·어르신)
+
+### 신청 방법 표 바뀜 (`routesFor`)
+
+| 공급유형 | senior | newlywed |
+|---|---|---|
+| happy_unknown · national_rental_unknown | own_type | rental_newlywed (지금 happy_senior와 같은 판정) |
+| happy_senior · national_rental_senior | own_type | **없음 → 미충족 "어르신 대상 주택이에요"** (바뀜) |
+| 그 밖 | 변경 3 그대로 | 변경 3 그대로 |

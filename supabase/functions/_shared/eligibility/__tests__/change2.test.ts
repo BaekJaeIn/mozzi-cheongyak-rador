@@ -80,8 +80,8 @@ describe("관심 지역 — 지구 또는 시군구 (BR-U2-C10~C14)", () => {
     expect(inInterestArea({ districtIds: [], regions: [{ sido: "경기", sigungu: "수원시" }] }, { districtIds: [], regions: [{ sido: "경기", sigungu: null }] })).toBe(true);
   });
 
-  it("'경기도 일원' 공고(시도까지만)는 성남시만 골라도 관심 지역 안", () => {
-    expect(inInterestArea({ districtIds: [], regions: [{ sido: "경기", sigungu: null }] }, { districtIds: [], regions: [{ sido: "경기", sigungu: "성남시" }] })).toBe(true);
+  it("'경기도 일원' 공고(시도까지만)는 성남시만 고르면 관심 지역 밖 (변경 4 BR-U2-E1)", () => {
+    expect(inInterestArea({ districtIds: [], regions: [{ sido: "경기", sigungu: null }] }, { districtIds: [], regions: [{ sido: "경기", sigungu: "성남시" }] })).toBe(false);
   });
 
   it("서울 강서구만 고르면 부천 대장 공고(지구 미선택)는 관심 지역 밖", () => {

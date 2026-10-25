@@ -1,6 +1,7 @@
 // 판정 결과·입력 타입 (U2 domain-entities §3, 계약 K4)
 import type { IsoDate } from "../domain/dates.ts";
 import type { Tenure } from "../domain/profile.ts";
+import type { NoticeAudience } from "../domain/audiences.ts";
 import type { CapitalSido } from "../domain/regions.ts";
 import type { Requirements } from "../domain/requirements.ts";
 import type { ApplyRoute } from "./routes.ts";
@@ -18,7 +19,8 @@ export type CriterionKey =
   | "household"
   | "welfare"
   | "marriage" // 변경 3
-  | "firstTime"; // 변경 3
+  | "firstTime" // 변경 3
+  | "audience"; // 변경 4 신청 대상 (BR-U2-E11)
 
 /** 화면이 기기 프로필에서 붙여 보여줄 내 금액 (NFR-U2-10) */
 export type UserValueKey = "monthlyIncome" | "totalAsset" | "carValue";
@@ -82,6 +84,8 @@ export interface NoticeForJudgement {
   districtIds: string[];
   /** 공고 지역 (U3가 판별, 0개면 지구로만 매칭) */
   regions: NoticeRegion[];
+  /** 공고 신청 대상 (U3가 판별, 빈 배열 = 누구나·모름) — 변경 4 BR-U2-E10 */
+  audiences: NoticeAudience[];
   units: UnitForJudgement[];
 }
 

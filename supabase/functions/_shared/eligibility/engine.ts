@@ -3,7 +3,8 @@
 import type { IsoDate } from "../domain/dates.ts";
 import type { HouseholdProfile } from "../domain/profile.ts";
 import type { IncomeTable } from "./income-table.ts";
-import { MSG, ACTION, MSG_NEWLYWED } from "./messages.ts";
+import { AUDIENCE_MSG, MSG, ACTION, MSG_NEWLYWED } from "./messages.ts";
+import { audienceBlocked, type NoticeAudience } from "../domain/audiences.ts";
 import { evaluateAge } from "./criteria/age.ts";
 import { type CriterionContext, result } from "./criteria/common.ts";
 import { evaluateIncome } from "./criteria/income.ts";
@@ -168,6 +169,13 @@ export function childBonus(profile: HouseholdProfile, units: readonly UnitJudgem
   return childRoute ? Math.min(children, 2) : 0;
 }
 
+/** 신청 대상이 막힌 공고의 주택형 — 대상 조건 하나로 미충족 (변경 4 BR-U2-E11·E12) */
+function blockedUnit(profile: HouseholdProfile, unit: UnitForJudgement, audience: NoticeAudience): UnitJudgement {
+  const criteria = [result("audience", "ineligible", `audience_${audience}`, AUDIENCE_MSG[audience])];
+  const judged: UnitJudgement = { unitId: unit.id, supplyType: unit.supplyType, verdict: "ineligible", criteria };
+  return profile.householdKind === "newlywed" ? { ...judged, routes: [] } : judged;
+}
+
 export function judgeNotice(
   profile: HouseholdProfile,
   notice: NoticeForJudgement,
@@ -175,10 +183,11 @@ export function judgeNotice(
   asOf: IsoDate,
 ): NoticeJudgement {
   const baseDate = baseDateOf(notice, asOf);
-  const units = notice.units.map((u) => judgeUnit(profile, u, ref, baseDate));
+  const blocked = audienceBlocked(profile.householdKind, notice.audiences);
+  const units = blocked ? notice.units.map((u) => blockedUnit(profile, u, blocked)) : notice.units.map((u) => judgeUnit(profile, u, ref, baseDate));
   return {
     noticeId: notice.id,
-    verdict: combineNotice(units.map((u) => u.verdict)),
+    verdict: blocked ? "ineligible" : combineNotice(units.map((u) => u.verdict)), // 주택형이 없어도 막힌 공고는 미충족 (BR-U2-E11)
     inDistrict: inInterestArea(notice, profile.prefs), // 관심 지역 안 (변경 2 BR-U2-C12)
     score: score(notice, profile.prefs) + childBonus(profile, units),
     baseDate,

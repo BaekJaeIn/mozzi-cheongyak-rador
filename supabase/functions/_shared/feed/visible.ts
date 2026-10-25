@@ -85,7 +85,7 @@ export const labelOf = (labels: TypeLabels, code: string): TypeLabel => labels.g
 // ---------- 판정 상세 읽기 ----------
 
 const VERDICTS: readonly Verdict[] = ["eligible", "ineligible", "unknown"];
-const CRITERION_KEYS: readonly CriterionKey[] = ["type", "age", "homeless", "income", "asset", "car", "savings", "residence", "household", "welfare", "marriage", "firstTime"];
+const CRITERION_KEYS: readonly CriterionKey[] = ["type", "age", "homeless", "income", "asset", "car", "savings", "residence", "household", "welfare", "marriage", "firstTime", "audience"];
 const USER_VALUE_KEYS: readonly UserValueKey[] = ["monthlyIncome", "totalAsset", "carValue"];
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 

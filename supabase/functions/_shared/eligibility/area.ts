@@ -3,10 +3,13 @@ import type { RegionPick } from "../domain/profile.ts";
 import { isCapitalSido, isCapitalSigungu } from "../domain/regions.ts";
 import type { NoticeRegion } from "./types.ts";
 
-/** 공고 지역 하나가 관심 시군구 하나에 들어가는지: 시도가 같고, 시도 전체를 골랐거나(Q1) 공고가 시도까지만 확인됐거나(Q2) 시군구가 같다 */
+/**
+ * 공고 지역 하나가 관심 시군구 하나에 들어가는지: 시도가 같고, 시도 전체를 골랐거나(Q1) 시군구가 같다.
+ * 공고가 시도까지만 확인됐으면 시도 전체를 고른 경우에만 맞는다 (변경 4 BR-U2-E1 — 변경 2 Q2 규칙 삭제)
+ */
 export function regionMatches(region: NoticeRegion, pick: RegionPick): boolean {
   if (region.sido !== pick.sido) return false;
-  return pick.sigungu === null || region.sigungu === null || region.sigungu === pick.sigungu;
+  return pick.sigungu === null || region.sigungu === pick.sigungu;
 }
 
 export function inInterestArea(

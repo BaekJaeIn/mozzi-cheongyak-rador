@@ -169,4 +169,5 @@ export const CRITERION_NAMES: Readonly<Record<CriterionKey, string>> = {
   welfare: "복지 대상",
   marriage: "혼인", // 변경 3
   firstTime: "생애최초",
+  audience: "신청 대상", // 변경 4
 };

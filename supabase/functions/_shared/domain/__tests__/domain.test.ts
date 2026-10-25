@@ -47,7 +47,11 @@ describe("validateProfile", () => {
 
 describe("classifySupplyType (BR-U2-10~19)", () => {
   const cases: [string, string | undefined, string][] = [
-    ["하남교산 A2 행복주택 입주자 모집", undefined, "happy_senior"],
+    ["하남교산 A2 행복주택 입주자 모집", undefined, "happy_unknown"], // 변경 4 BR-U2-E20
+    ["하남교산 A2 행복주택 고령자 계층", undefined, "happy_senior"],
+    ["연천BIX 경기행복주택 기업체 기숙사 추가모집 공고", undefined, "happy_unknown"],
+    ["화성동탄 국민임대 예비입주자", undefined, "national_rental_unknown"],
+    ["은평 국민임대 어르신 우선공급", undefined, "national_rental_senior"],
     ["남양주왕숙 고령자복지주택(영구임대)", undefined, "senior_welfare"],
     ["고양창릉 영구임대 예비입주자", undefined, "permanent_rental_senior"],
     ["부천대장 국민임대 고령자 우선공급", undefined, "national_rental_senior"],

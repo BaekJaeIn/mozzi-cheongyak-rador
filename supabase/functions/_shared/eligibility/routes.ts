@@ -23,8 +23,8 @@ export const ROUTE_LABELS: Readonly<Record<ApplyRoute, string>> = {
   rental_newlywed: "신혼부부 몫 임대",
 };
 
-/** 신혼 가구가 쓸 수 없는 어르신 대상 공급유형 (BR-U2-D11) */
-const SENIOR_ONLY: ReadonlySet<SupplyTypeCode> = new Set(["senior_welfare", "permanent_rental_senior"]);
+/** 신혼 가구가 쓸 수 없는 어르신 대상 공급유형 (BR-U2-D11). 변경 4 BR-U2-E22: 고령자 계층으로 확인된 국민임대·행복주택도 */
+const SENIOR_ONLY: ReadonlySet<SupplyTypeCode> = new Set(["senior_welfare", "permanent_rental_senior", "national_rental_senior", "happy_senior"]);
 
 /** 공고문에서 따로 뽑은 신혼·생애최초 물량 줄 → 신청 방법 (BR-U2-D50·D51). 노부부 가구는 신청 방법 없음 */
 export const NEWLYWED_ONLY_ROUTE: Readonly<Partial<Record<SupplyTypeCode, ApplyRoute>>> = {
@@ -48,9 +48,9 @@ export function routesFor(kind: HouseholdKind, supplyType: SupplyTypeCode): Appl
       return ["newlywed_special", "first_time", "general"];
     case "newlywed_hope_town":
       return ["newlywed_hope"];
-    case "happy_senior":
-    case "national_rental_senior":
-      return ["rental_newlywed"];
+    case "happy_unknown":
+    case "national_rental_unknown":
+      return ["rental_newlywed"]; // 변경 4 BR-U2-E22: 계층 모름만 신혼 몫으로 본다
     case "integrated_rental":
     case "unranked":
     case "other":
