@@ -21,7 +21,7 @@
 - [x] **Step 6 — PDF 고르기** `pdf-locator.ts` `isPdf`: 확장자·경로 .pdf만 (E30)
 - [x] **Step 7 — AI 추출·분석**
   - `prompt.ts`·`extraction.ts`: `audiences`(9개 값, 누구나 [], 모름 null) 스키마·검증 (E22)
-  - `gemini-request.ts`: 기본 모델 `gemini-3.8-flash`, `_lib/gemini.ts`·`analyze/index.ts`: `GEMINI_MODEL` 환경 변수 (E33), 오류 설명에 HTTP 상태
+  - `gemini-request.ts`: 기본 모델 ~~`gemini-3.8-flash`~~ → **`gemini-3.5-flash`**·출력 16,384 (측정으로 고침, code-summary-change-4 "Gemini 모델 측정"), `GEMINI_MODEL` 환경 변수는 이미 있음 (E33), 오류 설명에 HTTP 상태
   - `analyze-orchestrator.ts`: 성공 시 `audiences_ai`, 실패 시 `ai_last_error`(200자, 쿼리 문자열 제거) (E32), `ANALYSIS_VERSION = 3` (E34)
   - `ports.ts`·`_lib/db/collect-repository.ts`·메모리 저장소: `releaseClaim(id, failed, error?)`
 - [x] **Step 8 — DB** `supabase/migrations/0016_collect_audiences.sql`
