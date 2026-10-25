@@ -36,6 +36,21 @@ describe("fetchWithRetry (P-U3-R2)", () => {
     expect(s.calls()).toBe(calls);
   });
 
+  it("마감까지 5초보다 적게 남으면 시도하지 않는다 — 재시도도 마감 안에서만 (변경 4)", async () => {
+    const none = scripted([200]);
+    await expect(fetchWithRetry(KEY_URL, { timeoutMs: 60_000, fetchImpl: none.fetchImpl, sleep: noSleep, deadlineAt: Date.now() + 3_000 })).rejects.toThrow(/deadline/);
+    expect(none.calls()).toBe(0);
+    // 첫 시도 503 뒤, 재시도 전에 마감이 가까워지면 다시 시도하지 않는다
+    const s = scripted([503, 200]);
+    const deadlineAt = Date.now() + 8_000;
+    const late = async () => void (await new Promise((r) => setTimeout(r, 3_500)));
+    await expect(fetchWithRetry(KEY_URL, { timeoutMs: 60_000, fetchImpl: s.fetchImpl, sleep: late, deadlineAt })).rejects.toBeInstanceOf(HttpError);
+    expect(s.calls()).toBe(1);
+    // 마감이 멀면 지금처럼 한 번 더
+    const ok = scripted([503, 200]);
+    expect((await fetchWithRetry(KEY_URL, { timeoutMs: 60_000, fetchImpl: ok.fetchImpl, sleep: noSleep, deadlineAt: Date.now() + 120_000 })).status).toBe(200);
+  });
+
   it("오류 문구에 API 키(쿼리)가 없다", async () => {
     const s = scripted([500]);
     const error = await fetchWithRetry(KEY_URL, { timeoutMs: 1000, fetchImpl: s.fetchImpl, sleep: noSleep }).catch((e: Error) => e);

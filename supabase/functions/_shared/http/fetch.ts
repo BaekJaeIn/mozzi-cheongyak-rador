@@ -43,7 +43,12 @@ export interface FetchOptions {
   fetchImpl?: FetchLike;
   sleep?: Sleep;
   retryDelayMs?: number;
+  /** 이 시각(Date.now 기준 ms)까지 — 시도마다 남은 시간으로 시간 제한을 줄이고, 남은 시간이 없으면 다시 시도하지 않는다 (변경 4) */
+  deadlineAt?: number;
 }
+
+/** 마감까지 이보다 적게 남으면 새 시도를 하지 않는다 */
+export const MIN_ATTEMPT_MS = 5_000;
 
 /**
  * 시간 제한 + 1회 재시도. 2xx면 Response를, 아니면 HttpError를 던진다.
@@ -56,9 +61,14 @@ export async function fetchWithRetry(url: string, opts: FetchOptions): Promise<R
 
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt > 0) await sleep(opts.retryDelayMs ?? COLLECT_RETRY_DELAY_MS);
+    const left = opts.deadlineAt === undefined ? Infinity : opts.deadlineAt - Date.now();
+    if (left < MIN_ATTEMPT_MS) {
+      lastError ??= new HttpError(null, url, "deadline");
+      break;
+    }
     let res: Response;
     try {
-      res = await fetchImpl(url, { ...opts.init, signal: AbortSignal.timeout(opts.timeoutMs) });
+      res = await fetchImpl(url, { ...opts.init, signal: AbortSignal.timeout(Math.min(opts.timeoutMs, left)) });
     } catch (e) {
       const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");
       lastError = new HttpError(null, url, timeout ? "timeout" : undefined);

@@ -177,3 +177,17 @@
 ## 범위 밖 (알림)
 
 - 매시 정각 알림 발송이 "Vault 값 없음: dispatch_url 또는 cron_secret"으로 멈춰 있음 → 새 공고·마감 알림이 나가지 않는다. U6 운영 설정(setup-guide-u6 ⑤⑥)
+
+## 운영 반영 결과 (2026-10-25)
+
+| 순서 | 작업 | 결과 |
+|---|---|---|
+| 0 | next 16.4.0 → **16.4.2** (사용자 결정, 커밋 `76bc053`) → 재검증: typecheck·lint, 단위 926, E2E 91+3 건너뜀, 빌드 보안 경고 사라짐, `npm audit --omit=dev` 0 | ✅ |
+| 1 | `db push --linked` 0015·0016 → `migration list --linked` 원격 0015·0016 | ✅ |
+| 2 | `secrets set GEMINI_API_KEY` (임시 파일 → 바로 삭제) — 운영 값 해시 = 새 키 해시 | ✅ |
+| 3 | `functions deploy collect analyze dispatch` | ✅ |
+| 4 | `git push` (`4852c3f..df3988c`) → 운영 번들에 새 안내 문구, `/api/health` 200 | ✅ |
+| 5 | collect 수동 1회 (예약 작업과 같게 `invoke_edge_function` api·crawl) — api 21건·crawl 6건 다시 저장, 기기 3대 다시 판정 성공 | ✅ |
+| 5' | 신혼 가구 기기 기준: 신고 9건 모두 **숨김**, GH 특화형 매입임대(부천·김포·의왕) **보임** | ✅ |
+
+- 알게 된 것: SH 수집기는 저장된 글을 다시 읽지 않아(P-U3-C5, 요청 수 줄이기) **SH 공고 17건은 정규화 판 4로 다시 저장되지 않았다** — 서울 공고의 지역·대상은 그 글이 바뀔 때까지 옛 값. 이번 신고(경기)와는 무관 → 다음 변경 후보

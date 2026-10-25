@@ -9,12 +9,13 @@ const GEMINI_TIMEOUT_MS = 60_000;
 
 export function createGeminiExtractor(apiKey: string, model = DEFAULT_GEMINI_MODEL): Extractor {
   return {
-    async extract({ pdf, title, supplyTypeHint }) {
+    async extract({ pdf, title, supplyTypeHint, deadlineAt }) {
       const body = JSON.stringify(buildGeminiRequest({ pdfBase64: encodeBase64(pdf), title, supplyTypeHint }));
       let json: unknown;
       try {
         const res = await fetchWithRetry(geminiEndpoint(model), {
           timeoutMs: GEMINI_TIMEOUT_MS,
+          ...(deadlineAt !== undefined ? { deadlineAt } : {}),
           init: { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": apiKey }, body },
         });
         json = await res.json();

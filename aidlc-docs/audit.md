@@ -2106,3 +2106,11 @@
 **Context**: 변경 요청 4, Build and Test
 
 ---
+
+## Build and Test (변경 4) — 운영 analyze 시간 한도 문제
+**Timestamp**: 2026-10-25T15:50:00Z
+**User Input**: "(함수 실행 시간 한도 문제를 고칠까요?) 고침 (Recommended)"
+**AI Response**: "운영 첫 analyze: 1건 gemini_error HTTP 503(ai_last_error 기록), 2건째가 150초 한도에 끊겨 실행 기록 없음·예약 남음. 원인: Gemini 호출 최대 60s×2+2s, 70s cutoff 뒤에도 시작. 고침: 실행 마감(시작+140s, 저장 10s 남김) 안에서만 호출·재시도, 남은 시간 15s 미만이면 미룸"
+**Context**: 변경 요청 4, Build and Test (고침)
+
+---

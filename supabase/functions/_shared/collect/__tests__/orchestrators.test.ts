@@ -187,6 +187,32 @@ describe("runAnalyze", () => {
     expect(deferred).toMatchObject({ claimedAt: null, aiAttempts: 0, summaryStatus: "pending" });
   });
 
+  it("Gemini에는 실행 마감(시작 + 140초 - 저장 몫 10초)을 넘겨 준다 (변경 4, 함수 150초 한도)", async () => {
+    const box = await collectOnce();
+    const clock = fakeClock();
+    const start = clock.nowMs();
+    const extractor = fakeExtractor();
+    const deadlines: (number | undefined)[] = [];
+    const spy = { ...extractor, extract: async (input: Parameters<typeof extractor.extract>[0]) => (deadlines.push(input.deadlineAt), clock.advance(30_000), extractor.extract(input)) };
+    await analyzeOnce(box, { clock, extractor: spy as typeof extractor });
+    expect(deadlines).toEqual([start + 130_000, start + 130_000]);
+  });
+
+  it("남은 시간이 15초보다 적으면 Gemini를 부르지 않고 미룬다 — 실패로 세지 않는다 (변경 4)", async () => {
+    const box = await collectOnce();
+    const clock = fakeClock();
+    const extractor = fakeExtractor();
+    const slow = { ...extractor, extract: async (input: Parameters<typeof extractor.extract>[0]) => (clock.advance(65_000), extractor.extract(input)) };
+    const pdf = fakePdf();
+    let fetches = 0;
+    const slowPdf = { fetchPdf: async (url: string) => (++fetches === 2 && clock.advance(55_000), pdf.fetchPdf(url)) }; // 두 번째 PDF가 느림: 65 + 55 = 120초 → 남은 10초
+    const { summary } = await analyzeOnce(box, { clock, extractor: slow as typeof extractor, pdf: slowPdf as typeof pdf });
+    expect(summary.outcomes.map((o) => o.status)).toEqual(["done", "deferred"]);
+    expect(extractor.calls).toBe(1);
+    const deferred = box.notices.get(summary.outcomes[1]!.noticeId)!;
+    expect(deferred).toMatchObject({ claimedAt: null, aiAttempts: 0, summaryStatus: "pending", lastError: null });
+  });
+
   it("예약은 10분 동안 다른 실행이 가져가지 않는다 (P-U3-R3)", async () => {
     const box = await collectOnce();
     const now = new Date("2026-10-15T00:00:00Z");

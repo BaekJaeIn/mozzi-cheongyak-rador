@@ -22,6 +22,14 @@ import {
 export const ANALYZE_BATCH = 2;
 /** 시작 후 이 시간이 지나면 다음 공고를 시작하지 않는다 (NFR-U3-03) */
 export const ANALYZE_CUTOFF_MS = 70_000;
+/** 함수 실행 한도 150초 안: Gemini 호출·재시도는 시작 + 140초 - 저장 몫 10초까지 (변경 4 운영 확인 — 2건째 호출이 150초를 넘겨 끊겼다) */
+export const ANALYZE_WALL_MS = 140_000;
+export const SAVE_RESERVE_MS = 10_000;
+/** Gemini에 줄 시간이 이보다 적으면 그 공고는 다음 실행으로 미룬다(실패 아님) */
+export const MIN_EXTRACT_MS = 15_000;
+
+/** 시간이 모자라 미룬다 */
+class DeferredError extends Error {}
 
 export interface AnalyzeDeps {
   repo: CollectRepository;
@@ -55,7 +63,13 @@ export interface AnalyzeSummary {
 /** 변경 3: 분석 판 — 이 코드로 분석한 공고 (BR-U3-D30) */
 export const ANALYSIS_VERSION = 3; // 변경 4 BR-U3-E34: 신청 대상 추출
 
-async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: StandardRequirements, reanalysis = false): Promise<AnalyzeOutcome> {
+async function analyzeOne(
+  deps: AnalyzeDeps,
+  noticeId: string,
+  standards: StandardRequirements,
+  deadlineAt: number,
+  reanalysis = false,
+): Promise<AnalyzeOutcome> {
   const loaded = await deps.repo.loadForAnalysis(noticeId);
   if (!loaded) {
     if (reanalysis) await deps.repo.releaseReanalysis(noticeId);
@@ -76,9 +90,10 @@ async function analyzeOne(deps: AnalyzeDeps, noticeId: string, standards: Standa
 
   let raw: unknown;
   try {
-    raw = await deps.extractor.extract({ pdf: bytes, title: base.title, supplyTypeHint: SUPPLY_TYPES[base.supplyType].formal });
+    if (deadlineAt - deps.clock.nowMs() < MIN_EXTRACT_MS) throw new DeferredError();
+    raw = await deps.extractor.extract({ pdf: bytes, title: base.title, supplyTypeHint: SUPPLY_TYPES[base.supplyType].formal, deadlineAt });
   } catch (e) {
-    throw e instanceof StepError ? e : new StepError("gemini_error", errorMessage(e));
+    throw e instanceof StepError || e instanceof DeferredError ? e : new StepError("gemini_error", errorMessage(e));
   }
 
   const extraction = parseExtraction(raw); // BR-U3-63·64
@@ -134,8 +149,13 @@ export async function runAnalyze(deps: AnalyzeDeps, opts: AnalyzeOptions): Promi
       continue;
     }
     try {
-      outcomes.push(await analyzeOne(deps, noticeId, standards, reanalysis));
+      outcomes.push(await analyzeOne(deps, noticeId, standards, opts.startedAtMs + ANALYZE_WALL_MS - SAVE_RESERVE_MS, reanalysis));
     } catch (e) {
+      if (e instanceof DeferredError) {
+        await release(false).catch(() => undefined); // 시간이 모자람 — 다음 실행으로 (실패 아님)
+        outcomes.push({ noticeId, status: "deferred" });
+        continue;
+      }
       const code: AnalyzeFailure = e instanceof StepError ? e.code : "gemini_error";
       await release(true, failureReason(code, e)).catch(() => undefined); // ai_attempts + 1 (다시 분석은 reanalysis_attempts + 1), 실패 이유 (E32)
       outcomes.push({ noticeId, status: "failed", code });

@@ -61,7 +61,8 @@ export interface PdfFetcher {
 
 export interface Extractor {
   /** Gemini 응답 JSON(검증 전). 실패하면 StepError(gemini_error | invalid_json) */
-  extract(input: { pdf: Uint8Array; title: string; supplyTypeHint: string }): Promise<unknown>;
+  /** deadlineAt: 이 시각(ms)까지 끝내야 한다 — 호출·재시도 모두 (변경 4, 함수 150초 한도) */
+  extract(input: { pdf: Uint8Array; title: string; supplyTypeHint: string; deadlineAt?: number }): Promise<unknown>;
 }
 
 export interface Recomputer {
