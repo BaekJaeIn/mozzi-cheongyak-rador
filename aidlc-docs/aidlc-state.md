@@ -118,5 +118,6 @@
 - [x] U3 Code Generation (2026-10-25 승인, 커밋 d96e2ca·b906679)
 - [x] U5 Functional Design (뒤로 버튼, 2026-10-25 승인)
 - [x] U5 Code Generation (2026-10-25 승인, 커밋 3622c17·1cb2584)
-- [ ] Build and Test (변경 4) — 자동 테스트·운영 반영 완료, 승인 대기 (남은 것: 휴대폰 확인)
+- [x] Build and Test (변경 4) — 2026-10-25 승인 (운영 반영 0015·0016·키·함수·push 301b365). 남은 것: 사용자·부모님 휴대폰 확인, Vault 알림 설정, SH 다시 저장
+- [-] Operations — placeholder (변경 4 완료)
 - 계획: U2(FD·Code) → U3(FD·Code) → U5(FD 작게·Code) → Build and Test
