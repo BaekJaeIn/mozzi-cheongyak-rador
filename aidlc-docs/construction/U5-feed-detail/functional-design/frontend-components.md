@@ -137,3 +137,53 @@ BookmarksView (/bookmarks)
 
 - 기기 프로필은 지금처럼 `useProfile()`로 읽는다(가구 종류·자녀 수). 서버로 보내지 않는다
 - 접근성: `details`의 `summary`에 "신혼부부 특별공급, 확인 필요"처럼 판정 글자를 함께 읽힌다(기호는 `aria-hidden`)
+
+## 10. 변경 요청 4 (2026-10-25) — 뒤로 버튼
+
+> 근거: business-rules §18 (BR-U5-E1~E32)
+
+### 10.1 나누기
+
+| 부품 | 맡는 일 |
+|---|---|
+| `app-chrome/back-target.ts` | 갈 곳 (지금 그대로) + `EXIT_WINDOW_MS = 3000`, 안내 문구 상수 |
+| `app-chrome/back-controller.ts` (새, 순수) | 상태 기계: 사건 → 할 일 목록. 브라우저 API를 부르지 않는다 |
+| `app-chrome/BackNavigation.tsx` | 브라우저 사건을 상태 기계에 넣고, 돌려받은 할 일을 실행(CloseWatcher 켜고 끄기, `pushState`, `history.back`, `router.replace`, 창 닫기, 안내 띄우기, 3초 타이머) |
+
+### 10.2 상태 기계
+
+```ts
+interface BackState {
+  guard: boolean;          // 지킴이 칸이 있다
+  watcher: boolean;        // CloseWatcher가 켜져 있다
+  exiting: boolean;        // 종료 안내 3초 중
+  ignoreNextPop: boolean;  // 조용히 뺀 지킴이의 popstate
+}
+type BackEvent =
+  | { kind: "start"; watcherSupported: boolean }
+  | { kind: "gesture" }                                  // 터치·클릭·키 (조작 처리 중)
+  | { kind: "back"; via: "watcher" | "history"; target: BackTarget; overlay: boolean }
+  | { kind: "exitTimeout" };
+type BackAction =
+  | { kind: "pushGuard" } | { kind: "silentHistoryBack" }
+  | { kind: "armWatcher" } | { kind: "disarmWatcher" }
+  | { kind: "closeOverlay" } | { kind: "navigate"; href: string }
+  | { kind: "showExitHint" } | { kind: "startExitTimer" };
+export function step(state: BackState, event: BackEvent, watcherSupported: boolean): { state: BackState; actions: BackAction[] };
+```
+
+| 사건 | 할 일 |
+|---|---|
+| start | 지원하면 armWatcher (지킴이는 넣지 않음, E11) |
+| gesture | 안내 중이 아니고 지킴이가 없으면 pushGuard (E11·E12) |
+| back (history) | guard=false. ignoreNextPop이면 끝. 안내 중이면 무시. 창이면 closeOverlay, 갈 곳이면 navigate, 아니면 종료 안내(E21) |
+| back (watcher) | watcher=false. 창·갈 곳이면 처리 후 armWatcher(E13), 아니면 종료 안내 |
+| 종료 안내 | showExitHint + startExitTimer + (watcher면) disarmWatcher + (guard면) silentHistoryBack·ignoreNextPop |
+| exitTimeout | exiting=false, 지원하면 armWatcher, 조작한 적이 있으면 pushGuard (E22) |
+
+- `back`·`exitTimeout` 사건에는 `sticky`(페이지가 조작을 받은 적이 있다)를 싣는다. sticky면 처리 직후 지킴이를 바로 넣는다(이동 전에) — E12 (코드 단계에서 보완)
+
+### 10.3 화면
+
+- 안내는 지금 자리(하단 메뉴 위, `aria-live="polite"`)에 새 문구, 3초
+- 바뀌지 않는 것: 갈 곳 규칙, 창 닫기(`useBackClose`), 상세의 [뒤로] 버튼(`useLastList`)

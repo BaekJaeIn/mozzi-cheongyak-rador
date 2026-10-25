@@ -123,7 +123,9 @@ test("상세: 피드 밖 공고도 열리고 상태를 알려 준다, 없는 공
   await expect(page.getByText("공고를 찾을 수 없어요. 오래된 공고는 1년이 지나면 지워져요")).toBeVisible();
 });
 
-test("뒤로 버튼: 상세 → 목록, 목록에서는 한 번 더 누르면 종료 안내 (2026-10-17 요청)", async ({ page }) => {
+const EXIT_HINT = "종료하시려면 뒤로가기 버튼을 한번 더 클릭해주세요.";
+
+test("뒤로 버튼: 상세 → 목록, 목록에서는 한 번 더 누르면 종료 안내 (2026-10-17 요청, 변경 4 문구)", async ({ page }) => {
   await openFeed(page);
   await card(page, fx.open.name).getByRole("link").click();
   await expect(page).toHaveURL(new RegExp(`/notice/${fx.open.id}$`));
@@ -142,11 +144,42 @@ test("뒤로 버튼: 상세 → 목록, 목록에서는 한 번 더 누르면 �
   await expect(page).toHaveURL(/\/$/);
   await expect(card(page, fx.open.name)).toBeVisible();
 
-  // 첫 화면: 처음 누르면 종료하지 않고 안내만
+  // 첫 화면: 처음 누르면 종료하지 않고 안내만 (방금 터치하지 않았어도 — 조작한 적이 있는 페이지, BR-U5-E12)
   await pressBack(page);
-  await expect(page.getByText("뒤로 버튼을 한 번 더 누르면 종료돼요")).toBeVisible();
+  await expect(page.getByText(EXIT_HINT)).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
   await expect(card(page, fx.open.name)).toBeVisible();
+});
+
+test("뒤로 버튼: CloseWatcher가 없는 브라우저(방문 기록 길) — 상세 → 목록 → 안내 → 3초 안에 다시 누르면 앱을 떠난다 (변경 4 BR-U5-E10~E22)", async ({ page }) => {
+  await page.addInitScript(() => {
+    delete (window as unknown as { CloseWatcher?: unknown }).CloseWatcher;
+  });
+  await openFeed(page);
+  await card(page, fx.open.name).getByRole("link").click();
+  await expect(page).toHaveURL(new RegExp(`/notice/${fx.open.id}$`));
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(card(page, fx.open.name)).toBeVisible();
+
+  // 설정 → 뒤로 → (터치 없이) 뒤로 = 안내
+  await page.getByRole("navigation", { name: "주요 메뉴" }).getByRole("link", { name: "설정" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await page.waitForTimeout(500); // 사람이 연달아 누르는 간격 — 앱이 처리를 끝내고 지킴이를 다시 넣을 틈 (자동 시험은 몇 ms 안에 누른다)
+  await page.goBack();
+  await expect(page.getByText(EXIT_HINT)).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+
+  // 안내가 사라지면(3초) 다시 받을 준비 → 다시 안내
+  await expect(page.getByText(EXIT_HINT)).toBeHidden({ timeout: 5_000 });
+  await page.goBack();
+  await expect(page.getByText(EXIT_HINT)).toBeVisible();
+
+  // 3초 안에 한 번 더 → 앱이 받지 않으므로 브라우저가 앱 밖(처음 빈 페이지)으로 간다
+  await page.goBack({ waitUntil: "commit" });
+  await expect(page).not.toHaveURL(/127\.0\.0\.1|localhost/);
 });
 
 test("뒤로 버튼: 알림으로 상세를 바로 열었어도 맞춤 공고로 (2026-10-17 요청)", async ({ page }) => {

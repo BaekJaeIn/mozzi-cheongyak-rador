@@ -1,7 +1,7 @@
 // 휴대폰 뒤로 버튼이 갈 곳 (2026-10-17 사용자 요청)
 // - 앱 안 이동은 모두 replace라서 방문 기록이 쌓이지 않는다. 뒤로 버튼은 화면 위계로만 움직인다
 // - 공고 상세 → 들어온 목록(맞춤 공고 또는 관심 공고), 관심 공고·설정 → 맞춤 공고, 내 정보 고치기 → 설정
-// - 맞춤 공고(첫 화면)에서는 "한 번 더 누르면 종료" 안내 뒤 두 번째에 종료
+// - 맞춤 공고(첫 화면)에서는 "한 번 더 누르면 종료" 안내 뒤 두 번째에 종료 (변경 4: 3초, 새 문구 — BR-U5-E20)
 
 export type BackTarget = { kind: "go"; href: string } | { kind: "exit" };
 
@@ -18,8 +18,11 @@ export function backTarget(pathname: string, opts: { lastList: ListPath; hasProf
   return { kind: "exit" };
 }
 
-/** 두 번째 누름을 종료로 보는 시간 */
-export const EXIT_WINDOW_MS = 2000;
+/** 두 번째 누름을 종료로 보는 시간 (변경 4 BR-U5-E20) */
+export const EXIT_WINDOW_MS = 3000;
+
+/** 종료 안내 문구 (2026-10-25 사용자 요청) */
+export const EXIT_HINT = "종료하시려면 뒤로가기 버튼을 한번 더 클릭해주세요.";
 
 export function isListPath(pathname: string): pathname is ListPath {
   return pathname === "/" || pathname === "/bookmarks";

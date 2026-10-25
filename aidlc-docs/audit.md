@@ -2034,3 +2034,43 @@
 **Context**: 변경 요청 4, U3 Code Generation
 
 ---
+
+## U3 Code Generation (변경 4) — 승인 / U5 Functional Design 시작
+**Timestamp**: 2026-10-25T12:30:00Z
+**User Input**: "진행"
+**AI Response**: "U3 코드 승인 기록. U5 뒤로 버튼 기능 설계 시작 — 지금 코드(BackNavigation.tsx) 분석"
+**Context**: 변경 요청 4, U5 Functional Design
+
+---
+
+## U5 Functional Design (변경 4) — 질문·답 / 완료, 승인 요청
+**Timestamp**: 2026-10-25T12:50:00Z
+**User Input**: "(질문: 휴대폰에 앱을 어느 브라우저로 설치?) 모르겠어요"
+**AI Response**: "원인 분석: CloseWatcher가 있으면 그것만 쓰고(실기기 미시험, E2E는 Esc), 없으면 조작 전에 넣은 지킴이가 브라우저 방문 기록 조작 방지로 건너뛰어짐. 설계: 두 길 함께, 지킴이는 조작 중에만, 안내 3초·새 문구, 안내 중 받는 것 없음(지킴이 조용히 빼기), 순수 상태 기계 + E2E 방문 기록 길. business-rules §18, frontend-components §10, business-logic-model §12 작성, 승인 요청"
+**Context**: 변경 요청 4, U5 Functional Design
+
+---
+
+## U5 Functional Design (변경 4) — 승인 / Code Generation 계획
+**Timestamp**: 2026-10-25T12:55:00Z
+**User Input**: "진행"
+**AI Response**: "U5 기능 설계 승인 기록. U5-feed-detail-change-4-code-generation-plan.md 작성(Step 1~5), 계획 승인 요청"
+**Context**: 변경 요청 4, U5 Code Generation Part 1
+
+---
+
+## U5 Code Generation (변경 4) — 계획 승인
+**Timestamp**: 2026-10-25T13:00:00Z
+**User Input**: "승인"
+**AI Response**: "계획 승인 기록, Step 1부터 코드 생성. 구현 중 확인: 터치는 pointerdown이 사용자 조작(활성화)이 아님 — 지킴이는 pointerup·click·keydown에서 넣는다"
+**Context**: 변경 요청 4, U5 Code Generation Part 2
+
+---
+
+## U5 Code Generation (변경 4) — 완료, 승인 요청
+**Timestamp**: 2026-10-25T14:10:00Z
+**User Input**: (없음)
+**AI Response**: "Step 1~5 완료. 상태 기계(back-controller), CloseWatcher·지킴이 함께, 3초·새 문구. 코드 단계에서 고침: pointerdown → pointerup·keydown, 조작한 적이 있으면 처리 직후 지킴이(BR-U5-E12 보완), popstate 상태 즉시 변경, WebKit 50ms(BR-U5-E15). 검증: typecheck·lint, 단위 926(3회), 로컬 E2E 91 통과·3 건너뜀. 로컬 커밋, 승인 요청"
+**Context**: 변경 요청 4, U5 Code Generation
+
+---
