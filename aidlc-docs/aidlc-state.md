@@ -118,5 +118,5 @@
 - [x] U3 Code Generation (2026-10-25 승인, 커밋 d96e2ca·b906679)
 - [x] U5 Functional Design (뒤로 버튼, 2026-10-25 승인)
 - [x] U5 Code Generation (2026-10-25 승인, 커밋 3622c17·1cb2584)
-- [ ] Build and Test (변경 4) — 진행 중
+- [ ] Build and Test (변경 4) — 자동 테스트·운영 반영 완료, 승인 대기 (남은 것: 휴대폰 확인)
 - 계획: U2(FD·Code) → U3(FD·Code) → U5(FD 작게·Code) → Build and Test
